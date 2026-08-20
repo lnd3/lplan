@@ -134,12 +134,14 @@ plan graph-report ./plan
 - ✅ Structured queries and impact analysis
 - ✅ 58 comprehensive test suite
 
-### Shell Scripts (Legacy)
-Original bash-based validation (still works, no longer developed):
+### Shell Scripts (Deprecated)
+Original bash-based tools (no longer developed, replaced by Python engine):
 
-- `tools/validate.sh` — Check a plan/ directory against schema
-- `tools/aggregate-local.sh` — Scan for submodules and generate hierarchical INDEX
-- `tools/init-repo.sh` — Initialize plan/ in a new repo
+- `tools/validate.sh` — ⚠️ Use `./bin/plan validate` instead
+- `tools/aggregate-local.sh` — ⚠️ Use `./bin/plan graph-report` or `./bin/plan check-refs` instead
+- `tools/init-repo.sh` — ⚠️ Use `./bin/plan init` instead
+
+The Python engine provides superior functionality: full dependency analysis, cycle detection, impact analysis, and structured queries.
 
 ## Installation & Updates
 

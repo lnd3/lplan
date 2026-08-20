@@ -1,5 +1,12 @@
 #!/bin/bash
-# aggregate-local.sh — Discover submodule plans and aggregate hierarchical view
+# aggregate-local.sh — DEPRECATED: Use Python engine instead
+#
+# This script is no longer developed. For multi-repo aggregation, use:
+#   ./bin/plan graph-report plan/       # See cross-repo dependencies
+#   ./bin/plan check-refs plan/         # Verify cross-repo references
+#
+# The Python engine provides full dependency analysis and querying.
+# See README.md for more information.
 
 set -euo pipefail
 
