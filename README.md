@@ -147,7 +147,7 @@ Install lplan in your project:
 
 ```bash
 # Clone or add as a dependency
-git clone https://github.com/yourusername/lplan /path/to/lplan
+git clone https://github.com/lnd3/lplan /path/to/lplan
 
 # Install dependencies
 pip install -r /path/to/lplan/requirements.txt
