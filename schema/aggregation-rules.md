@@ -175,38 +175,34 @@ Invalidate cache if:
 - `.gitmodules` changes
 - `repos.yml` (if used) changes
 
-## Example: TradeFlow + Submodules
+## Example: Multi-Repo Aggregation
 
 **Input State**:
 ```
-TradeFlow/plan/projects/P005.md (status=PLANNING, depends=[])
-TradeFlow/plan/projects/P001.md (status=BLOCKED, enables=["P003"], depends=["P005", "P006"])
-deps/ltools/plan/projects/L001.md (status=DONE, enables=["tradeflow:P005"])
+my-app/plan/projects/P001.md (status=PLANNING, depends=["core-lib:L001"])
+my-app/plan/projects/P002.md (status=BLOCKED, depends=["P001"])
+deps/core-lib/plan/projects/L001.md (status=IN_PROGRESS, enables=["my-app:P001"])
 ```
 
 **Aggregator Output**:
 ```
-## Projects (TradeFlow-Scoped)
+## Local Projects (my-app)
 
 | ID | Title | Status | Priority |
-| P001 | Price Levels Strategy | BLOCKED | HIGH |
-| P005 | HyperLiquid API | PLANNING | HIGH |
+| P001 | Core Feature | PLANNING | HIGH |
+| P002 | Secondary Feature | BLOCKED | MEDIUM |
 
-## Linked Submodule Plans
+## Linked Dependencies
 
-### ltools (deps/ltools/)
+### core-lib (deps/core-lib/)
 
-| ID | Title | Status | Impact on TradeFlow |
-| L001 | Node Registry | DONE | P005 depends; available ✓ |
+| ID | Title | Status | Enables |
+| L001 | Infrastructure | IN_PROGRESS | P001 ✓ |
 
 ## Dependency Summary
 
-P005 (PLANNING) ← L001 (DONE) ✓
-P001 (BLOCKED) ← P005 (PLANNING) ⏳
-P001 (BLOCKED) ← P006 (?) (not found in ldeps)
+P001 (PLANNING) ← L001 (IN_PROGRESS) ⏳
+P002 (BLOCKED) ← P001 (PLANNING) ⏳
 ```
 
-**Output**: User can see at a glance:
-- L001 is ready; P005 can proceed
-- P005 is only blocker for P001
-- P006 is missing or not defined; needs investigation
+**Insight**: Once L001 completes, P001 can proceed, which unblocks P002.

@@ -105,7 +105,7 @@ When external factors change (e.g., Binance unavailable):
 ## Multi-Repo Scoring
 
 When aggregating across repos, scorers can be:
-- **Local**: Computed per-repo (P001 is HIGH within TradeFlow, independent of ltools)
+- **Local**: Computed per-repo (P001 is HIGH within my-app, independent of upstream-lib)
 - **Aggregate**: Considers cross-repo dependencies (P005 is HIGH globally because it blocks P001 globally)
 
 By default, each repo scores independently. Aggregation tools can optionally re-weight based on global impact.
@@ -122,7 +122,7 @@ To customize priority computation for a repo:
 
 Example:
 ```markdown
-# TradeFlow Priority Framework
+# my-app Priority Framework
 
 Inherits from planner-framework schema.
 

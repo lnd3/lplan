@@ -34,28 +34,26 @@ python3 -m planner.cli validate ./plan
 
 See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more commands.
 
-### Instantiate in a Repository
+### Initialize a New Plan
 
 ```bash
 # In your repo root:
-cp -r /path/to/planner-framework/.planner-framework .
-./tools/init-repo.sh --name "MyProject" --role "Core system"
+./bin/plan init ./plan --name "MyProject"
 
 # This creates:
 # plan/
-#   README.md
 #   INDEX.md
 #   CHANGELOG.md
-#   projects/
+#   projects/P001-*.md (template)
 #   designs/
 #   actions/
 ```
 
 ### Define a Project
 
-1. Copy `planner-framework/templates/project.md.template` to `plan/projects/P001-my-project.md`
+1. Edit `plan/projects/P001-*.md` with your project details
 2. Fill in frontmatter according to `schema/project.schema.md`
-3. Run validation: `plan validate ./plan`
+3. Run validation: `./bin/plan validate ./plan`
 
 ### Link Submodules
 
@@ -143,54 +141,62 @@ Original bash-based validation (still works, no longer developed):
 - `tools/aggregate-local.sh` — Scan for submodules and generate hierarchical INDEX
 - `tools/init-repo.sh` — Initialize plan/ in a new repo
 
-## Versioning
+## Installation & Updates
 
-Each repo instantiates a specific version of planner-framework via git submodule. Update .planner-framework to get framework updates:
+Install lplan in your project:
 
 ```bash
-cd .planner-framework && git pull origin main
-cd ..
-git add .planner-framework && git commit -m "Update planner-framework"
+# Clone or add as a dependency
+git clone https://github.com/yourusername/lplan /path/to/lplan
+
+# Install dependencies
+pip install -r /path/to/lplan/requirements.txt
+
+# Create alias for convenience
+alias plan="/path/to/lplan/bin/plan"
 ```
 
-## Concepts
+## Core Concepts
 
-### Repo-Scoped Plans
-Each repository has its own `plan/` directory following this framework. Plans are independent; each repo owns its projects, designs, and actions.
+### Project Planning
+Organize work into hierarchical projects (goals), designs (specs), and actions (tasks). Use structured YAML + markdown for both machine readability and human editing.
 
-### Hierarchical Linking
-Submodules with their own `plan/` are automatically discovered. Cross-repo dependencies are resolved and displayed in aggregated views (e.g., "P005 depends on ltools:L001").
+### Dependency Tracking
+Declare explicit dependencies between projects. lplan analyzes them to find cycles, compute critical paths, and show execution order.
 
-### Independent Instances
-Multiple repos can use planner-framework without coordination. Each has its own frontmatter, priorities, and changelog. Aggregation is computed on-demand.
+### Priority Scoring
+Automatically compute project priority from weighted drivers. Detect mismatches between driver score and declared priority.
 
-### Schema as Guarantee
-All repos using the framework conform to the same schema. Tools can validate, traverse, and aggregate with certainty.
+### Multi-Repo Support
+Use cross-repo references to link plans across dependencies. Example: `depends: ["upstream-lib:UP001"]`
 
-## Example: TradeFlow + Submodules
+## Multi-Repo Planning
 
 ```
-TradeFlow/
-  .planner-framework/         ← git submodule (shared framework)
-  plan/                       ← Instance 1 (TradeFlow strategy)
-    INDEX.md                  ← Shows local + linked submodule work
-    projects/P001-P007.md
-  deps/ltools/plan/           ← Instance 2 (ltools infrastructure)
-    INDEX.md                  ← Shows ltools work
-    projects/L001-L005.md
-  deps/ldeps/plan/            ← Instance 3 (ldeps build system)
-    INDEX.md
-    projects/D001-D003.md
+my-app/
+  plan/                       ← Local projects for my-app
+    projects/P001-*.md
+    designs/D001-*.md
+    actions/A001-*.md
+
+deps/upstream-lib/plan/       ← Linked submodule (upstream-lib)
+  projects/UP001-*.md
+
+deps/shared-tools/plan/       ← Linked submodule (shared-tools)
+  projects/ST001-*.md
 ```
 
-Running `./tools/aggregate-local.sh` in TradeFlow root generates a hierarchical view showing all three plans linked together.
+Use cross-repo references in dependencies: `depends: ["upstream-lib:UP001"]`
 
-## Contributing
+## Development
 
-Framework updates are versioned. To propose changes:
-1. Edit files in planner-framework/
-2. Test in examples/
-3. Update version in README.md
-4. Commit and tag
+To contribute to lplan:
 
-Repos update via `git submodule update --remote`.
+1. Clone the repository
+2. Make changes to `src/planner/` modules
+3. Run tests: `PYTHONPATH=src pytest tests/ -v`
+4. Test manually: `./bin/plan <command> plan/`
+5. Update docs if needed
+6. Commit and create a pull request
+
+See [IMPLEMENTATION.md](IMPLEMENTATION.md) for architecture details.

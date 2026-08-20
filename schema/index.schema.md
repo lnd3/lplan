@@ -26,12 +26,12 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 ```
 
 ### Priority Framework (Optional, if custom)
-If the repo overrides or extends planner-framework's priority system, include:
+If the repo overrides or extends lplan's priority system, include:
 ```markdown
 ## Priority Framework
 
 [Description of local drivers, scoring, etc.]
-[Can inherit from `.planner-framework/schema/priority-framework.md` with local additions]
+[Can inherit from `.lplan/schema/priority-framework.md` with local additions]
 ```
 
 ### Projects Table
