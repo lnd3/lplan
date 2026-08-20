@@ -1,0 +1,144 @@
+"""Plan directory initialization and scaffolding."""
+
+from datetime import date
+from pathlib import Path
+from typing import Optional
+import re
+from .models import Project, Status, Priority
+
+
+def _slugify(text: str) -> str:
+    """Convert text to URL slug."""
+    text = text.lower()
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[-\s]+', '-', text)
+    return text.strip('-')
+
+
+def init_plan(
+    plan_dir: Path,
+    repo_name: str,
+    first_project_title: Optional[str] = None,
+) -> None:
+    """Initialize a new plan directory structure.
+
+    Creates:
+    - projects/, designs/, actions/ subdirectories
+    - INDEX.md and CHANGELOG.md from templates
+    - Optional P001-<slug>.md project file
+
+    Args:
+        plan_dir: Path to plan directory (created if needed)
+        repo_name: Repository name (used in INDEX)
+        first_project_title: Optional title for initial project (P001)
+    """
+    plan_dir = Path(plan_dir)
+    plan_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create subdirectories
+    for subdir in ["projects", "designs", "actions"]:
+        (plan_dir / subdir).mkdir(exist_ok=True)
+
+    # Create INDEX.md if not present
+    index_path = plan_dir / "INDEX.md"
+    if not index_path.exists():
+        today = date.today().isoformat()
+        index_content = f"""# {repo_name} Plan Index
+
+*Last updated: {today}*
+
+Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+
+---
+
+## Projects
+
+| ID | Title | Status | Priority | Key Open Work |
+| --- | --- | --- | --- | --- |
+
+---
+
+## Designs
+
+| ID | Title | Status | Project | Doc |
+| --- | --- | --- | --- | --- |
+
+---
+
+## Actions
+
+| ID | Title | Status | Design | Open Tasks |
+| --- | --- | --- | --- | --- |
+"""
+        index_path.write_text(index_content, encoding="utf-8")
+
+    # Create CHANGELOG.md if not present
+    changelog_path = plan_dir / "CHANGELOG.md"
+    if not changelog_path.exists():
+        changelog_content = """# Plan Changelog
+
+Append-only record of all status and priority changes.
+
+Format: `YYYY-MM-DD | ID | old_status → new_status | note`
+
+---
+
+"""
+        changelog_path.write_text(changelog_content, encoding="utf-8")
+
+    # Optionally create initial project
+    if first_project_title:
+        today = date.today().isoformat()
+        slug = _slugify(first_project_title)
+        project_file = plan_dir / "projects" / f"P001-{slug}.md"
+
+        # Only create if P001-* doesn't already exist
+        existing_p001 = list(plan_dir.glob("projects/P001-*.md"))
+        if not existing_p001:
+            project_content = f"""---
+id: P001
+title: {first_project_title}
+status: IDEA
+priority: MEDIUM
+priority_drivers:
+  - strategic_edge
+created: {today}
+updated: {today}
+depends: []
+external_dependencies: []
+enables: []
+---
+
+## Goal
+
+1–2 paragraph statement of what this project achieves. What problem does it solve? Why is it important?
+
+## Scope
+
+Bullet-point list of what's included and excluded:
+- Component A
+- Component B
+- Not included: X, Y, Z
+
+## Linked
+
+- **Projects**: (other projects this depends on or relates to)
+- **Designs**: (designs that specify this project)
+- **Actions**: (concrete task lists)
+- **Dependencies**: (upstream repos/features)
+
+## Tasks
+
+### Phase 1
+- [ ] Task A
+- [ ] Task B
+
+### Phase 2
+- [ ] Task C
+- [ ] Task D
+
+## Log
+
+{today} — Project created.
+"""
+            project_file.write_text(project_content, encoding="utf-8")

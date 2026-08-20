@@ -1,37 +1,46 @@
 """Schema validator for plan entities."""
 
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Set, Optional
+from difflib import get_close_matches
 from .models import Project, Design, Action, PlanEntity, Status, Priority
 
 
 class ValidationError:
     """Represents a validation error."""
 
-    def __init__(self, entity_id: str, field: str, message: str):
+    def __init__(self, entity_id: str, field: str, message: str, suggestion: Optional[str] = None):
         self.entity_id = entity_id
         self.field = field
         self.message = message
+        self.suggestion = suggestion
 
     def __str__(self) -> str:
-        return f"[{self.entity_id}] {self.field}: {self.message}"
+        base = f"[{self.entity_id}] {self.field}: {self.message}"
+        if self.suggestion:
+            base += f"\n    Suggestion: {self.suggestion}"
+        return base
 
     def __repr__(self) -> str:
-        return f"ValidationError({self.entity_id}, {self.field}, {self.message})"
+        return f"ValidationError({self.entity_id}, {self.field}, {self.message}, {self.suggestion})"
 
 
 class ValidationWarning:
     """Represents a validation warning."""
 
-    def __init__(self, entity_id: str, field: str, message: str):
+    def __init__(self, entity_id: str, field: str, message: str, suggestion: Optional[str] = None):
         self.entity_id = entity_id
         self.field = field
         self.message = message
+        self.suggestion = suggestion
 
     def __str__(self) -> str:
-        return f"[{self.entity_id}] {self.field}: {self.message}"
+        base = f"[{self.entity_id}] {self.field}: {self.message}"
+        if self.suggestion:
+            base += f"\n    Suggestion: {self.suggestion}"
+        return base
 
     def __repr__(self) -> str:
-        return f"ValidationWarning({self.entity_id}, {self.field}, {self.message})"
+        return f"ValidationWarning({self.entity_id}, {self.field}, {self.message}, {self.suggestion})"
 
 
 class SchemaValidator:
@@ -90,9 +99,11 @@ class SchemaValidator:
                 for dep in entity.depends:
                     if ":" not in dep:  # Local ref
                         if dep not in entities:
+                            suggestion = self._suggest_ref(dep, entities)
                             self.errors.append(
                                 ValidationError(
-                                    entity_id, "depends", f"Referenced project {dep} not found"
+                                    entity_id, "depends", f"Referenced project {dep} not found",
+                                    suggestion=suggestion
                                 )
                             )
                     # Cross-repo refs (repo:ID) are not validated here
@@ -100,31 +111,39 @@ class SchemaValidator:
                 for enable in entity.enables:
                     if ":" not in enable:  # Local ref
                         if enable not in entities:
+                            suggestion = self._suggest_ref(enable, entities)
                             self.errors.append(
                                 ValidationError(
-                                    entity_id, "enables", f"Referenced project {enable} not found"
+                                    entity_id, "enables", f"Referenced project {enable} not found",
+                                    suggestion=suggestion
                                 )
                             )
 
             elif isinstance(entity, Design):
                 if entity.project not in entities:
+                    suggestion = self._suggest_ref(entity.project, entities)
                     self.warnings.append(
                         ValidationWarning(
-                            entity_id, "project", f"Parent project {entity.project} not found"
+                            entity_id, "project", f"Parent project {entity.project} not found",
+                            suggestion=suggestion
                         )
                     )
 
             elif isinstance(entity, Action):
                 if entity.project and entity.project not in entities:
+                    suggestion = self._suggest_ref(entity.project, entities)
                     self.warnings.append(
                         ValidationWarning(
-                            entity_id, "project", f"Associated project {entity.project} not found"
+                            entity_id, "project", f"Associated project {entity.project} not found",
+                            suggestion=suggestion
                         )
                     )
                 if entity.design and entity.design not in entities:
+                    suggestion = self._suggest_ref(entity.design, entities)
                     self.warnings.append(
                         ValidationWarning(
-                            entity_id, "design", f"Parent design {entity.design} not found"
+                            entity_id, "design", f"Parent design {entity.design} not found",
+                            suggestion=suggestion
                         )
                     )
 
@@ -167,6 +186,35 @@ class SchemaValidator:
         """Validate action-specific rules."""
         # Actions can exist without project or design, so no strict requirements
         pass
+
+    def _suggest_ref(self, missing_ref: str, entities: Dict[str, PlanEntity]) -> Optional[str]:
+        """Suggest a correction for a missing reference.
+
+        Tries:
+        1. Fuzzy match against known IDs
+        2. Suggest cross-repo syntax if it looks external
+
+        Args:
+            missing_ref: The missing reference
+            entities: Dict of known entities
+
+        Returns:
+            Suggestion string or None
+        """
+        entity_ids = list(entities.keys())
+
+        # Try fuzzy match (close mismatches, typos)
+        matches = get_close_matches(missing_ref, entity_ids, n=1, cutoff=0.6)
+        if matches:
+            return f"Did you mean '{matches[0]}'?"
+
+        # Check if it looks like an external ref (all caps + digits after colon)
+        if missing_ref and missing_ref[0].isalpha():
+            # Could be a cross-repo reference
+            if not any(c == ':' for c in missing_ref):
+                return f"If this is from an external repo, use format 'repo:{missing_ref}'"
+
+        return None
 
     def get_report(self) -> Dict[str, Any]:
         """Get validation report."""

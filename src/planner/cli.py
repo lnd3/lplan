@@ -2,6 +2,7 @@
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Optional
 
@@ -12,7 +13,15 @@ from .parser import PlanParser
 from .validator import SchemaValidator
 from .priority import PriorityEngine
 from .graph import DependencyGraph
-from .models import Project
+from .models import Project, Status
+from .stats import compute_stats, compute_timeline, compute_estimates, compute_velocity
+from .writer import update_entity_frontmatter, append_log_entry
+from .index_gen import generate_index, write_index, append_changelog
+from .init import init_plan
+from .refs import check_references
+from .git_ops import governed_commit
+from .report import write_report
+from .watch import watch_plan
 
 
 @click.group()
@@ -312,6 +321,406 @@ def graph_report(plan_dir: str) -> None:
         click.echo(f"\nCross-repo references ({len(report['cross_repo_refs'])}):")
         for ref in sorted(report["cross_repo_refs"]):
             click.echo(f"  - {ref}")
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def stats(plan_dir: str) -> None:
+    """Show aggregate statistics."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    entities = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            entities[result.entity.id] = result.entity
+
+    stat_data = compute_stats(entities)
+
+    click.echo("Plan Statistics")
+    click.echo("=" * 70)
+    click.echo(f"Projects: {stat_data['projects_total']}")
+    click.echo(f"Designs: {stat_data['designs_total']}")
+    click.echo(f"Actions: {stat_data['actions_total']}")
+    click.echo(f"% Done: {stat_data['percent_done']:.1f}%")
+    click.echo(f"Blocked: {stat_data['blocked_count']}")
+    click.echo(f"Priority Mismatches: {stat_data['priority_mismatches']}")
+    click.echo(f"\nBy Status:")
+    for status, count in sorted(stat_data['by_status'].items()):
+        click.echo(f"  {status}: {count}")
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def timeline(plan_dir: str) -> None:
+    """Show project execution phases."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if not projects:
+        click.echo("No projects found")
+        sys.exit(0)
+
+    graph = DependencyGraph(projects)
+    phases = compute_timeline(projects, graph)
+
+    click.echo("Project Execution Timeline")
+    click.echo("=" * 70)
+
+    for phase_num, project_ids in phases:
+        click.echo(f"\nPhase {phase_num} (can run in parallel):")
+        for pid in sorted(project_ids):
+            p = projects[pid]
+            click.echo(f"  - {pid}: {p.title} ({p.status.value})")
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def estimate(plan_dir: str) -> None:
+    """Show time estimate rollup."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if not projects:
+        click.echo("No projects found")
+        sys.exit(0)
+
+    est_data = compute_estimates(projects)
+
+    click.echo("Time Estimates")
+    click.echo("=" * 70)
+    click.echo(f"Total Effort: {est_data['total_effort_days']} days")
+    click.echo(f"Projects with Estimates: {est_data['projects_with_estimates']}")
+    click.echo(f"Projects without Estimates: {est_data['projects_without_estimates']}")
+
+    if est_data['by_status']:
+        click.echo(f"\nBy Status:")
+        for status, (days, count) in sorted(est_data['by_status'].items()):
+            click.echo(f"  {status}: {days} days ({count} projects)")
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def velocity(plan_dir: str) -> None:
+    """Show velocity metrics from completed estimates."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if not projects:
+        click.echo("No projects found")
+        sys.exit(0)
+
+    vel_data = compute_velocity(projects)
+
+    click.echo("Velocity Analysis")
+    click.echo("=" * 70)
+
+    if vel_data['completed_projects'] == 0:
+        click.echo("No completed projects with full estimate data")
+        sys.exit(0)
+
+    click.echo(f"Completed Projects: {vel_data['completed_projects']}")
+    click.echo(f"Average Variance: {vel_data['average_variance_percent']:+.1f}%")
+
+    if vel_data['projects']:
+        click.echo(f"\nProject Details:")
+        for proj in vel_data['projects']:
+            click.echo(
+                f"  {proj['id']}: {proj['effort_days']} days estimated, "
+                f"{proj['actual_days']} days actual ({proj['variance_percent']:+.1f}%)"
+            )
+
+
+@main.command()
+@click.argument("entity_id")
+@click.argument("note")
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+@click.option("--status", help="Also update status to this value")
+def log(entity_id: str, note: str, plan_dir: str, status: Optional[str]) -> None:
+    """Append log entry to an entity."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    # Find the entity file
+    entity_file = None
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if result.entity.id == entity_id:
+                entity_file = result.entity
+                break
+
+    if not entity_file:
+        click.echo(f"Entity {entity_id} not found", err=True)
+        sys.exit(1)
+
+    # Find the file path
+    entity_path = None
+    for fpath, result in files.items():
+        if not isinstance(result, dict) or "error" not in result:
+            if result.entity.id == entity_id:
+                entity_path = Path(fpath)
+                break
+
+    if not entity_path:
+        click.echo(f"Could not find file for {entity_id}", err=True)
+        sys.exit(1)
+
+    try:
+        # Update status if requested
+        if status:
+            update_entity_frontmatter(
+                entity_path,
+                {"status": status, "updated": date.today().isoformat()}
+            )
+            append_changelog(plan_path, entity_id, entity_file.status.value, status, note)
+
+        # Append log entry
+        append_log_entry(entity_path, note)
+        click.echo(f"✓ Logged: {entity_id}")
+
+    except Exception as e:
+        click.echo(f"Error updating entity: {e}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("entity_id")
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+@click.option("--status", help="Update status")
+@click.option("--priority", help="Update priority")
+def update(entity_id: str, plan_dir: str, status: Optional[str], priority: Optional[str]) -> None:
+    """Update entity frontmatter fields."""
+    plan_path = Path(plan_dir)
+
+    if not status and not priority:
+        click.echo("No updates specified (use --status or --priority)", err=True)
+        sys.exit(1)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    # Find the entity file
+    entity_file = None
+    entity_path = None
+    for fpath, result in files.items():
+        if not isinstance(result, dict) or "error" not in result:
+            if result.entity.id == entity_id:
+                entity_file = result.entity
+                entity_path = Path(fpath)
+                break
+
+    if not entity_file:
+        click.echo(f"Entity {entity_id} not found", err=True)
+        sys.exit(1)
+
+    # Build updates
+    updates = {"updated": date.today().isoformat()}
+    if status:
+        updates["status"] = status
+    if priority:
+        updates["priority"] = priority
+
+    try:
+        update_entity_frontmatter(entity_path, updates)
+        click.echo(f"✓ Updated: {entity_id}")
+    except Exception as e:
+        click.echo(f"Error updating entity: {e}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def generate_index(plan_dir: str) -> None:
+    """Generate or update INDEX.md."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    entities = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            entities[result.entity.id] = result.entity
+
+    try:
+        write_index(plan_path, entities, "Plan")
+        click.echo(f"✓ Generated INDEX.md")
+    except Exception as e:
+        click.echo(f"Error generating index: {e}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path())
+@click.option("--name", required=True, help="Repository name")
+@click.option("--first-project", help="Optional first project title")
+def init(plan_dir: str, name: str, first_project: Optional[str]) -> None:
+    """Initialize a new plan directory."""
+    plan_path = Path(plan_dir)
+
+    try:
+        init_plan(plan_path, name, first_project)
+        click.echo(f"✓ Initialized plan directory: {plan_path}")
+    except Exception as e:
+        click.echo(f"Error initializing plan: {e}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def check_refs(plan_dir: str) -> None:
+    """Check for reference errors and orphaned entities."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    entities = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            entities[result.entity.id] = result.entity
+
+    report = check_references(entities, plan_path)
+
+    click.echo("Reference Check Report")
+    click.echo("=" * 70)
+    click.echo(f"References Checked: {report['local_refs_checked']}")
+
+    if report['unresolvable_refs']:
+        click.echo(f"\nUnresolvable References ({len(report['unresolvable_refs'])}):")
+        for ref_info in report['unresolvable_refs']:
+            click.echo(f"  ✗ {ref_info['from']}: {ref_info['ref']} ({ref_info['hint']})")
+
+    if report['orphaned_designs']:
+        click.echo(f"\nOrphaned Designs ({len(report['orphaned_designs'])}):")
+        for design_id in report['orphaned_designs']:
+            click.echo(f"  ⚠ {design_id}")
+
+    if report['orphaned_actions']:
+        click.echo(f"\nOrphaned Actions ({len(report['orphaned_actions'])}):")
+        for action_id in report['orphaned_actions']:
+            click.echo(f"  ⚠ {action_id}")
+
+    if report['unused_projects']:
+        click.echo(f"\nUnused Projects ({len(report['unused_projects'])}):")
+        for project_id in report['unused_projects']:
+            click.echo(f"  ℹ {project_id}")
+
+    if report['errors']:
+        click.echo(f"\nErrors ({len(report['errors'])}):")
+        for error in report['errors']:
+            click.echo(f"  ✗ {error}")
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+@click.option("-m", "--message", required=True, help="Commit message")
+def commit(plan_dir: str, message: str) -> None:
+    """Commit plan changes with validation."""
+    plan_path = Path(plan_dir)
+
+    try:
+        governed_commit(plan_path, message)
+    except RuntimeError as e:
+        click.echo(f"{e}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+@click.option("-o", "--output", type=click.Path(), help="Output file path")
+def report(plan_dir: str, output: Optional[str]) -> None:
+    """Generate HTML report."""
+    plan_path = Path(plan_dir)
+
+    if not output:
+        output = str(plan_path / "report.html")
+
+    output_path = Path(output)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    entities = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            entities[result.entity.id] = result.entity
+
+    try:
+        write_report(plan_path, entities, output_path)
+        click.echo(f"✓ Report written: {output_path}")
+    except Exception as e:
+        click.echo(f"Error generating report: {e}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+@click.option("--interval", type=int, default=5, help="Poll interval in seconds")
+def watch(plan_dir: str, interval: int) -> None:
+    """Watch plan for changes."""
+    plan_path = Path(plan_dir)
+
+    try:
+        watch_plan(plan_path, interval=interval)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 
 if __name__ == "__main__":

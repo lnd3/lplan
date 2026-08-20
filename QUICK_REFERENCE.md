@@ -41,6 +41,83 @@ plan graph-report ./plan
 # Shows: total projects, dependencies, cycles, roots, leaves, cross-repo refs
 ```
 
+### Show Statistics
+```bash
+plan stats ./plan
+# Shows: project counts, % done, blocked count, priority mismatches
+```
+
+### Show Execution Timeline
+```bash
+plan timeline ./plan
+# Shows: projects grouped by execution phase (what can run in parallel)
+```
+
+### Time Estimate Rollup
+```bash
+plan estimate ./plan
+# Shows: total effort days, projects with/without estimates
+```
+
+### Velocity Analysis
+```bash
+plan velocity ./plan
+# Shows: completed projects, actual vs estimated variance
+```
+
+### Log Entry
+```bash
+plan log P001 "Work in progress" ./plan
+plan log P001 "Completed work" ./plan --status DONE
+# Appends to entity's Log section, optionally updates status
+```
+
+### Update Entity
+```bash
+plan update P001 ./plan --status IN_PROGRESS
+plan update P001 ./plan --priority HIGH
+# Modifies frontmatter fields
+```
+
+### Generate Index
+```bash
+plan generate-index ./plan
+# Creates or updates INDEX.md with entity tables
+```
+
+### Initialize Plan
+```bash
+plan init ./new-plan --name "Project Name"
+plan init ./new-plan --name "Project Name" --first-project "Initial Project"
+# Creates plan structure: projects/, designs/, actions/, INDEX.md, CHANGELOG.md
+```
+
+### Check References
+```bash
+plan check-refs ./plan
+# Validates cross-references, flags orphaned entities, unused projects
+```
+
+### Governed Commit
+```bash
+plan commit ./plan -m "Updated project P001 status"
+# Validates plan, stages changes, creates git commit (or reports validation errors)
+```
+
+### Generate HTML Report
+```bash
+plan report ./plan -o report.html
+# Creates self-contained HTML with stats, tables, and SVG dependency graph
+```
+
+### Watch for Changes
+```bash
+plan watch ./plan
+plan watch ./plan --interval 10
+# Monitors plan directory, alerts on status changes, cycles, BLOCKED transitions
+# (Ctrl-C to stop)
+```
+
 ## Python API
 
 ### Parse Files
@@ -121,8 +198,19 @@ external_dependencies:
     feature: "Feature name"
     status: DONE
     blocking: false
+estimate:
+  effort_days: 5.0
+  confidence: high
+  started: 2026-08-20
+  completed: 2026-08-25
 ---
 ```
+
+**Estimate fields (all optional):**
+- `effort_days`: Estimated effort in days (float)
+- `confidence`: low | medium | high
+- `started`: Date work started (ISO format)
+- `completed`: Date work completed (ISO format)
 
 ### Design
 ```yaml
