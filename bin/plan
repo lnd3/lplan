@@ -1,0 +1,10 @@
+#!/bin/bash
+# Planner Framework CLI wrapper
+# Provides convenient access to 'plan' commands without PYTHONPATH setup
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${SCRIPT_DIR}/src:${PYTHONPATH:-}"
+
+exec python3 -m planner.cli "$@"

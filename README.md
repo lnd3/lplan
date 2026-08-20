@@ -18,16 +18,18 @@ This framework defines:
 # 1. Install dependencies
 pip install pyyaml click networkx pydantic python-dateutil
 
-# 2. Set up environment
-export PYTHONPATH="${PWD}/src"
+# 2. Use the wrapper script (no PYTHONPATH setup needed)
+./bin/plan validate ./plan
+./bin/plan priority ./plan
 
-# 3. Validate your plan
-plan validate ./plan
-plan priority ./plan
-
-# 4. Analyze dependencies
+# 3. Or set up an alias for convenience
+alias plan="./bin/plan"
 plan deps P001 ./plan
 plan graph-report ./plan
+
+# 4. Or export PYTHONPATH
+export PYTHONPATH="${PWD}/src"
+python3 -m planner.cli validate ./plan
 ```
 
 See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more commands.
