@@ -64,7 +64,7 @@ echo
 # Check project files
 echo "Checking project files..."
 project_count=0
-for project_file in "$PLAN_DIR"/projects/*.md 2>/dev/null || true; do
+for project_file in "$PLAN_DIR"/projects/*.md; do
     if [[ ! -f "$project_file" ]]; then
         continue
     fi
