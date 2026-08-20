@@ -12,6 +12,26 @@ This framework defines:
 
 ## Quick Start
 
+### Using the Python Engine (Recommended)
+
+```bash
+# 1. Install dependencies
+pip install pyyaml click networkx pydantic python-dateutil
+
+# 2. Set up environment
+export PYTHONPATH="${PWD}/src"
+
+# 3. Validate your plan
+plan validate ./plan
+plan priority ./plan
+
+# 4. Analyze dependencies
+plan deps P001 ./plan
+plan graph-report ./plan
+```
+
+See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more commands.
+
 ### Instantiate in a Repository
 
 ```bash
@@ -33,7 +53,7 @@ cp -r /path/to/planner-framework/.planner-framework .
 
 1. Copy `planner-framework/templates/project.md.template` to `plan/projects/P001-my-project.md`
 2. Fill in frontmatter according to `schema/project.schema.md`
-3. Run validation: `./tools/validate.sh plan/`
+3. Run validation: `plan validate ./plan`
 
 ### Link Submodules
 
@@ -49,6 +69,10 @@ If your repo has git submodules with their own `plan/` directories:
 # - Cross-repo dependencies
 ```
 
+### Migrating from Shell Scripts?
+
+If you're currently using the shell-based `validate.sh`, see [MIGRATION.md](MIGRATION.md) for a step-by-step guide.
+
 ## Structure
 
 - **schema/** — Formal definitions and specs
@@ -56,9 +80,23 @@ If your repo has git submodules with their own `plan/` directories:
 - **tools/** — Validation, aggregation, initialization scripts
 - **examples/** — Reference implementations
 
-## Schema
+## Documentation
 
-See `schema/` for complete specifications:
+### For Users
+
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** — Cheat sheet for CLI commands and Python API
+- **[MIGRATION.md](MIGRATION.md)** — Step-by-step guide from shell scripts to Python engine
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — Detailed issue resolution and debugging
+
+### For Developers
+
+- **[IMPLEMENTATION.md](IMPLEMENTATION.md)** — Architecture, data models, and extension points
+- **[pyproject.toml](pyproject.toml)** — Python dependencies and build configuration
+- **[tests/](tests/)** — 58 comprehensive test cases covering all components
+
+### Schema Reference
+
+See `schema/` for formal specifications:
 - `frontmatter.md` — YAML frontmatter format and fields
 - `project.schema.md` — Project file structure
 - `design.schema.md` — Design file structure
@@ -69,9 +107,39 @@ See `schema/` for complete specifications:
 
 ## Tools
 
-- `validate.sh` — Check a plan/ directory against schema
-- `aggregate-local.sh` — Scan for submodules and generate hierarchical INDEX
-- `init-repo.sh` — Initialize plan/ in a new repo
+### Python Engine (New — Recommended)
+Modern programmatic approach with full dependency analysis and priority scoring:
+
+```bash
+# Install
+pip install pyyaml click networkx pydantic python-dateutil
+
+# Validate plan
+plan validate ./plan
+
+# Analyze priorities
+plan priority ./plan
+
+# Show dependencies
+plan deps P001 ./plan
+
+# Full dependency graph analysis
+plan graph-report ./plan
+```
+
+**Why the Python engine?**
+- ✅ Programmatic priority computation (no manual scoring)
+- ✅ Full dependency graph analysis (cycle detection, critical path)
+- ✅ Type-safe validation with Pydantic
+- ✅ Structured queries and impact analysis
+- ✅ 58 comprehensive test suite
+
+### Shell Scripts (Legacy)
+Original bash-based validation (still works, no longer developed):
+
+- `tools/validate.sh` — Check a plan/ directory against schema
+- `tools/aggregate-local.sh` — Scan for submodules and generate hierarchical INDEX
+- `tools/init-repo.sh` — Initialize plan/ in a new repo
 
 ## Versioning
 
