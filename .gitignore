@@ -28,3 +28,4 @@ env/
 *.swo
 *~
 .DS_Store
+.obsidian/
