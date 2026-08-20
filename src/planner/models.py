@@ -32,6 +32,14 @@ class ExternalDependency(BaseModel):
     blocking: bool = False
 
 
+class Estimate(BaseModel):
+    """Optional time estimate for a project."""
+    effort_days: Optional[float] = None
+    confidence: Optional[str] = None  # low, medium, high
+    started: Optional[date] = None
+    completed: Optional[date] = None
+
+
 class PlanEntity(BaseModel):
     """Base model for all plan entities."""
     id: str
@@ -66,6 +74,7 @@ class Project(PlanEntity):
     external_dependencies: List[ExternalDependency] = Field(default_factory=list)
     enables: List[str] = Field(default_factory=list)
     project: Optional[str] = None  # Parent project if nested
+    estimate: Optional[Estimate] = None
 
     @field_validator("status")
     @classmethod

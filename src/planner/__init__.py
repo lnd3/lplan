@@ -2,7 +2,7 @@
 
 __version__ = "0.1.0"
 
-from .models import Project, Design, Action, Status, Priority
+from .models import Project, Design, Action, Status, Priority, Estimate
 from .parser import PlanParser
 from .validator import SchemaValidator
 from .priority import PriorityEngine

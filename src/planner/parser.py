@@ -134,6 +134,18 @@ class PlanParser:
         if isinstance(updated, str):
             updated = date.fromisoformat(updated)
 
+        # Parse estimate if present
+        estimate = None
+        if "estimate" in data and data["estimate"]:
+            est_data = data["estimate"]
+            if isinstance(est_data, dict):
+                # Convert date strings in estimate
+                for date_field in ("started", "completed"):
+                    if date_field in est_data and isinstance(est_data[date_field], str):
+                        est_data[date_field] = date.fromisoformat(est_data[date_field])
+                from .models import Estimate
+                estimate = Estimate(**est_data)
+
         return Project(
             id=data["id"],
             title=data["title"],
@@ -147,6 +159,7 @@ class PlanParser:
             external_dependencies=external_deps,
             enables=data.get("enables", []),
             project=data.get("project"),
+            estimate=estimate,
         )
 
     @staticmethod
