@@ -1,0 +1,27 @@
+---
+id: AXXX
+title: Action Title Here
+status: IDEA
+design: DXXX
+project: PXXX
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## Context
+
+Why does this action exist? What design or project does it implement?
+
+## Tasks
+
+### Category 1
+- [ ] Task 1
+- [ ] Task 2
+
+### Category 2
+- [ ] Task 3
+- [ ] Task 4
+
+## Log
+
+YYYY-MM-DD — Action created.

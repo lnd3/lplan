@@ -1,0 +1,45 @@
+---
+id: PXXX
+title: Project Title Here
+status: IDEA
+priority: MEDIUM
+priority_drivers:
+  - strategic_edge
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+depends: []
+external_dependencies: []
+enables: []
+---
+
+## Goal
+
+1–2 paragraph statement of what this project achieves. What problem does it solve? Why is it important?
+
+## Scope
+
+Bullet-point list of what's included and excluded:
+- Component A
+- Component B
+- Not included: X, Y, Z
+
+## Linked
+
+- **Projects**: (other projects this depends on or relates to)
+- **Designs**: (designs that specify this project)
+- **Actions**: (concrete task lists)
+- **Dependencies**: (upstream repos/features)
+
+## Tasks
+
+### Phase 1
+- [ ] Task A
+- [ ] Task B
+
+### Phase 2
+- [ ] Task C
+- [ ] Task D
+
+## Log
+
+YYYY-MM-DD — Project created.

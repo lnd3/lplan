@@ -1,0 +1,29 @@
+# [Repository Name] Plan Index
+
+*Last updated: YYYY-MM-DD*
+
+Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+
+---
+
+## Projects
+
+| ID | Title | Status | Priority | Key Open Work |
+| --- | --- | --- | --- | --- |
+| [PXXX](projects/PXXX.md) | Project Title | IDEA | LOW | TBD |
+
+---
+
+## Designs
+
+| ID | Title | Status | Project | Doc |
+| --- | --- | --- | --- | --- |
+| [DXXX](designs/DXXX.md) | Design Title | IDEA | PXXX | (link if applicable) |
+
+---
+
+## Actions
+
+| ID | Title | Status | Design | Open Tasks |
+| --- | --- | --- | --- | --- |
+| [AXXX](actions/AXXX.md) | Action Title | IDEA | DXXX | TBD |

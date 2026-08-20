@@ -1,0 +1,41 @@
+---
+id: DXXX
+title: Design Title Here
+status: IDEA
+project: PXXX
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+doc_link: ""
+---
+
+## Summary
+
+One paragraph: What problem does this design solve? What's the approach?
+
+## Architecture
+
+High-level structure and components.
+
+## Implementation Status
+
+- [ ] Phase 1: Description
+- [ ] Phase 2: Description
+
+## Key Decisions
+
+- **Decision 1**: Why we chose X (tradeoff: Y)
+- **Decision 2**: Why we chose A (tradeoff: B)
+
+## Open Questions
+
+What's not yet decided?
+
+## Related
+
+- Project: PXXX
+- Full doc: (link to docs/)
+- Related: (other designs/projects)
+
+## Log
+
+YYYY-MM-DD — Design created.
