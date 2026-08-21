@@ -131,6 +131,20 @@ def _validate(plan_dir: Path) -> tuple[bool, str]:
     return result.returncode == 0, output
 
 
+def _auto_regenerate_index(plan_dir: Path) -> None:
+    """Regenerate INDEX.md from current entities (called on view)."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "planner.cli", "generate-index", str(plan_dir)],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        # Silent success; if it fails, just return stale INDEX.md
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+
+
 _HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -649,6 +663,11 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
     @app.route("/api/file")
     def get_file():
         rel = request.args.get("path", "")
+
+        # Auto-regenerate INDEX.md on view (no manual regeneration needed)
+        if rel == "INDEX.md":
+            _auto_regenerate_index(plan_dir)
+
         try:
             content = _read_file(plan_dir, rel)
             return Response(content, mimetype="text/plain; charset=utf-8")

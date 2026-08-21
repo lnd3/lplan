@@ -52,6 +52,8 @@ Not included:
 
 ## Log
 
+2026-08-22 — Polish cycle: Added FOCUS.md + REFLECTION.md to dogfood lplan's own plan. Auto-regenerate INDEX.md on HTTP access (no manual regen needed). Changelog entries now properly separated by newlines.
+
 2026-08-22 — All Tier 2 Operational/Governance/Visibility features shipped. Web UI (plan serve) and additional scaffolding added beyond scope.
 
 2026-08-22 — Tier 2 implementation complete: 8 modules (writer, index_gen, stats, init, refs, git_ops, report, watch), 13 CLI commands, 42 tests, suggestions in validator

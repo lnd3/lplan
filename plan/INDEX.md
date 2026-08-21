@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-22 00:54:41 UTC*
+*Last updated: 2026-08-22 01:02:18 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -11,7 +11,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | ID | Title | Status | Priority | Key Open Work |
 | --- | --- | --- | --- | --- |
 | [P001](projects/P001-tier1-engine.md) | Tier 1 - Python Execution Engine | DONE | HIGH | TBD |
-| [P002](projects/P002-tier2-analysis.md) | Tier 2 - Analysis & Query Tools | DONE | HIGH | TBD |
+| [P002](projects/P002-tier2-analysis.md) | Tier 2 - Analysis & Query Tools | DONE | MEDIUM | TBD |
 | [P003](projects/P003-tier3-automation.md) | Tier 3 - Automation & Visualization | IDEA | MEDIUM | TBD |
 
 ---
