@@ -527,11 +527,6 @@ async function loadFile(path) {
   document.getElementById('report-btn').style.display = 'none';
   hideBanner();
   showPreview(currentRaw);
-
-  // Auto-validate and run priority check for INDEX.md
-  if (path === 'INDEX.md') {
-    setTimeout(() => autoValidateAndPriority(), 500);
-  }
 }
 
 async function autoValidateAndPriority() {
@@ -916,6 +911,11 @@ async function saveFile() {
   showBanner(true, data.output || '✓ Saved');
   cancelEdit();
   showPreview(currentRaw);
+
+  // Run validation and priority check after any save
+  if (currentPath !== 'README.md' && currentPath !== 'FOCUS.md' && currentPath !== 'REFLECTION.md') {
+    setTimeout(() => autoValidateAndPriority(), 300);
+  }
 }
 
 // ── Banner ────────────────────────────────────────────────────────────────
