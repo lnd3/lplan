@@ -559,8 +559,43 @@ async function loadFile(path) {
   });
 
   document.getElementById('current-path').textContent = path;
+  document.getElementById('report-btn').style.display = 'none';
   hideBanner();
   showPreview(currentRaw);
+
+  // Auto-validate and run priority check for INDEX.md
+  if (path === 'INDEX.md') {
+    setTimeout(() => autoValidateAndPriority(), 500);
+  }
+}
+
+async function autoValidateAndPriority() {
+  try {
+    const validateRes = await fetch('/api/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: 'validate' })
+    });
+    const validateData = await validateRes.json();
+
+    const priorityRes = await fetch('/api/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: 'priority' })
+    });
+    const priorityData = await priorityRes.json();
+
+    // Show banner with results
+    let bannerClass = (validateData.ok && priorityData.ok) ? 'ok' : 'error';
+    let bannerText = validateData.output + '\n\n' + priorityData.output;
+
+    const banner = document.getElementById('validate-banner');
+    banner.textContent = bannerText;
+    banner.className = bannerClass;
+    banner.style.display = '';
+  } catch (e) {
+    console.error('Auto-validation failed:', e);
+  }
 }
 
 function showPreview(markdown) {
@@ -598,6 +633,44 @@ function showBrowser() {
   document.getElementById('analytics-dashboard').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
   document.getElementById('btn-edit').style.display = '';
+  document.getElementById('report-btn').style.display = 'none';
+}
+
+async function generateReport() {
+  const reportBtn = document.getElementById('report-btn');
+  const originalText = reportBtn.textContent;
+  reportBtn.textContent = '⏳ Generating...';
+  reportBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: 'report' })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      reportBtn.textContent = '✓ Report generated';
+      setTimeout(() => {
+        reportBtn.textContent = originalText;
+        reportBtn.disabled = false;
+      }, 2000);
+    } else {
+      reportBtn.textContent = '✗ Error';
+      setTimeout(() => {
+        reportBtn.textContent = originalText;
+        reportBtn.disabled = false;
+      }, 2000);
+    }
+  } catch (e) {
+    console.error('Report generation failed:', e);
+    reportBtn.textContent = '✗ Failed';
+    setTimeout(() => {
+      reportBtn.textContent = originalText;
+      reportBtn.disabled = false;
+    }, 2000);
+  }
 }
 
 async function showAnalytics() {
@@ -652,7 +725,10 @@ function renderAnalyticsDashboard(analytics) {
     console.log('Analytics keys:', Object.keys(analytics));
     if (typeof metrics !== 'object') throw new Error('Metrics is not an object: ' + typeof metrics);
 
-    let html = '<div class="analytics-header">📊 Analytics Dashboard</div>';
+    let html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">';
+  html += '<div class="analytics-header" style="margin: 0;">📊 Analytics Dashboard</div>';
+  html += '<button id="report-btn" onclick="generateReport()" style="padding: 8px 16px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Generate Report</button>';
+  html += '</div>';
 
   // Summary Stats
   html += '<div class="analytics-section">';
