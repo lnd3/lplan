@@ -22,6 +22,10 @@ from .refs import check_references
 from .git_ops import governed_commit
 from .report import write_report
 from .watch import watch_plan
+from .impact import analyze_impact
+from .metrics import compute_all_metrics
+from .bottleneck import detect_bottlenecks
+from .capacity import analyze_capacity
 
 
 @click.group()
@@ -740,6 +744,178 @@ def report(plan_dir: str, output: Optional[str]) -> None:
     except Exception as e:
         click.echo(f"Error generating report: {e}", err=True)
         sys.exit(1)
+
+
+@main.command()
+@click.argument("project_id")
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def impact(project_id: str, plan_dir: str) -> None:
+    """Show impact of completing a project."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if project_id not in projects:
+        click.echo(f"Project {project_id} not found", err=True)
+        sys.exit(1)
+
+    graph = DependencyGraph(projects)
+    impact_data = analyze_impact(project_id, projects, graph)
+
+    click.echo(f"Impact Analysis: {impact_data['project_id']} - {impact_data['title']}")
+    click.echo("=" * 70)
+    click.echo(f"Status: {impact_data['status']}")
+    click.echo(f"\nDirectly unblocks: {impact_data['num_unblocked']} project(s)")
+    if impact_data["unblocks"]:
+        for uid in impact_data["unblocks"]:
+            click.echo(f"  - {uid}: {projects[uid].title if uid in projects else '(external)'}")
+
+    click.echo(f"\nDownstream impact: {impact_data['num_downstream']} project(s)")
+    if impact_data["downstream"]:
+        for did in impact_data["downstream"][:5]:
+            click.echo(f"  - {did}")
+        if len(impact_data["downstream"]) > 5:
+            click.echo(f"  ... and {len(impact_data['downstream']) - 5} more")
+
+    click.echo(f"\nBlocked by: {len(impact_data['blocked_by'])} project(s)")
+    if impact_data["blocked_by"]:
+        for bid in impact_data["blocked_by"]:
+            click.echo(f"  - {bid}")
+
+    click.echo(f"\nOverall impact ratio: {impact_data['impact_ratio']:.0%}")
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def metrics(plan_dir: str) -> None:
+    """Show project metrics (fan-in, depth, criticality)."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if not projects:
+        click.echo("No projects found")
+        sys.exit(0)
+
+    graph = DependencyGraph(projects)
+    metrics_data = compute_all_metrics(projects, graph)
+
+    click.echo("Project Metrics")
+    click.echo("=" * 70)
+    click.echo(f"{'ID':<6} {'Fan-In':<8} {'Fan-Out':<8} {'Depth':<7} {'Criticality':<12}")
+    click.echo("-" * 70)
+
+    for project_id in sorted(metrics_data.keys()):
+        m = metrics_data[project_id]
+        click.echo(
+            f"{m['project_id']:<6} {m['fan_in']:<8} {m['fan_out']:<8} "
+            f"{m['depth']:<7} {m['criticality']:<12.2f}"
+        )
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def bottlenecks(plan_dir: str) -> None:
+    """Detect bottleneck projects."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if not projects:
+        click.echo("No projects found")
+        sys.exit(0)
+
+    graph = DependencyGraph(projects)
+    bottleneck_data = detect_bottlenecks(projects, graph)
+
+    click.echo("Bottleneck Detection")
+    click.echo("=" * 70)
+    click.echo(f"Summary: {bottleneck_data['summary']}")
+
+    if bottleneck_data["blocking_bottlenecks"]:
+        click.echo("\nBlocking Bottlenecks:")
+        for b in bottleneck_data["blocking_bottlenecks"]:
+            click.echo(f"  ⚠ {b['project_id']}: {b['title']} ({b['status']})")
+            click.echo(f"     → {b['reason']}")
+
+    if bottleneck_data["deep_chains"]:
+        click.echo("\nDeep Dependency Chains:")
+        for chain in bottleneck_data["deep_chains"][:3]:
+            click.echo(f"  {chain['length']} projects: {' → '.join(chain['chain'])}")
+            if chain.get("effort_days"):
+                click.echo(f"     (~{chain['effort_days']} days estimated)")
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def capacity(plan_dir: str) -> None:
+    """Analyze capacity and parallelization."""
+    plan_path = Path(plan_dir)
+
+    try:
+        files = PlanParser.parse_directory(plan_path)
+    except Exception as e:
+        click.echo(f"Error parsing files: {e}", err=True)
+        sys.exit(1)
+
+    projects = {}
+    for result in files.values():
+        if not isinstance(result, dict) or "error" not in result:
+            if isinstance(result.entity, Project):
+                projects[result.entity.id] = result.entity
+
+    if not projects:
+        click.echo("No projects found")
+        sys.exit(0)
+
+    graph = DependencyGraph(projects)
+    capacity_data = analyze_capacity(projects, graph)
+
+    click.echo("Capacity Analysis")
+    click.echo("=" * 70)
+    click.echo(f"Total effort: {capacity_data['total_effort_days']} days")
+    click.echo(f"Estimated projects: {capacity_data['estimated_projects']}/{len(projects)}")
+    click.echo(f"Critical path: {capacity_data['critical_path_days']} days")
+    click.echo(f"Parallelizable: {capacity_data['parallelizable_effort']} days")
+    click.echo(f"Compression ratio: {capacity_data['compression_ratio']}x (perfect parallelization)")
+
+    click.echo("\nTimeline Phases:")
+    for phase in capacity_data["timeline_phases"]:
+        click.echo(
+            f"  Phase {phase['phase']}: {phase['project_count']} project(s), "
+            f"{phase['total_effort_days']} days effort, "
+            f"~{phase['ideal_duration_days']} days to complete"
+        )
 
 
 @main.command()
