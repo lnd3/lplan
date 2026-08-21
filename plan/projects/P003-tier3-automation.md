@@ -52,6 +52,8 @@ Not included:
 
 ## Log
 
+2026-08-22 — Starting Tier 3 Phase 3: Building visualizations (Gantt, burndown, capacity charts). SVG-based, no external deps.
+
 2026-08-22 — Tier 3 Phase 2 complete: Analytics dashboard UI built. Web UI now shows analytics tab with metrics, bottlenecks, capacity, and timeline. Full end-to-end analytics working.
 
 2026-08-22 — Tier 3 Phase 1 complete: Advanced analytics modules (impact, metrics, bottleneck, capacity) + CLI commands (impact, metrics, bottlenecks, capacity) + API endpoints for web UI. Ready for dashboard UI integration.

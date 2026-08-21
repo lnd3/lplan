@@ -763,11 +763,55 @@ function renderAnalyticsDashboard(analytics) {
     console.warn('timeline_phases exists but is not an array:', capacity.timeline_phases);
   }
 
-    dashboard.innerHTML = html;
+    // Add charts section
+  html += '<div class="analytics-section">';
+  html += '<div class="section-title">📈 Charts</div>';
+  html += '<div id="charts-container" style="display: grid; grid-template-columns: 1fr; gap: 20px;"></div>';
+  html += '</div>';
+
+  dashboard.innerHTML = html;
+
+  // Load and render charts
+  loadCharts();
   } catch (e) {
     console.error('Error rendering analytics:', e);
     const dashboard = document.getElementById('analytics-dashboard');
     dashboard.innerHTML = `<div class="warning-box">Rendering error: ${e.message}</div><pre style="color: #f38ba8; font-size: 0.8em;">${e.stack}</pre>`;
+  }
+}
+
+async function loadCharts() {
+  try {
+    const container = document.getElementById('charts-container');
+    if (!container) return;
+
+    // Load Gantt chart
+    try {
+      const ganttRes = await fetch('/api/chart/gantt');
+      const ganttData = await ganttRes.json();
+      if (ganttData.ok && ganttData.svg) {
+        const ganttDiv = document.createElement('div');
+        ganttDiv.innerHTML = `<div class="section-title">📅 Gantt Chart</div>${ganttData.svg}`;
+        container.appendChild(ganttDiv);
+      }
+    } catch (e) {
+      console.error('Error loading Gantt:', e);
+    }
+
+    // Load Burndown chart
+    try {
+      const burndownRes = await fetch('/api/chart/burndown');
+      const burndownData = await burndownRes.json();
+      if (burndownData.ok && burndownData.svg) {
+        const burndownDiv = document.createElement('div');
+        burndownDiv.innerHTML = `<div class="section-title">🔥 Burndown Chart</div>${burndownData.svg}`;
+        container.appendChild(burndownDiv);
+      }
+    } catch (e) {
+      console.error('Error loading Burndown:', e);
+    }
+  } catch (e) {
+    console.error('Error loading charts:', e);
   }
 }
 
@@ -1055,6 +1099,51 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
             impact = analyze_impact(project_id, projects, graph)
 
             return jsonify({"ok": True, "data": impact})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    @app.route("/api/chart/gantt")
+    def get_gantt_chart():
+        """Get Gantt chart SVG."""
+        try:
+            from planner.gantt import generate_gantt_svg
+
+            parsed = PlanParser.parse_directory(plan_dir)
+            projects = {}
+            for result in parsed.values():
+                if not isinstance(result, dict) or "error" not in result:
+                    if isinstance(result.entity, Project):
+                        projects[result.entity.id] = result.entity
+
+            if not projects:
+                return jsonify({"ok": True, "svg": "<svg></svg>"})
+
+            graph = DependencyGraph(projects)
+            svg = generate_gantt_svg(projects, graph)
+
+            return jsonify({"ok": True, "svg": svg})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    @app.route("/api/chart/burndown")
+    def get_burndown_chart():
+        """Get burndown chart SVG."""
+        try:
+            from planner.burndown import generate_burndown_svg
+
+            parsed = PlanParser.parse_directory(plan_dir)
+            projects = {}
+            for result in parsed.values():
+                if not isinstance(result, dict) or "error" not in result:
+                    if isinstance(result.entity, Project):
+                        projects[result.entity.id] = result.entity
+
+            if not projects:
+                return jsonify({"ok": True, "svg": "<svg></svg>"})
+
+            svg = generate_burndown_svg(projects)
+
+            return jsonify({"ok": True, "svg": svg})
         except Exception as e:
             return jsonify({"ok": False, "error": str(e)}), 500
 
