@@ -645,6 +645,9 @@ window.onload = async () => {
 def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True):
     """Create and return the Flask app."""
     from flask import Flask, jsonify, request, Response
+    from planner.parser import PlanParser
+    from planner.models import Project
+    from planner.graph import DependencyGraph
 
     app = Flask(__name__)
     app.config["plan_dir"] = plan_dir
@@ -722,6 +725,77 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         result = subprocess.run(args, capture_output=True, text=True)
         output = (result.stdout + result.stderr).strip()
         return jsonify({"ok": result.returncode == 0, "output": output or "✓ Done"})
+
+    @app.route("/api/analytics")
+    def get_analytics():
+        """Get analytics data (metrics, impact, bottlenecks, capacity)."""
+        try:
+            from planner.metrics import compute_all_metrics
+            from planner.impact import get_most_impactful_projects
+            from planner.bottleneck import detect_bottlenecks
+            from planner.capacity import analyze_capacity
+
+            parsed = PlanParser.parse_directory(plan_dir)
+            projects = {}
+            for result in parsed.values():
+                if not isinstance(result, dict) or "error" not in result:
+                    if isinstance(result.entity, Project):
+                        projects[result.entity.id] = result.entity
+
+            if not projects:
+                return jsonify({"ok": True, "data": {}})
+
+            graph = DependencyGraph(projects)
+
+            # Compute all analytics
+            metrics = compute_all_metrics(projects, graph)
+            impactful = get_most_impactful_projects(projects, graph, limit=5)
+            bottlenecks = detect_bottlenecks(projects, graph)
+            capacity = analyze_capacity(projects, graph)
+
+            return jsonify({
+                "ok": True,
+                "data": {
+                    "metrics": metrics,
+                    "impactful_projects": impactful,
+                    "bottlenecks": {
+                        "summary": bottlenecks["summary"],
+                        "blocking_count": len(bottlenecks["blocking_bottlenecks"]),
+                        "chain_count": len(bottlenecks["deep_chains"]),
+                    },
+                    "capacity": {
+                        "total_effort_days": capacity["total_effort_days"],
+                        "critical_path_days": capacity["critical_path_days"],
+                        "compression_ratio": capacity["compression_ratio"],
+                        "timeline_phases": len(capacity["timeline_phases"]),
+                    },
+                },
+            })
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    @app.route("/api/analytics/<project_id>")
+    def get_project_analytics(project_id: str):
+        """Get analytics for a specific project."""
+        try:
+            from planner.impact import analyze_impact
+
+            parsed = PlanParser.parse_directory(plan_dir)
+            projects = {}
+            for result in parsed.values():
+                if not isinstance(result, dict) or "error" not in result:
+                    if isinstance(result.entity, Project):
+                        projects[result.entity.id] = result.entity
+
+            if project_id not in projects:
+                return jsonify({"ok": False, "error": "Project not found"}), 404
+
+            graph = DependencyGraph(projects)
+            impact = analyze_impact(project_id, projects, graph)
+
+            return jsonify({"ok": True, "data": impact})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
 
     @app.route("/report")
     def serve_report():
