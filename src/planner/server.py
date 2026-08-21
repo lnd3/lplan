@@ -613,28 +613,42 @@ async function showAnalytics() {
 
   try {
     const res = await fetch('/api/analytics');
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('Analytics API error:', res.status, text);
+      dashboard.innerHTML = `<div class="warning-box">API Error: ${res.status}</div><pre style="color: #f38ba8; font-size: 0.8em;">${text}</pre>`;
+      return;
+    }
+
     const data = await res.json();
+    console.log('Analytics data:', data);
 
     if (!data.ok) {
-      dashboard.innerHTML = '<div class="warning-box">Error loading analytics</div>';
+      const errMsg = data.error || 'Unknown error';
+      console.error('Analytics error:', errMsg);
+      dashboard.innerHTML = `<div class="warning-box">Error: ${errMsg}</div>`;
       return;
     }
 
     renderAnalyticsDashboard(data.data);
   } catch (e) {
-    dashboard.innerHTML = '<div class="warning-box">Failed to fetch analytics</div>';
+    console.error('Analytics fetch failed:', e);
+    dashboard.innerHTML = `<div class="warning-box">Failed to load analytics: ${e.message}</div><pre style="color: #f38ba8; font-size: 0.8em;">${e.stack}</pre>`;
   }
 }
 
 function renderAnalyticsDashboard(analytics) {
-  const dashboard = document.getElementById('analytics-dashboard');
+  try {
+    const dashboard = document.getElementById('analytics-dashboard');
 
-  const metrics = analytics.metrics || {};
-  const bottlenecks = analytics.bottlenecks || {};
-  const capacity = analytics.capacity || {};
-  const impactful = analytics.impactful_projects || [];
+    const metrics = analytics.metrics || {};
+    const bottlenecks = analytics.bottlenecks || {};
+    const capacity = analytics.capacity || {};
+    const impactful = analytics.impactful_projects || [];
 
-  let html = '<div class="analytics-header">📊 Analytics Dashboard</div>';
+    console.log('Rendering with:', { metrics, bottlenecks, capacity, impactful });
+
+    let html = '<div class="analytics-header">📊 Analytics Dashboard</div>';
 
   // Summary Stats
   html += '<div class="analytics-section">';
@@ -737,7 +751,12 @@ function renderAnalyticsDashboard(analytics) {
     html += '</table></div>';
   }
 
-  dashboard.innerHTML = html;
+    dashboard.innerHTML = html;
+  } catch (e) {
+    console.error('Error rendering analytics:', e);
+    const dashboard = document.getElementById('analytics-dashboard');
+    dashboard.innerHTML = `<div class="warning-box">Rendering error: ${e.message}</div><pre style="color: #f38ba8; font-size: 0.8em;">${e.stack}</pre>`;
+  }
 }
 
 // ── Edit / Save ───────────────────────────────────────────────────────────
