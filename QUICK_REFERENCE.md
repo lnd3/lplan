@@ -3,8 +3,12 @@
 ## Installation
 
 ```bash
+# Core
 pip install pyyaml click networkx pydantic python-dateutil
-export PYTHONPATH="${PWD}/src"
+
+# Web UI (optional)
+pip install flask
+# or: pip install lplan[web]
 ```
 
 ## CLI Commands
@@ -82,14 +86,31 @@ plan update P001 ./plan --priority HIGH
 ### Generate Index
 ```bash
 plan generate-index ./plan
-# Creates or updates INDEX.md with entity tables
+# Regenerates INDEX.md from filesystem (repo name auto-detected from parent dir)
+# Timestamp: "Last updated: YYYY-MM-DD HH:MM:SS UTC"
+# Links use actual filenames, not title slugs — immune to title changes
+
+plan generate-index ./plan --repo-name "MyProject"
+# Override auto-detected repo name
+```
+
+### Web UI
+```bash
+plan serve ./plan                        # Read-only browser UI (port 8000)
+plan serve ./plan --edit                 # Enable raw file editing
+plan serve ./plan --port 9000            # Custom port
+plan serve ./plan --edit --no-validate   # Skip validation on save
+plan stop ./plan                         # Stop running server
+plan restart ./plan                      # Restart with same options
+# Server writes .plan-server.pid; stop/restart read it
 ```
 
 ### Initialize Plan
 ```bash
 plan init ./new-plan --name "Project Name"
 plan init ./new-plan --name "Project Name" --first-project "Initial Project"
-# Creates plan structure: projects/, designs/, actions/, INDEX.md, CHANGELOG.md
+# Creates: INDEX.md, FOCUS.md, CHANGELOG.md, REFLECTION.md, VALIDATION.md,
+#          README.md, projects/, designs/, actions/
 ```
 
 ### Check References
@@ -269,8 +290,12 @@ updated: 2026-08-20
 ## File Structure
 ```
 plan/
-  INDEX.md
-  CHANGELOG.md
+  INDEX.md          ← dashboard (auto-generated or hand-maintained)
+  FOCUS.md          ← current active/blocked/next (rewritten each session)
+  CHANGELOG.md      ← append-only status change log
+  REFLECTION.md     ← append-only learnings, gotchas, patterns
+  VALIDATION.md     ← validation workflow reference
+  README.md         ← framework overview
   projects/
     P001-name.md
     P002-name.md
@@ -279,6 +304,24 @@ plan/
   actions/
     A001-name.md
 ```
+
+### FOCUS.md format (rewritten, not appended)
+```markdown
+## Active
+What is being worked on right now.
+
+## Blocked
+What cannot proceed and why.
+
+## Next
+Ordered list of next 2–4 concrete steps.
+```
+
+### REFLECTION.md format (append-only)
+```
+YYYY-MM-DD | CATEGORY | insight text
+```
+Categories: `GOTCHA` · `PATTERN` · `LEARNING` · `WARNING` · `DECISION`
 
 ## Common Patterns
 

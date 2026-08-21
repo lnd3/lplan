@@ -1,204 +1,253 @@
-# Planner Framework
+# lplan — Structured Planning Framework
 
-A generic, reusable planning system for organizing projects, designs, and actions across software repositories. Supports hierarchical linking to submodules and cross-repo dependencies.
+A generic, reusable planning system for organising projects, designs, and actions across software repositories. Designed to work as a git submodule.
 
-## Overview
+## Core Idea
 
-This framework defines:
-- **Schema**: Valid structure for projects, designs, actions, and indices
-- **Templates**: Boilerplate files for instantiating in any repository
-- **Tools**: Scripts to validate, aggregate, and link hierarchically
-- **Examples**: Reference implementations
+Plans scale by adding files, not by adding fields. Each concern gets its own flat, readable document:
+
+| File | Purpose | Updated |
+|------|---------|---------|
+| `INDEX.md` | Dashboard — all projects, designs, actions at a glance | Auto-generated or manually maintained |
+| `FOCUS.md` | Current active work, what's blocked, what's next | Rewritten each session |
+| `CHANGELOG.md` | Append-only status change log | Appended on every status change |
+| `REFLECTION.md` | Learnings, gotchas, patterns — accumulated project intuition | Appended as insights are discovered |
+| `VALIDATION.md` | Validation workflow and common errors | Reference |
+| `README.md` | This file — framework overview | Reference |
+| `projects/` | High-level goals (P001, P002, …) | Edited directly |
+| `designs/` | Architectural decisions (D001, D002, …) | Edited directly |
+| `actions/` | Concrete task lists (A001, A002, …) | Edited directly |
+
+---
 
 ## Quick Start
 
-### Using the Python Engine (Recommended)
+### 1. Install
 
 ```bash
-# 1. Install dependencies
+# Core (required)
 pip install pyyaml click networkx pydantic python-dateutil
 
-# 2. Use the wrapper script (no PYTHONPATH setup needed)
-./bin/plan validate ./plan
-./bin/plan priority ./plan
-
-# 3. Or set up an alias for convenience
-alias plan="./bin/plan"
-plan deps P001 ./plan
-plan graph-report ./plan
-
-# 4. Or export PYTHONPATH
-export PYTHONPATH="${PWD}/src"
-python3 -m planner.cli validate ./plan
+# Web UI (optional)
+pip install flask
 ```
 
-See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more commands.
-
-### Initialize a New Plan
+### 2. Initialise a plan
 
 ```bash
-# In your repo root:
-./bin/plan init ./plan --name "MyProject"
-
-# This creates:
-# plan/
-#   INDEX.md
-#   CHANGELOG.md
-#   projects/P001-*.md (template)
-#   designs/
-#   actions/
+# In your repo root (lplan as submodule at deps/lplan):
+./deps/lplan/bin/plan init ./plan --name "MyProject"
 ```
 
-### Define a Project
+Creates: `INDEX.md`, `FOCUS.md`, `CHANGELOG.md`, `REFLECTION.md`, `VALIDATION.md`, `README.md`, `projects/`, `designs/`, `actions/`
 
-1. Edit `plan/projects/P001-*.md` with your project details
-2. Fill in frontmatter according to `schema/project.schema.md`
-3. Run validation: `./bin/plan validate ./plan`
-
-### Link Submodules
-
-If your repo has git submodules with their own `plan/` directories:
+### 3. Validate before committing
 
 ```bash
-# Submodules auto-discovered
-./tools/aggregate-local.sh
-
-# Generates hierarchical view:
-# - Local projects (P001–P007)
-# - Linked submodules (deps/ltools/plan/, deps/ldeps/plan/)
-# - Cross-repo dependencies
+./deps/lplan/bin/plan validate ./plan
 ```
 
-### Migrating from Shell Scripts?
+### 4. Browse in the browser
 
-If you're currently using the shell-based `validate.sh`, see [MIGRATION.md](MIGRATION.md) for a step-by-step guide.
+```bash
+./deps/lplan/bin/plan serve ./plan          # read-only
+./deps/lplan/bin/plan serve ./plan --edit   # with editing
+# Then open http://127.0.0.1:8000
+```
 
-## Structure
+---
 
-- **schema/** — Formal definitions and specs
-- **templates/** — Boilerplate files
-- **tools/** — Validation, aggregation, initialization scripts
-- **examples/** — Reference implementations
+## CLI Commands
+
+### Daily workflow
+
+```bash
+plan validate ./plan                    # Validate before committing
+plan generate-index ./plan              # Regenerate INDEX.md (auto-detects repo name)
+plan priority ./plan                    # Check priority scores vs declared priority
+plan blocked ./plan                     # List blocked projects and their blockers
+```
+
+### Analysis
+
+```bash
+plan deps P001 ./plan                   # Show what blocks P001 and what P001 blocks
+plan graph-report ./plan                # Full dependency graph (cycles, roots, leaves)
+plan stats ./plan                       # Aggregate counts and % done
+plan timeline ./plan                    # Execution phases (what can run in parallel)
+plan check-refs ./plan                  # Find broken links and orphaned entities
+```
+
+### Editing
+
+```bash
+plan log P001 "Started work" ./plan                  # Append to entity log
+plan log P001 "Done" ./plan --status DONE            # Append + update status
+plan update P001 ./plan --status IN_PROGRESS         # Update frontmatter field
+plan update P001 ./plan --priority HIGH
+```
+
+### Web UI
+
+```bash
+plan serve ./plan                       # Start browser UI (read-only, port 8000)
+plan serve ./plan --edit                # Enable file editing
+plan serve ./plan --port 9000           # Custom port
+plan stop ./plan                        # Stop running server (reads .plan-server.pid)
+plan restart ./plan                     # Restart with same options
+```
+
+### Other
+
+```bash
+plan report ./plan -o report.html       # Generate HTML report (also available in web UI)
+plan commit ./plan -m "Update P001"     # Validate + git commit in one step
+plan watch ./plan                       # Watch for changes (Ctrl-C to stop)
+plan init ./plan --name "Name"          # Initialise new plan directory
+```
+
+---
+
+## Plan File Formats
+
+### Project (`projects/P001-name.md`)
+
+```yaml
+---
+id: P001
+title: My Project
+status: IN_PROGRESS
+priority: HIGH
+priority_drivers:
+  - strategic_edge
+created: 2026-08-20
+updated: 2026-08-20
+depends: [P002]
+external_dependencies: []
+enables: [P003]
+---
+
+## Goal
+What this project achieves and why.
+
+## Scope
+- Included: A, B, C
+- Not included: X, Y
+
+## Tasks
+### Phase 1
+- [x] Done item
+- [ ] Pending item
+
+## Log
+2026-08-20 — Project created.
+```
+
+### Design (`designs/D001-name.md`)
+
+```yaml
+---
+id: D001
+title: My Design
+status: PLANNING
+project: P001
+created: 2026-08-20
+updated: 2026-08-20
+---
+```
+
+### Action (`actions/A001-name.md`)
+
+```yaml
+---
+id: A001
+title: My Action
+status: IN_PROGRESS
+priority: HIGH
+priority_drivers:
+  - enables_multiple
+design: D001
+project: P001
+created: 2026-08-20
+updated: 2026-08-20
+depends: []
+external_dependencies: []
+---
+```
+
+---
+
+## Status Values
+
+`IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+
+## Priority Values
+
+`HIGH` · `MEDIUM` · `LOW`
+
+Priority is computed from `priority_drivers`. See `schema/priority-framework.md` for driver weights.
+
+---
+
+## FOCUS.md Workflow
+
+`FOCUS.md` is rewritten (not appended) each session. It answers: *what is being worked on right now, what is blocked, and what comes next.* Keeping it current costs one minute per session and eliminates the "where were we?" reconstruction cost at session start.
+
+## REFLECTION.md Workflow
+
+`REFLECTION.md` is append-only, one entry per insight:
+
+```
+YYYY-MM-DD | CATEGORY | insight text
+```
+
+Categories: `GOTCHA` · `PATTERN` · `LEARNING` · `WARNING` · `DECISION`
+
+Write an entry when something surprises you, when an assumption turns out to be wrong, or when a pattern generalises across multiple situations. This builds up project intuition that persists across context resets.
+
+---
+
+## Validation Requirement
+
+Always validate before committing changes to `plan/`:
+
+```bash
+./deps/lplan/bin/plan validate ./plan
+```
+
+See `plan/VALIDATION.md` for common errors and fixes.
+
+Optional pre-commit hook (`.git/hooks/pre-commit`):
+
+```bash
+#!/bin/bash
+if git diff --cached --name-only | grep -q '^plan/'; then
+    ./deps/lplan/bin/plan validate ./plan || exit 1
+fi
+```
+
+---
+
+## Adding as a Submodule
+
+```bash
+git submodule add https://github.com/lnd3/lplan deps/lplan
+./deps/lplan/bin/plan init ./plan --name "MyProject"
+```
+
+Update lplan:
+
+```bash
+cd deps/lplan && git pull origin main && cd ..
+git add deps/lplan && git commit -m "Update lplan"
+```
+
+---
 
 ## Documentation
 
-### For Users
-
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** — Cheat sheet for CLI commands and Python API
-- **[MIGRATION.md](MIGRATION.md)** — Step-by-step guide from shell scripts to Python engine
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — Detailed issue resolution and debugging
-
-### For Developers
-
-- **[IMPLEMENTATION.md](IMPLEMENTATION.md)** — Architecture, data models, and extension points
-- **[pyproject.toml](pyproject.toml)** — Python dependencies and build configuration
-- **[tests/](tests/)** — 58 comprehensive test cases covering all components
-
-### Schema Reference
-
-See `schema/` for formal specifications:
-- `frontmatter.md` — YAML frontmatter format and fields
-- `project.schema.md` — Project file structure
-- `design.schema.md` — Design file structure
-- `action.schema.md` — Action file structure
-- `index.schema.md` — INDEX.md structure and generation rules
-- `priority-framework.md` — Driver definitions and scoring
-- `aggregation-rules.md` — How hierarchical linking works
-
-## Tools
-
-### Python Engine (New — Recommended)
-Modern programmatic approach with full dependency analysis and priority scoring:
-
-```bash
-# Install
-pip install pyyaml click networkx pydantic python-dateutil
-
-# Validate plan
-plan validate ./plan
-
-# Analyze priorities
-plan priority ./plan
-
-# Show dependencies
-plan deps P001 ./plan
-
-# Full dependency graph analysis
-plan graph-report ./plan
-```
-
-**Why the Python engine?**
-- ✅ Programmatic priority computation (no manual scoring)
-- ✅ Full dependency graph analysis (cycle detection, critical path)
-- ✅ Type-safe validation with Pydantic
-- ✅ Structured queries and impact analysis
-- ✅ 58 comprehensive test suite
-
-### Shell Scripts (Deprecated)
-Original bash-based tools (no longer developed, replaced by Python engine):
-
-- `tools/validate.sh` — ⚠️ Use `./bin/plan validate` instead
-- `tools/aggregate-local.sh` — ⚠️ Use `./bin/plan graph-report` or `./bin/plan check-refs` instead
-- `tools/init-repo.sh` — ⚠️ Use `./bin/plan init` instead
-
-The Python engine provides superior functionality: full dependency analysis, cycle detection, impact analysis, and structured queries.
-
-## Installation & Updates
-
-Install lplan in your project:
-
-```bash
-# Clone or add as a dependency
-git clone https://github.com/lnd3/lplan /path/to/lplan
-
-# Install dependencies
-pip install -r /path/to/lplan/requirements.txt
-
-# Create alias for convenience
-alias plan="/path/to/lplan/bin/plan"
-```
-
-## Core Concepts
-
-### Project Planning
-Organize work into hierarchical projects (goals), designs (specs), and actions (tasks). Use structured YAML + markdown for both machine readability and human editing.
-
-### Dependency Tracking
-Declare explicit dependencies between projects. lplan analyzes them to find cycles, compute critical paths, and show execution order.
-
-### Priority Scoring
-Automatically compute project priority from weighted drivers. Detect mismatches between driver score and declared priority.
-
-### Multi-Repo Support
-Use cross-repo references to link plans across dependencies. Example: `depends: ["upstream-lib:UP001"]`
-
-## Multi-Repo Planning
-
-```
-my-app/
-  plan/                       ← Local projects for my-app
-    projects/P001-*.md
-    designs/D001-*.md
-    actions/A001-*.md
-
-deps/upstream-lib/plan/       ← Linked submodule (upstream-lib)
-  projects/UP001-*.md
-
-deps/shared-tools/plan/       ← Linked submodule (shared-tools)
-  projects/ST001-*.md
-```
-
-Use cross-repo references in dependencies: `depends: ["upstream-lib:UP001"]`
-
-## Development
-
-To contribute to lplan:
-
-1. Clone the repository
-2. Make changes to `src/planner/` modules
-3. Run tests: `PYTHONPATH=src pytest tests/ -v`
-4. Test manually: `./bin/plan <command> plan/`
-5. Update docs if needed
-6. Commit and create a pull request
-
-See [IMPLEMENTATION.md](IMPLEMENTATION.md) for architecture details.
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** — Command cheat sheet
+- **[VALIDATION.md](VALIDATION.md)** — Validation workflow and common errors
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — Issue resolution
+- **[IMPLEMENTATION.md](IMPLEMENTATION.md)** — Architecture and extension points
+- **[schema/](schema/)** — Formal specifications
