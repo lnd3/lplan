@@ -2,7 +2,7 @@
 id: P002
 title: Tier 2 - Analysis & Query Tools
 status: DONE
-priority: HIGH
+priority: MEDIUM
 priority_drivers:
 - enables_multiple
 created: 2026-08-20
