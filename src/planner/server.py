@@ -293,7 +293,36 @@ _HTML = r"""<!DOCTYPE html>
   #preview tr:hover td { background: #1e1e2e; }
   #preview ul, #preview ol { padding-left: 22px; margin: 6px 0; }
   #preview li { margin: 3px 0; }
-  #preview li input[type=checkbox] { margin-right: 6px; }
+  #preview li input[type=checkbox] {
+    margin-right: 6px;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #6c7086;
+    border-radius: 3px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    cursor: default;
+    background: transparent;
+  }
+  #preview li input[type=checkbox]:checked {
+    background: #89b4fa;
+    border-color: #89b4fa;
+  }
+  #preview li input[type=checkbox]:checked::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: -1px;
+    width: 4px;
+    height: 8px;
+    border: 2px solid #1e1e2e;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
   #preview blockquote {
     border-left: 3px solid #89b4fa;
     padding-left: 14px;
@@ -405,10 +434,31 @@ async function loadFile(path) {
 
 function showPreview(markdown) {
   cancelEdit();
-  // Configure marked for GFM checkboxes
   marked.setOptions({ gfm: true, breaks: false });
-  document.getElementById('preview').innerHTML = marked.parse(markdown);
-  document.getElementById('preview').style.display = '';
+  const preview = document.getElementById('preview');
+  preview.innerHTML = marked.parse(markdown);
+  preview.style.display = '';
+  interceptLinks(preview);
+}
+
+function interceptLinks(container) {
+  container.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href');
+    // Intercept relative links that look like plan files (.md, or path within plan dirs)
+    if (!href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('#')) {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        // Normalize: strip leading ./ and anchors
+        let path = href.replace(/^\.\//, '').split('#')[0];
+        loadFile(path);
+      });
+      a.style.cursor = 'pointer';
+    } else if (href.startsWith('http://') || href.startsWith('https://')) {
+      // External links open in new tab
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+    }
+  });
 }
 
 // ── Edit / Save ───────────────────────────────────────────────────────────
