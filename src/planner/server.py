@@ -524,7 +524,6 @@ async function loadFile(path) {
   });
 
   document.getElementById('current-path').textContent = path;
-  document.getElementById('report-btn').style.display = 'none';
   hideBanner();
   showPreview(currentRaw);
 }
@@ -593,7 +592,6 @@ function showBrowser() {
   document.getElementById('analytics-dashboard').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
   document.getElementById('btn-edit').style.display = '';
-  document.getElementById('report-btn').style.display = 'none';
 }
 
 async function generateReport() {
