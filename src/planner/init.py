@@ -173,3 +173,27 @@ Bullet-point list of what's included and excluded:
 {today} — Project created.
 """
             project_file.write_text(project_content, encoding="utf-8")
+
+    # Create README.md if not present
+    readme_path = plan_dir / "README.md"
+    if not readme_path.exists():
+        # Read template
+        template_path = Path(__file__).parent.parent.parent / "templates" / "README.md.template"
+        if template_path.exists():
+            readme_content = template_path.read_text(encoding="utf-8")
+        else:
+            # Fallback if template not found
+            readme_content = f"""# {repo_name} Planning System
+
+This directory contains the planning structure for {repo_name}, following the lplan generic planning framework.
+
+## Quick Start
+
+```bash
+./deps/lplan/bin/plan validate ./plan    # Validate plan before commit
+cat plan/INDEX.md                          # View current status
+```
+
+See `deps/lplan/README.md` for full documentation.
+"""
+        readme_path.write_text(readme_content, encoding="utf-8")
