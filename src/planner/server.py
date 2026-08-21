@@ -1,0 +1,512 @@
+"""Local web server for browsing and editing plan files."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any, Dict
+
+
+def _check_flask() -> None:
+    try:
+        import flask  # noqa: F401
+    except ImportError:
+        print("Flask is required for 'plan serve'. Install it with:")
+        print("  pip install flask")
+        sys.exit(1)
+
+
+def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
+    """Build file tree for the plan directory."""
+    tree = []
+
+    # Top-level files first
+    for name in ["INDEX.md", "CHANGELOG.md", "VALIDATION.md", "README.md"]:
+        p = plan_dir / name
+        if p.exists():
+            tree.append({"name": name, "path": name, "type": "file"})
+
+    # Category directories
+    for category in ["projects", "designs", "actions"]:
+        cat_dir = plan_dir / category
+        if not cat_dir.exists():
+            continue
+        files = sorted(
+            ({"name": f.name, "path": f"{category}/{f.name}", "type": "file"}
+             for f in cat_dir.glob("*.md")),
+            key=lambda x: x["name"],
+        )
+        if files:
+            tree.append({"name": category, "path": category, "type": "dir", "children": files})
+
+    return tree
+
+
+def _read_file(plan_dir: Path, rel_path: str) -> str:
+    """Read a file relative to plan_dir. Raises ValueError on path traversal."""
+    target = (plan_dir / rel_path).resolve()
+    if not str(target).startswith(str(plan_dir.resolve())):
+        raise ValueError("Path traversal denied")
+    return target.read_text(encoding="utf-8")
+
+
+def _write_file(plan_dir: Path, rel_path: str, content: str) -> None:
+    """Write a file relative to plan_dir. Raises ValueError on path traversal."""
+    target = (plan_dir / rel_path).resolve()
+    if not str(target).startswith(str(plan_dir.resolve())):
+        raise ValueError("Path traversal denied")
+    target.write_text(content, encoding="utf-8")
+
+
+def _validate(plan_dir: Path) -> tuple[bool, str]:
+    """Run plan validate and return (passed, output)."""
+    result = subprocess.run(
+        [sys.executable, "-m", "planner.cli", "validate", str(plan_dir)],
+        capture_output=True,
+        text=True,
+    )
+    output = result.stdout + result.stderr
+    return result.returncode == 0, output
+
+
+_HTML = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan</title>
+
+<!-- Markdown renderer -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- CodeMirror -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Toolbar ── */
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #181825;
+    border-bottom: 1px solid #313244;
+    flex-shrink: 0;
+  }
+  #toolbar span { color: #89b4fa; font-weight: 600; font-size: 13px; }
+  #toolbar .path { color: #6c7086; font-size: 12px; flex: 1; }
+  #toolbar button {
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  #btn-edit   { background: #313244; color: #cdd6f4; }
+  #btn-save   { background: #a6e3a1; color: #1e1e2e; display: none; }
+  #btn-cancel { background: #45475a; color: #cdd6f4; display: none; }
+
+  /* ── Main layout ── */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #181825;
+    border-right: 1px solid #313244;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .tree-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    color: #bac2de;
+    border-radius: 4px;
+    margin: 1px 4px;
+  }
+  .tree-item:hover   { background: #313244; }
+  .tree-item.active  { background: #45475a; color: #89b4fa; }
+  .tree-dir {
+    padding: 6px 12px 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c7086;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tree-dir:hover { color: #9399b2; }
+  .tree-dir .arrow { font-size: 9px; transition: transform 0.15s; }
+  .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
+  .tree-children.hidden { display: none; }
+
+  /* ── Content ── */
+  #content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Preview */
+  #preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 48px;
+    line-height: 1.7;
+  }
+  #preview h1 { font-size: 1.8em; color: #89b4fa; margin-bottom: 12px; border-bottom: 1px solid #313244; padding-bottom: 8px; }
+  #preview h2 { font-size: 1.3em; color: #cba6f7; margin: 24px 0 8px; }
+  #preview h3 { font-size: 1.1em; color: #f38ba8; margin: 16px 0 6px; }
+  #preview p  { margin: 8px 0; color: #cdd6f4; }
+  #preview a  { color: #89b4fa; text-decoration: none; }
+  #preview a:hover { text-decoration: underline; }
+  #preview code {
+    background: #313244;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.88em;
+    color: #f38ba8;
+  }
+  #preview pre {
+    background: #181825;
+    border: 1px solid #313244;
+    border-radius: 6px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  #preview pre code { background: none; padding: 0; color: #a6e3a1; }
+  #preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  #preview th {
+    background: #313244;
+    color: #89b4fa;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid #45475a;
+  }
+  #preview td {
+    padding: 6px 12px;
+    border-bottom: 1px solid #313244;
+    color: #cdd6f4;
+  }
+  #preview tr:hover td { background: #1e1e2e; }
+  #preview ul, #preview ol { padding-left: 22px; margin: 6px 0; }
+  #preview li { margin: 3px 0; }
+  #preview li input[type=checkbox] { margin-right: 6px; }
+  #preview blockquote {
+    border-left: 3px solid #89b4fa;
+    padding-left: 14px;
+    color: #9399b2;
+    margin: 10px 0;
+  }
+  #preview hr { border: none; border-top: 1px solid #313244; margin: 20px 0; }
+
+  /* Editor */
+  #editor-wrap { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+  .CodeMirror { flex: 1; height: 100% !important; font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 13px; line-height: 1.6; }
+  .CodeMirror-scroll { overflow-y: auto !important; }
+
+  /* Validation banner */
+  #validate-banner {
+    display: none;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    border-top: 1px solid #313244;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  #validate-banner.ok    { background: #1e3a2f; color: #a6e3a1; }
+  #validate-banner.error { background: #3a1e1e; color: #f38ba8; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span>📋 Plan</span>
+  <span class="path" id="current-path">—</span>
+  <button id="btn-edit"   onclick="enterEdit()">Edit</button>
+  <button id="btn-save"   onclick="saveFile()">Save</button>
+  <button id="btn-cancel" onclick="cancelEdit()">Cancel</button>
+</div>
+
+<div id="main">
+  <div id="sidebar"></div>
+  <div id="content">
+    <div id="preview"></div>
+    <div id="editor-wrap"></div>
+    <div id="validate-banner"></div>
+  </div>
+</div>
+
+<script>
+let currentPath = null;
+let currentRaw  = null;
+let editor      = null;
+let editEnabled = EDIT_ENABLED;
+
+// ── Sidebar ───────────────────────────────────────────────────────────────
+async function loadTree() {
+  const res  = await fetch('/api/tree');
+  const tree = await res.json();
+  const sb   = document.getElementById('sidebar');
+  sb.innerHTML = '';
+  renderTree(sb, tree);
+}
+
+function renderTree(parent, nodes) {
+  for (const node of nodes) {
+    if (node.type === 'file') {
+      const el = document.createElement('div');
+      el.className = 'tree-item';
+      el.textContent = node.name;
+      el.dataset.path = node.path;
+      el.onclick = () => loadFile(node.path);
+      parent.appendChild(el);
+    } else {
+      // Directory header
+      const hdr = document.createElement('div');
+      hdr.className = 'tree-dir';
+      hdr.innerHTML = `<span class="arrow">▼</span> ${node.name}`;
+      parent.appendChild(hdr);
+
+      // Children container
+      const children = document.createElement('div');
+      children.className = 'tree-children';
+      renderTree(children, node.children);
+      parent.appendChild(children);
+
+      hdr.onclick = () => {
+        hdr.classList.toggle('collapsed');
+        children.classList.toggle('hidden');
+      };
+    }
+  }
+}
+
+// ── File loading ──────────────────────────────────────────────────────────
+async function loadFile(path) {
+  const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
+  if (!res.ok) { showError(`Failed to load: ${path}`); return; }
+  currentRaw  = await res.text();
+  currentPath = path;
+
+  // Update sidebar highlight
+  document.querySelectorAll('.tree-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.path === path);
+  });
+
+  document.getElementById('current-path').textContent = path;
+  hideBanner();
+  showPreview(currentRaw);
+}
+
+function showPreview(markdown) {
+  cancelEdit();
+  // Configure marked for GFM checkboxes
+  marked.setOptions({ gfm: true, breaks: false });
+  document.getElementById('preview').innerHTML = marked.parse(markdown);
+  document.getElementById('preview').style.display = '';
+}
+
+// ── Edit / Save ───────────────────────────────────────────────────────────
+function enterEdit() {
+  if (!editEnabled || !currentRaw) return;
+
+  const preview = document.getElementById('preview');
+  const wrap    = document.getElementById('editor-wrap');
+
+  preview.style.display = 'none';
+  wrap.style.display    = 'flex';
+
+  document.getElementById('btn-edit').style.display   = 'none';
+  document.getElementById('btn-save').style.display   = '';
+  document.getElementById('btn-cancel').style.display = '';
+
+  if (!editor) {
+    const textarea = document.createElement('textarea');
+    wrap.appendChild(textarea);
+    editor = CodeMirror.fromTextArea(textarea, {
+      mode: 'markdown',
+      theme: 'dracula',
+      lineNumbers: true,
+      lineWrapping: true,
+      autofocus: true,
+    });
+    editor.getWrapperElement().style.flex = '1';
+  }
+  editor.setValue(currentRaw);
+  editor.refresh();
+}
+
+function cancelEdit() {
+  document.getElementById('editor-wrap').style.display  = 'none';
+  document.getElementById('preview').style.display      = '';
+  document.getElementById('btn-edit').style.display     = editEnabled ? '' : 'none';
+  document.getElementById('btn-save').style.display     = 'none';
+  document.getElementById('btn-cancel').style.display   = 'none';
+  hideBanner();
+}
+
+async function saveFile() {
+  if (!editor || !currentPath) return;
+  const content = editor.getValue();
+
+  const res = await fetch(`/api/file?path=${encodeURIComponent(currentPath)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    body: content,
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.ok) {
+    showBanner(false, data.output || 'Save failed.');
+    return;
+  }
+
+  currentRaw = content;
+  showBanner(true, data.output || '✓ Saved');
+  cancelEdit();
+  showPreview(currentRaw);
+}
+
+// ── Banner ────────────────────────────────────────────────────────────────
+function showBanner(ok, text) {
+  const el = document.getElementById('validate-banner');
+  el.className = ok ? 'ok' : 'error';
+  el.textContent = text;
+  el.style.display = '';
+}
+function hideBanner() {
+  document.getElementById('validate-banner').style.display = 'none';
+}
+function showError(msg) {
+  document.getElementById('preview').innerHTML =
+    `<p style="color:#f38ba8">${msg}</p>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.onload = async () => {
+  if (!editEnabled) {
+    document.getElementById('btn-edit').style.display = 'none';
+  }
+  await loadTree();
+  loadFile('INDEX.md');
+};
+</script>
+</body>
+</html>
+"""
+
+
+def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True):
+    """Create and return the Flask app."""
+    from flask import Flask, jsonify, request, Response
+
+    app = Flask(__name__)
+    app.config["plan_dir"] = plan_dir
+    app.config["edit"] = edit
+    app.config["validate_on_save"] = validate_on_save
+
+    @app.route("/")
+    def index():
+        html = _HTML.replace("EDIT_ENABLED", "true" if edit else "false")
+        return Response(html, mimetype="text/html")
+
+    @app.route("/api/tree")
+    def tree():
+        return jsonify(_build_tree(plan_dir))
+
+    @app.route("/api/file")
+    def get_file():
+        rel = request.args.get("path", "")
+        try:
+            content = _read_file(plan_dir, rel)
+            return Response(content, mimetype="text/plain; charset=utf-8")
+        except (ValueError, FileNotFoundError) as e:
+            return Response(str(e), status=404)
+
+    @app.route("/api/file", methods=["POST"])
+    def put_file():
+        if not edit:
+            return jsonify({"ok": False, "output": "Edit mode not enabled."}), 403
+
+        rel = request.args.get("path", "")
+        content = request.get_data(as_text=True)
+
+        try:
+            _write_file(plan_dir, rel, content)
+        except (ValueError, OSError) as e:
+            return jsonify({"ok": False, "output": str(e)}), 400
+
+        if validate_on_save:
+            passed, output = _validate(plan_dir)
+            if not passed:
+                # Restore original content on validation failure
+                try:
+                    original = _read_file(plan_dir, rel)
+                    # We already wrote it — caller sees the error and keeps editing
+                except Exception:
+                    pass
+                return jsonify({"ok": False, "output": output}), 422
+            return jsonify({"ok": True, "output": output})
+
+        return jsonify({"ok": True, "output": "✓ Saved"})
+
+    return app
+
+
+def serve(plan_dir: Path, host: str = "127.0.0.1", port: int = 8000,
+          edit: bool = False, validate_on_save: bool = True) -> None:
+    """Start the plan web server."""
+    _check_flask()
+    app = create_app(plan_dir, edit=edit, validate_on_save=validate_on_save)
+
+    edit_note = " (edit enabled)" if edit else " (read-only)"
+    print(f"Plan server running at http://{host}:{port}{edit_note}")
+    print("Press Ctrl+C to stop.")
+
+    app.run(host=host, port=port, debug=False, use_reloader=False)

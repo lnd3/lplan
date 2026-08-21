@@ -755,5 +755,21 @@ def watch(plan_dir: str, interval: int) -> None:
         sys.exit(0)
 
 
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+@click.option("--host", default="127.0.0.1", show_default=True, help="Host to bind to")
+@click.option("--port", default=8000, show_default=True, help="Port to listen on")
+@click.option("--edit", is_flag=True, default=False, help="Enable file editing")
+@click.option("--no-validate", is_flag=True, default=False, help="Skip validation on save")
+def serve(plan_dir: str, host: str, port: int, edit: bool, no_validate: bool) -> None:
+    """Start a local web server to browse (and optionally edit) the plan."""
+    from .server import serve as _serve
+    plan_path = Path(plan_dir).resolve()
+    try:
+        _serve(plan_path, host=host, port=port, edit=edit, validate_on_save=not no_validate)
+    except KeyboardInterrupt:
+        sys.exit(0)
+
+
 if __name__ == "__main__":
     main()
