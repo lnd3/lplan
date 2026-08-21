@@ -195,10 +195,9 @@ _HTML = r"""<!DOCTYPE html>
     font-size: 12px;
     font-weight: 500;
   }
-  #btn-edit    { background: #313244; color: #cdd6f4; }
-  #btn-save    { background: #a6e3a1; color: #1e1e2e; display: none; }
-  #btn-cancel  { background: #45475a; color: #cdd6f4; display: none; }
-  #btn-report  { background: #313244; color: #89b4fa; }
+  #btn-edit   { background: #313244; color: #cdd6f4; }
+  #btn-save   { background: #a6e3a1; color: #1e1e2e; display: none; }
+  #btn-cancel { background: #45475a; color: #cdd6f4; display: none; }
 
   /* ── Main layout ── */
   #main {
@@ -452,7 +451,6 @@ _HTML = r"""<!DOCTYPE html>
   <span class="path" id="current-path">—</span>
   <button onclick="showBrowser()">📁 Files</button>
   <button onclick="showAnalytics()">📊 Analytics</button>
-  <button id="btn-report" onclick="generateReport()">📊 Report</button>
   <button id="btn-edit"   onclick="enterEdit()">Edit</button>
   <button id="btn-save"   onclick="saveFile()">Save</button>
   <button id="btn-cancel" onclick="cancelEdit()">Cancel</button>
@@ -935,25 +933,6 @@ function showError(msg) {
     `<p style="color:#f38ba8">${msg}</p>`;
 }
 
-// ── Report ────────────────────────────────────────────────────────────────────────────────
-async function generateReport() {
-  showBanner(true, 'Generating report…');
-
-  const res  = await fetch('/api/command', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ command: 'report' }),
-  });
-  const data = await res.json();
-
-  if (data.ok) {
-    showBanner(true, data.output || '✓ Report generated');
-    window.open('/report', '_blank');
-    return;
-  }
-
-  showBanner(data.ok, data.output || (data.ok ? '✓ Done' : '✗ Failed'));
-}
 
 // ── Init ──────────────────────────────────────────────────────────────────
 window.onload = async () => {
