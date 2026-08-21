@@ -9,16 +9,21 @@ from .models import PlanEntity, Project, Design, Action
 def generate_index(
     entities: Dict[str, PlanEntity],
     repo_name: str,
+    id_to_filename: Dict[str, str] = None,
 ) -> str:
     """Generate INDEX.md markdown.
 
     Args:
-        entities: Dict mapping entity paths or IDs to PlanEntity objects
+        entities: Dict mapping entity IDs to PlanEntity objects
         repo_name: Name of the repository (used in heading)
+        id_to_filename: Dict mapping entity ID to actual filename (e.g., "P001" → "P001-price-levels-strategy.md")
 
     Returns:
         Markdown string ready to write to INDEX.md
     """
+    if id_to_filename is None:
+        id_to_filename = {}
+
     # Separate entities by type
     projects: Dict[str, Project] = {}
     designs: Dict[str, Design] = {}
@@ -51,13 +56,10 @@ def generate_index(
     ]
 
     for pid, project in sorted(projects.items()):
-        # Find first unchecked task if any
         first_task = "TBD"
-        if project.id.startswith("P"):
-            # Try to find a file path for link
-            link = f"projects/{pid}-{project.title.lower().replace(' ', '-')}.md"
-        else:
-            link = f"projects/{pid}.md"
+        # Use actual filename if available, otherwise fall back to generated slug
+        filename = id_to_filename.get(pid, f"{pid}-{project.title.lower().replace(' ', '-')}.md")
+        link = f"projects/{filename}"
 
         lines.append(f"| [{pid}]({link}) | {project.title} | {project.status.value} | {project.priority.value} | {first_task} |")
 
@@ -72,7 +74,9 @@ def generate_index(
     ])
 
     for did, design in sorted(designs.items()):
-        link = f"designs/{did}-{design.title.lower().replace(' ', '-')}.md"
+        # Use actual filename if available, otherwise fall back to generated slug
+        filename = id_to_filename.get(did, f"{did}-{design.title.lower().replace(' ', '-')}.md")
+        link = f"designs/{filename}"
         project_ref = design.project if design.project else "—"
         lines.append(f"| [{did}]({link}) | {design.title} | {design.status.value} | {project_ref} | (link if applicable) |")
 
@@ -87,7 +91,9 @@ def generate_index(
     ])
 
     for aid, action in sorted(actions.items()):
-        link = f"actions/{aid}-{action.title.lower().replace(' ', '-')}.md"
+        # Use actual filename if available, otherwise fall back to generated slug
+        filename = id_to_filename.get(aid, f"{aid}-{action.title.lower().replace(' ', '-')}.md")
+        link = f"actions/{filename}"
         design_ref = action.design if action.design else "—"
         lines.append(f"| [{aid}]({link}) | {action.title} | {action.status.value} | {design_ref} | TBD |")
 
@@ -105,8 +111,21 @@ def write_index(plan_dir: Path, entities: Dict[str, PlanEntity], repo_name: str 
     Returns:
         Path to written INDEX.md
     """
+    # Build mapping of entity ID to actual filename by enumerating directories
+    id_to_filename = {}
+    for category in ["projects", "designs", "actions"]:
+        category_dir = plan_dir / category
+        if not category_dir.exists():
+            continue
+
+        for filepath in category_dir.glob("*.md"):
+            filename = filepath.name
+            # Extract ID from filename (e.g., "P001-price-levels-strategy.md" → "P001")
+            entity_id = filename.split('-')[0]
+            id_to_filename[entity_id] = filename
+
     index_path = plan_dir / "INDEX.md"
-    content = generate_index(entities, repo_name)
+    content = generate_index(entities, repo_name, id_to_filename)
     index_path.write_text(content, encoding="utf-8")
     return index_path
 
