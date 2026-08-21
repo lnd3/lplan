@@ -86,6 +86,37 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 """
         changelog_path.write_text(changelog_content, encoding="utf-8")
 
+    # Create VALIDATION.md if not present
+    validation_path = plan_dir / "VALIDATION.md"
+    if not validation_path.exists():
+        # Read template
+        template_path = Path(__file__).parent.parent.parent / "templates" / "VALIDATION.md.template"
+        if template_path.exists():
+            validation_content = template_path.read_text(encoding="utf-8")
+        else:
+            # Fallback if template not found
+            validation_content = """# Plan Validation
+
+This plan uses the [lplan](https://github.com/lnd3/lplan) framework for structured project management.
+
+## Validation Requirement
+
+Before committing changes to `plan/` directory, always validate:
+
+```bash
+./deps/lplan/bin/plan validate ./plan
+```
+
+Expected output:
+```
+✓ Validation passed (N entities)
+(0 warnings)
+```
+
+See `deps/lplan/README.md` and `deps/lplan/QUICK_REFERENCE.md` for complete documentation.
+"""
+        validation_path.write_text(validation_content, encoding="utf-8")
+
     # Optionally create initial project
     if first_project_title:
         today = date.today().isoformat()
