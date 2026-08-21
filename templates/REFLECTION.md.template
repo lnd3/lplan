@@ -1,0 +1,10 @@
+# Reflection
+
+Append-only log of learnings, gotchas, and patterns discovered during development.
+Not session notes — these are stable insights worth carrying forward indefinitely.
+
+Format: `YYYY-MM-DD | CATEGORY | insight`
+Categories: GOTCHA · PATTERN · LEARNING · WARNING · DECISION
+
+---
+

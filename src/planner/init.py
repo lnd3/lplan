@@ -177,12 +177,10 @@ Bullet-point list of what's included and excluded:
     # Create README.md if not present
     readme_path = plan_dir / "README.md"
     if not readme_path.exists():
-        # Read template
         template_path = Path(__file__).parent.parent.parent / "templates" / "README.md.template"
         if template_path.exists():
             readme_content = template_path.read_text(encoding="utf-8")
         else:
-            # Fallback if template not found
             readme_content = f"""# {repo_name} Planning System
 
 This directory contains the planning structure for {repo_name}, following the lplan generic planning framework.
@@ -197,3 +195,54 @@ cat plan/INDEX.md                          # View current status
 See `deps/lplan/README.md` for full documentation.
 """
         readme_path.write_text(readme_content, encoding="utf-8")
+
+    # Create FOCUS.md if not present
+    focus_path = plan_dir / "FOCUS.md"
+    if not focus_path.exists():
+        template_path = Path(__file__).parent.parent.parent / "templates" / "FOCUS.md.template"
+        if template_path.exists():
+            focus_content = template_path.read_text(encoding="utf-8")
+        else:
+            focus_content = """# Focus
+
+*Rewritten each session. Not append-only — reflects current state only.*
+
+---
+
+## Active
+
+*(What is being worked on right now and why)*
+
+---
+
+## Blocked
+
+*(What cannot proceed and what is needed to unblock it)*
+
+---
+
+## Next
+
+*(Ordered list of the next 2–4 concrete steps after active work completes)*
+"""
+        focus_path.write_text(focus_content, encoding="utf-8")
+
+    # Create REFLECTION.md if not present
+    reflection_path = plan_dir / "REFLECTION.md"
+    if not reflection_path.exists():
+        template_path = Path(__file__).parent.parent.parent / "templates" / "REFLECTION.md.template"
+        if template_path.exists():
+            reflection_content = template_path.read_text(encoding="utf-8")
+        else:
+            reflection_content = """# Reflection
+
+Append-only log of learnings, gotchas, and patterns discovered during development.
+Not session notes — these are stable insights worth carrying forward indefinitely.
+
+Format: `YYYY-MM-DD | CATEGORY | insight`
+Categories: GOTCHA · PATTERN · LEARNING · WARNING · DECISION
+
+---
+
+"""
+        reflection_path.write_text(reflection_content, encoding="utf-8")

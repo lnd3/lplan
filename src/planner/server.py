@@ -83,7 +83,7 @@ def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
     tree = []
 
     # Top-level files first
-    for name in ["INDEX.md", "CHANGELOG.md", "VALIDATION.md", "README.md"]:
+    for name in ["INDEX.md", "FOCUS.md", "CHANGELOG.md", "REFLECTION.md", "VALIDATION.md", "README.md"]:
         p = plan_dir / name
         if p.exists():
             tree.append({"name": name, "path": name, "type": "file"})
