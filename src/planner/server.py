@@ -640,6 +640,8 @@ async function showAnalytics() {
 function renderAnalyticsDashboard(analytics) {
   try {
     const dashboard = document.getElementById('analytics-dashboard');
+    if (!dashboard) throw new Error('Dashboard element not found');
+    if (!analytics) throw new Error('Analytics data is null');
 
     const metrics = analytics.metrics || {};
     const bottlenecks = analytics.bottlenecks || {};
@@ -647,6 +649,8 @@ function renderAnalyticsDashboard(analytics) {
     const impactful = analytics.impactful_projects || [];
 
     console.log('Rendering with:', { metrics, bottlenecks, capacity, impactful });
+    console.log('Analytics keys:', Object.keys(analytics));
+    if (typeof metrics !== 'object') throw new Error('Metrics is not an object: ' + typeof metrics);
 
     let html = '<div class="analytics-header">📊 Analytics Dashboard</div>';
 
