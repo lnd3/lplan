@@ -195,35 +195,10 @@ _HTML = r"""<!DOCTYPE html>
     font-size: 12px;
     font-weight: 500;
   }
-  #btn-edit   { background: #313244; color: #cdd6f4; }
-  #btn-save   { background: #a6e3a1; color: #1e1e2e; display: none; }
-  #btn-cancel { background: #45475a; color: #cdd6f4; display: none; }
-
-  /* Commands dropdown */
-  .cmd-wrap { position: relative; }
-  #btn-cmd { background: #313244; color: #cdd6f4; }
-  #btn-cmd:hover { background: #45475a; }
-  #cmd-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    background: #181825;
-    border: 1px solid #313244;
-    border-radius: 6px;
-    min-width: 170px;
-    z-index: 100;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    overflow: hidden;
-  }
-  #cmd-menu.open { display: block; }
-  .cmd-item {
-    padding: 8px 14px;
-    cursor: pointer;
-    color: #cdd6f4;
-    font-size: 13px;
-  }
-  .cmd-item:hover { background: #313244; color: #89b4fa; }
+  #btn-edit    { background: #313244; color: #cdd6f4; }
+  #btn-save    { background: #a6e3a1; color: #1e1e2e; display: none; }
+  #btn-cancel  { background: #45475a; color: #cdd6f4; display: none; }
+  #btn-report  { background: #313244; color: #89b4fa; }
 
   /* ── Main layout ── */
   #main {
@@ -477,15 +452,7 @@ _HTML = r"""<!DOCTYPE html>
   <span class="path" id="current-path">—</span>
   <button onclick="showBrowser()">📁 Files</button>
   <button onclick="showAnalytics()">📊 Analytics</button>
-  <div class="cmd-wrap">
-    <button id="btn-cmd" onclick="toggleCmdMenu()">Commands ▾</button>
-    <div id="cmd-menu">
-      <div class="cmd-item" onclick="runCommand('generate-index')">↻ Generate Index</div>
-      <div class="cmd-item" onclick="runCommand('validate')">✓ Validate</div>
-      <div class="cmd-item" onclick="runCommand('priority')">⚖ Priority</div>
-      <div class="cmd-item" onclick="runCommand('report')">📊 Report</div>
-    </div>
-  </div>
+  <button id="btn-report" onclick="generateReport()">📊 Report</button>
   <button id="btn-edit"   onclick="enterEdit()">Edit</button>
   <button id="btn-save"   onclick="saveFile()">Save</button>
   <button id="btn-cancel" onclick="cancelEdit()">Cancel</button>
@@ -968,45 +935,24 @@ function showError(msg) {
     `<p style="color:#f38ba8">${msg}</p>`;
 }
 
-// ── Commands ──────────────────────────────────────────────────────────────────────────────
-function toggleCmdMenu() {
-  document.getElementById('cmd-menu').classList.toggle('open');
-}
-
-// Close menu when clicking outside
-document.addEventListener('click', e => {
-  const wrap = document.getElementById('cmd-menu');
-  if (wrap && !e.target.closest('.cmd-wrap')) wrap.classList.remove('open');
-});
-
-async function runCommand(cmd) {
-  document.getElementById('cmd-menu').classList.remove('open');
-  showBanner(true, `Running ${cmd}…`);
+// ── Report ────────────────────────────────────────────────────────────────────────────────
+async function generateReport() {
+  showBanner(true, 'Generating report…');
 
   const res  = await fetch('/api/command', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ command: cmd }),
+    body: JSON.stringify({ command: 'report' }),
   });
   const data = await res.json();
 
-  if (cmd === 'report' && data.ok) {
-    // Open report in new tab
+  if (data.ok) {
     showBanner(true, data.output || '✓ Report generated');
     window.open('/report', '_blank');
     return;
   }
 
   showBanner(data.ok, data.output || (data.ok ? '✓ Done' : '✗ Failed'));
-
-  // If generate-index succeeded and INDEX.md is open, reload it
-  if (cmd === 'generate-index' && data.ok && currentPath === 'INDEX.md') {
-    const fileRes = await fetch('/api/file?path=INDEX.md');
-    if (fileRes.ok) {
-      currentRaw = await fileRes.text();
-      showPreview(currentRaw);
-    }
-  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
