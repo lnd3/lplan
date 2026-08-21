@@ -697,7 +697,7 @@ function renderAnalyticsDashboard(analytics) {
   }
 
   // Most Impactful Projects
-  if (impactful && impactful.length > 0) {
+  if (Array.isArray(impactful) && impactful.length > 0) {
     html += '<div class="analytics-section">';
     html += '<div class="section-title">🎯 Most Impactful Projects</div>';
     html += '<table class="analytics-table">';
@@ -706,8 +706,8 @@ function renderAnalyticsDashboard(analytics) {
     for (const p of impactful) {
       html += `<tr>
         <td><strong>${p.project_id}</strong></td>
-        <td>${p.num_unblocked}</td>
-        <td>${p.num_downstream}</td>
+        <td>${p.num_unblocked || 0}</td>
+        <td>${p.num_downstream || 0}</td>
         <td>${(p.impact_ratio * 100).toFixed(0)}%</td>
       </tr>`;
     }
@@ -716,28 +716,34 @@ function renderAnalyticsDashboard(analytics) {
   }
 
   // Project Metrics
-  if (Object.keys(metrics).length > 0) {
+  const metricKeys = Object.keys(metrics || {});
+  if (metricKeys.length > 0) {
     html += '<div class="analytics-section">';
     html += '<div class="section-title">📈 Project Metrics</div>';
     html += '<table class="analytics-table">';
     html += '<tr><th>Project</th><th>Fan-In</th><th>Fan-Out</th><th>Depth</th><th>Criticality</th></tr>';
 
-    for (const [pid, m] of Object.entries(metrics)) {
-      const critColor = m.criticality > 0.7 ? 'critical' : '';
-      html += `<tr>
-        <td><strong>${m.project_id}</strong></td>
-        <td>${m.fan_in}</td>
-        <td>${m.fan_out}</td>
-        <td>${m.depth}</td>
-        <td><span class="${critColor}">${m.criticality.toFixed(2)}</span></td>
-      </tr>`;
+    try {
+      for (const [pid, m] of Object.entries(metrics)) {
+        const critColor = (m.criticality || 0) > 0.7 ? 'critical' : '';
+        html += `<tr>
+          <td><strong>${m.project_id || pid}</strong></td>
+          <td>${m.fan_in || 0}</td>
+          <td>${m.fan_out || 0}</td>
+          <td>${m.depth || 0}</td>
+          <td><span class="${critColor}">${(m.criticality || 0).toFixed(2)}</span></td>
+        </tr>`;
+      }
+    } catch (e) {
+      console.error('Error rendering metrics:', e);
+      html += '<tr><td colspan="5">Error rendering metrics table</td></tr>';
     }
 
     html += '</table></div>';
   }
 
   // Timeline
-  if (capacity.timeline_phases) {
+  if (capacity.timeline_phases && Array.isArray(capacity.timeline_phases)) {
     html += '<div class="analytics-section">';
     html += '<div class="section-title">📅 Timeline Phases</div>';
     html += '<table class="analytics-table">';
@@ -753,6 +759,8 @@ function renderAnalyticsDashboard(analytics) {
     }
 
     html += '</table></div>';
+  } else if (capacity.timeline_phases) {
+    console.warn('timeline_phases exists but is not an array:', capacity.timeline_phases);
   }
 
     dashboard.innerHTML = html;
