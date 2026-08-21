@@ -1,17 +1,17 @@
 ---
 id: P002
 title: Tier 2 - Analysis & Query Tools
-status: IDEA
-priority: MEDIUM
+status: DONE
+priority: HIGH
 priority_drivers:
-  - enables_multiple
+- enables_multiple
 created: 2026-08-20
-updated: 2026-08-20
+updated: '2026-08-22'
 description: Advanced analytics, impact analysis, capacity planning
 depends:
-  - P001
+- P001
 enables:
-  - P003
+- P003
 ---
 
 ## Goal
@@ -51,5 +51,9 @@ Not included:
 - [ ] Documentation for new features
 
 ## Log
+
+2026-08-22 — All Tier 2 Operational/Governance/Visibility features shipped. Web UI (plan serve) and additional scaffolding added beyond scope.
+
+2026-08-22 — Tier 2 implementation complete: 8 modules (writer, index_gen, stats, init, refs, git_ops, report, watch), 13 CLI commands, 42 tests, suggestions in validator
 
 2026-08-20 — Project created as future work. Depends on P001 (core engine).
