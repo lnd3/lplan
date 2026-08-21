@@ -1,6 +1,6 @@
 """Index and changelog generation for plan visibility."""
 
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List
 from .models import PlanEntity, Project, Design, Action
@@ -33,10 +33,12 @@ def generate_index(
             actions[entity.id] = entity
 
     # Build markdown
+    now = datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
         f"# {repo_name} Plan Index",
         "",
-        f"*Last updated: {date.today().isoformat()}*",
+        f"*Last updated: {timestamp}*",
         "",
         "Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`",
         "",
