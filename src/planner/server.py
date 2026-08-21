@@ -3,10 +3,70 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+
+_PID_FILE = ".plan-server.pid"
+
+
+def _pid_path(plan_dir: Path) -> Path:
+    return plan_dir / _PID_FILE
+
+
+def _write_pid(plan_dir: Path, host: str, port: int, edit: bool, validate_on_save: bool) -> None:
+    _pid_path(plan_dir).write_text(json.dumps({
+        "pid": os.getpid(),
+        "host": host,
+        "port": port,
+        "edit": edit,
+        "validate_on_save": validate_on_save,
+    }), encoding="utf-8")
+
+
+def _read_pid(plan_dir: Path) -> Optional[Dict[str, Any]]:
+    p = _pid_path(plan_dir)
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _remove_pid(plan_dir: Path) -> None:
+    try:
+        _pid_path(plan_dir).unlink()
+    except FileNotFoundError:
+        pass
+
+
+def _kill_server(plan_dir: Path) -> bool:
+    """Send SIGTERM to the running server. Returns True if a process was found."""
+    info = _read_pid(plan_dir)
+    if not info:
+        return False
+
+    pid = info["pid"]
+    try:
+        os.kill(pid, signal.SIGTERM)
+        # Wait briefly for the process to exit
+        for _ in range(20):
+            time.sleep(0.1)
+            try:
+                os.kill(pid, 0)  # check if still alive
+            except ProcessLookupError:
+                break
+    except ProcessLookupError:
+        pass  # already dead
+
+    _remove_pid(plan_dir)
+    return True
 
 
 def _check_flask() -> None:
@@ -507,6 +567,45 @@ def serve(plan_dir: Path, host: str = "127.0.0.1", port: int = 8000,
 
     edit_note = " (edit enabled)" if edit else " (read-only)"
     print(f"Plan server running at http://{host}:{port}{edit_note}")
-    print("Press Ctrl+C to stop.")
+    print("Press Ctrl+C to stop.  Use 'plan stop' or 'plan restart' from another terminal.")
 
-    app.run(host=host, port=port, debug=False, use_reloader=False)
+    _write_pid(plan_dir, host, port, edit, validate_on_save)
+    try:
+        app.run(host=host, port=port, debug=False, use_reloader=False)
+    finally:
+        _remove_pid(plan_dir)
+
+
+def stop(plan_dir: Path) -> None:
+    """Stop a running plan server."""
+    if _kill_server(plan_dir):
+        print("Plan server stopped.")
+    else:
+        print("No running plan server found (no .plan-server.pid in plan dir).")
+
+
+def restart(plan_dir: Path) -> None:
+    """Restart a running plan server with the same options."""
+    info = _read_pid(plan_dir)
+    if not info:
+        print("No running plan server found. Use 'plan serve' to start one.")
+        sys.exit(1)
+
+    host = info.get("host", "127.0.0.1")
+    port = info.get("port", 8000)
+    edit = info.get("edit", False)
+    validate_on_save = info.get("validate_on_save", True)
+
+    print(f"Restarting plan server (http://{host}:{port})...")
+    _kill_server(plan_dir)
+
+    # Spawn new server as detached subprocess so this process can exit
+    args = [sys.executable, "-m", "planner.cli", "serve", str(plan_dir),
+            "--host", host, "--port", str(port)]
+    if edit:
+        args.append("--edit")
+    if not validate_on_save:
+        args.append("--no-validate")
+
+    subprocess.Popen(args, start_new_session=True)
+    print("Plan server restarted.")

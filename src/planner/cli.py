@@ -771,5 +771,21 @@ def serve(plan_dir: str, host: str, port: int, edit: bool, no_validate: bool) ->
         sys.exit(0)
 
 
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def stop(plan_dir: str) -> None:
+    """Stop a running plan web server."""
+    from .server import stop as _stop
+    _stop(Path(plan_dir).resolve())
+
+
+@main.command()
+@click.argument("plan_dir", type=click.Path(exists=True), default=".")
+def restart(plan_dir: str) -> None:
+    """Restart the plan web server with the same options."""
+    from .server import restart as _restart
+    _restart(Path(plan_dir).resolve())
+
+
 if __name__ == "__main__":
     main()
