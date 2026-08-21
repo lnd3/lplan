@@ -389,6 +389,85 @@ _HTML = r"""<!DOCTYPE html>
   }
   #validate-banner.ok    { background: #1e3a2f; color: #a6e3a1; }
   #validate-banner.error { background: #3a1e1e; color: #f38ba8; }
+
+  /* Analytics Dashboard */
+  #analytics-dashboard {
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .analytics-header {
+    font-size: 1.5em;
+    color: #89b4fa;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #313244;
+    padding-bottom: 10px;
+  }
+  .analytics-section {
+    margin-bottom: 30px;
+  }
+  .section-title {
+    font-size: 1.1em;
+    color: #cba6f7;
+    margin-bottom: 12px;
+  }
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: #313244;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-card-value {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #89b4fa;
+    margin-bottom: 4px;
+  }
+  .stat-card-label {
+    font-size: 0.85em;
+    color: #a6adc8;
+  }
+  .analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+  }
+  .analytics-table th {
+    background: #313244;
+    color: #89b4fa;
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #45475a;
+  }
+  .analytics-table td {
+    padding: 8px;
+    border-bottom: 1px solid #1e1e2e;
+    color: #cdd6f4;
+  }
+  .analytics-table tr:hover {
+    background: #313244;
+  }
+  .warning-box {
+    background: #3a2a1e;
+    border-left: 3px solid #f38ba8;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 3px;
+    color: #f38ba8;
+    font-size: 0.9em;
+  }
+  .positive {
+    color: #a6e3a1;
+  }
+  .critical {
+    color: #f38ba8;
+  }
 </style>
 </head>
 <body>
@@ -396,6 +475,8 @@ _HTML = r"""<!DOCTYPE html>
 <div id="toolbar">
   <span>📋 Plan</span>
   <span class="path" id="current-path">—</span>
+  <button onclick="showBrowser()">📁 Files</button>
+  <button onclick="showAnalytics()">📊 Analytics</button>
   <div class="cmd-wrap">
     <button id="btn-cmd" onclick="toggleCmdMenu()">Commands ▾</button>
     <div id="cmd-menu">
@@ -416,6 +497,7 @@ _HTML = r"""<!DOCTYPE html>
     <div id="preview"></div>
     <div id="editor-wrap"></div>
     <div id="validate-banner"></div>
+    <div id="analytics-dashboard" style="display: none;"></div>
   </div>
 </div>
 
@@ -508,6 +590,154 @@ function interceptLinks(container) {
       a.rel = 'noopener noreferrer';
     }
   });
+}
+
+// ── Analytics Dashboard ────────────────────────────────────────────────────
+function showBrowser() {
+  document.getElementById('preview').style.display = '';
+  document.getElementById('analytics-dashboard').style.display = 'none';
+  document.getElementById('sidebar').style.display = '';
+  document.getElementById('btn-edit').style.display = '';
+}
+
+async function showAnalytics() {
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('btn-edit').style.display = 'none';
+  document.getElementById('btn-save').style.display = 'none';
+  document.getElementById('btn-cancel').style.display = 'none';
+
+  const dashboard = document.getElementById('analytics-dashboard');
+  dashboard.style.display = '';
+  dashboard.innerHTML = '<div style="text-align: center; color: #a6adc8;">Loading analytics...</div>';
+
+  try {
+    const res = await fetch('/api/analytics');
+    const data = await res.json();
+
+    if (!data.ok) {
+      dashboard.innerHTML = '<div class="warning-box">Error loading analytics</div>';
+      return;
+    }
+
+    renderAnalyticsDashboard(data.data);
+  } catch (e) {
+    dashboard.innerHTML = '<div class="warning-box">Failed to fetch analytics</div>';
+  }
+}
+
+function renderAnalyticsDashboard(analytics) {
+  const dashboard = document.getElementById('analytics-dashboard');
+
+  const metrics = analytics.metrics || {};
+  const bottlenecks = analytics.bottlenecks || {};
+  const capacity = analytics.capacity || {};
+  const impactful = analytics.impactful_projects || [];
+
+  let html = '<div class="analytics-header">📊 Analytics Dashboard</div>';
+
+  // Summary Stats
+  html += '<div class="analytics-section">';
+  html += '<div class="section-title">Summary</div>';
+  html += '<div class="stat-cards">';
+
+  const projectCount = Object.keys(metrics).length || 0;
+  html += `<div class="stat-card">
+    <div class="stat-card-value">${projectCount}</div>
+    <div class="stat-card-label">Projects</div>
+  </div>`;
+
+  html += `<div class="stat-card">
+    <div class="stat-card-value">${capacity.total_effort_days || 0}</div>
+    <div class="stat-card-label">Days (Total)</div>
+  </div>`;
+
+  html += `<div class="stat-card">
+    <div class="stat-card-value">${capacity.critical_path_days || 0}</div>
+    <div class="stat-card-label">Days (Critical Path)</div>
+  </div>`;
+
+  html += `<div class="stat-card">
+    <div class="stat-card-value">${capacity.compression_ratio || 1}x</div>
+    <div class="stat-card-label">Parallelization Ratio</div>
+  </div>`;
+
+  html += '</div></div>';
+
+  // Bottlenecks
+  if (bottlenecks.summary) {
+    html += '<div class="analytics-section">';
+    html += '<div class="section-title">⚠ Bottlenecks</div>';
+    html += `<div class="warning-box">${bottlenecks.summary}</div>`;
+    if (bottlenecks.blocking_count > 0) {
+      html += `<p><strong>${bottlenecks.blocking_count}</strong> blocking project(s)</p>`;
+    }
+    if (bottlenecks.chain_count > 0) {
+      html += `<p><strong>${bottlenecks.chain_count}</strong> deep dependency chain(s)</p>`;
+    }
+    html += '</div>';
+  }
+
+  // Most Impactful Projects
+  if (impactful && impactful.length > 0) {
+    html += '<div class="analytics-section">';
+    html += '<div class="section-title">🎯 Most Impactful Projects</div>';
+    html += '<table class="analytics-table">';
+    html += '<tr><th>Project</th><th>Unblocks</th><th>Downstream</th><th>Impact</th></tr>';
+
+    for (const p of impactful) {
+      html += `<tr>
+        <td><strong>${p.project_id}</strong></td>
+        <td>${p.num_unblocked}</td>
+        <td>${p.num_downstream}</td>
+        <td>${(p.impact_ratio * 100).toFixed(0)}%</td>
+      </tr>`;
+    }
+
+    html += '</table></div>';
+  }
+
+  // Project Metrics
+  if (Object.keys(metrics).length > 0) {
+    html += '<div class="analytics-section">';
+    html += '<div class="section-title">📈 Project Metrics</div>';
+    html += '<table class="analytics-table">';
+    html += '<tr><th>Project</th><th>Fan-In</th><th>Fan-Out</th><th>Depth</th><th>Criticality</th></tr>';
+
+    for (const [pid, m] of Object.entries(metrics)) {
+      const critColor = m.criticality > 0.7 ? 'critical' : '';
+      html += `<tr>
+        <td><strong>${m.project_id}</strong></td>
+        <td>${m.fan_in}</td>
+        <td>${m.fan_out}</td>
+        <td>${m.depth}</td>
+        <td><span class="${critColor}">${m.criticality.toFixed(2)}</span></td>
+      </tr>`;
+    }
+
+    html += '</table></div>';
+  }
+
+  // Timeline
+  if (capacity.timeline_phases) {
+    html += '<div class="analytics-section">';
+    html += '<div class="section-title">📅 Timeline Phases</div>';
+    html += '<table class="analytics-table">';
+    html += '<tr><th>Phase</th><th>Projects</th><th>Effort</th><th>Duration</th></tr>';
+
+    for (const phase of capacity.timeline_phases) {
+      html += `<tr>
+        <td>Phase ${phase.phase}</td>
+        <td>${phase.project_count}</td>
+        <td>${phase.total_effort_days} days</td>
+        <td>~${phase.ideal_duration_days} days</td>
+      </tr>`;
+    }
+
+    html += '</table></div>';
+  }
+
+  dashboard.innerHTML = html;
 }
 
 // ── Edit / Save ───────────────────────────────────────────────────────────
