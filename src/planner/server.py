@@ -432,7 +432,11 @@ _HTML = r"""<!DOCTYPE html>
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .tree-item.active > div:first-child { color: #89b4fa; }
+  .tree-item.active > div:first-child {
+    color: #89b4fa;
+    background: #313244;
+    border-radius: 2px;
+  }
   .tree-dir {
     padding: 6px 12px 2px;
     font-size: 11px;
@@ -1080,6 +1084,7 @@ async function showTree() {
 }
 
 let treeHierarchy = null;
+let selectedTreeItem = null;
 
 function buildTreeHTML(projects, indent = 0) {
   let html = '';
@@ -1087,9 +1092,9 @@ function buildTreeHTML(projects, indent = 0) {
     const hasChildren = project.children && project.children.length > 0;
     const paddingLeft = indent * 20;
 
-    html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;">
+    html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})" style="display: ${hasChildren ? 'inline-block' : 'none'}">▼</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})" style="display: ${hasChildren ? 'inline-block' : 'none'}">▶</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
@@ -1101,15 +1106,16 @@ function buildTreeHTML(projects, indent = 0) {
 function buildChildrenHTML(parent, indent) {
   if (!parent.children || parent.children.length === 0) return '';
 
-  let html = `<div id="children-${parent.id}" class="tree-children">`;
+  let html = `<div id="children-${parent.id}" class="tree-children" style="display: none;">`;
   for (const child of parent.children) {
     const hasGrandchildren = child.children && child.children.length > 0;
     const paddingLeft = indent * 20;
+    const childType = parent.children[0].id.charAt(0) === 'D' ? 'design' : 'action';
 
-    html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;">
+    html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})" style="display: ${hasGrandchildren ? 'inline-block' : 'none'}">▼</span>
-        <div class="tree-node tree-node-design" onclick='showTreeRoot("${child.id}", "${child.title}", "design", "${child.path}")' data-id="${child.id}">${child.title}</div>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})" style="display: ${hasGrandchildren ? 'inline-block' : 'none'}">▶</span>
+        <div class="tree-node tree-node-design" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
       </div>
       ${buildChildrenHTML(child, indent + 1)}
     </div>`;
@@ -1132,6 +1138,21 @@ function toggleTreeItem(event, id, hasChildren) {
   }
 }
 
+function highlightTreeItem(id) {
+  // Remove highlight from previous selection
+  if (selectedTreeItem) {
+    const prevItem = document.getElementById(`tree-${selectedTreeItem}`);
+    if (prevItem) prevItem.classList.remove('active');
+  }
+
+  // Add highlight to new selection
+  const item = document.getElementById(`tree-${id}`);
+  if (item) {
+    item.classList.add('active');
+    selectedTreeItem = id;
+  }
+}
+
 async function showTreeRoot(id, title, type, path) {
   // Support both old param format and new element format
   if (typeof id === 'object' && id.dataset) {
@@ -1141,6 +1162,9 @@ async function showTreeRoot(id, title, type, path) {
     type = element.dataset.type;
     path = element.dataset.path;
   }
+
+  // Highlight selected item in tree
+  highlightTreeItem(id);
 
   const preview = document.getElementById('preview');
   preview.style.display = '';
@@ -1202,7 +1226,7 @@ async function showTreeRoot(id, title, type, path) {
         ${hierarchyHTML}
 
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">
-          <button onclick="window.open('${path}', '_blank')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: all 0.15s;">📄 Full Doc</button>
+          <button onclick="loadFile('${path}')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: all 0.15s;">📄 Full Doc</button>
         </div>
       </div>
     `;
