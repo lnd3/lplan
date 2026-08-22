@@ -1087,15 +1087,7 @@ async function showTree() {
     // Show first project by default
     const preview = document.getElementById('preview');
     if (treeHierarchy.length > 0) {
-      const mockElement = {
-        dataset: {
-          id: treeHierarchy[0].id,
-          title: treeHierarchy[0].title,
-          type: 'project',
-          path: treeHierarchy[0].path
-        }
-      };
-      await showTreeRoot(mockElement);
+      await showTreeRoot(treeHierarchy[0].id, treeHierarchy[0].title, 'project', treeHierarchy[0].path);
     } else {
       preview.style.display = '';
       preview.innerHTML = '<div style="padding: 20px; color: #a6adc8; text-align: center;">No items in hierarchy</div>';
@@ -1117,7 +1109,7 @@ function buildTreeHTML(projects, indent = 0) {
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;">
       <div style="display: flex; align-items: center;">
         <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})" style="display: ${hasChildren ? 'inline-block' : 'none'}">▼</span>
-        <div class="tree-node tree-node-project" onclick="showTreeRoot(this)" data-id="${project.id}" data-title="${project.title}" data-type="project" data-path="${project.path}">${project.title}</div>
+        <div class="tree-node tree-node-project" onclick="showTreeRoot('${project.id}', '${project.title}', 'project', '${project.path.replace(/'/g, "\\'")}')" data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
     </div>`;
@@ -1136,7 +1128,7 @@ function buildChildrenHTML(parent, indent) {
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;">
       <div style="display: flex; align-items: center;">
         <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})" style="display: ${hasGrandchildren ? 'inline-block' : 'none'}">▼</span>
-        <div class="tree-node tree-node-design" onclick="showTreeRoot(this)" data-id="${child.id}" data-title="${child.title}" data-type="design" data-path="${child.path}">${child.title}</div>
+        <div class="tree-node tree-node-design" onclick="showTreeRoot('${child.id}', '${child.title}', 'design', '${child.path.replace(/'/g, "\\'")}')" data-id="${child.id}">${child.title}</div>
       </div>
       ${buildChildrenHTML(child, indent + 1)}
     </div>`;
@@ -1159,11 +1151,15 @@ function toggleTreeItem(event, id, hasChildren) {
   }
 }
 
-async function showTreeRoot(element) {
-  const id = element.dataset.id;
-  const title = element.dataset.title;
-  const type = element.dataset.type;
-  const path = element.dataset.path;
+async function showTreeRoot(id, title, type, path) {
+  // Support both old param format and new element format
+  if (typeof id === 'object' && id.dataset) {
+    const element = id;
+    id = element.dataset.id;
+    title = element.dataset.title;
+    type = element.dataset.type;
+    path = element.dataset.path;
+  }
 
   const preview = document.getElementById('preview');
   preview.style.display = '';
@@ -1262,7 +1258,7 @@ function renderHierarchyView(node, type, depth = 0) {
     const toggleId = `hierarchy-${child.id}`;
     const childIcon = childType === 'design' ? '🎨' : '✓';
 
-    html += `<div style="background: #313244; padding: 12px; border-radius: 4px; cursor: pointer; transition: background 0.15s;" class="tree-node" data-id="${child.id}" data-title="${child.title}" data-type="${childType}" data-path="${child.path}" onclick="showTreeRoot(this)">`
+    html += `<div style="background: #313244; padding: 12px; border-radius: 4px; cursor: pointer; transition: background 0.15s;" class="tree-node" onclick="showTreeRoot('${child.id}', '${child.title}', '${childType}', '${child.path.replace(/'/g, "\\'")}')">`
       <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
         ${hasGrandchildren ? `<span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0; margin-top: 2px;">▼</span>` : '<span style="width: 16px; flex-shrink: 0;"></span>'}
         <div style="flex: 1; min-width: 0;">
