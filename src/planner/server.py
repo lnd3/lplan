@@ -432,6 +432,10 @@ _HTML = r"""<!DOCTYPE html>
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .tree-item.active {
+    background: #313244;
+    border-radius: 2px;
+  }
   .tree-item.active > div:first-child {
     color: #89b4fa;
     background: #313244;
@@ -1254,7 +1258,7 @@ async function renderHierarchyView(node, type, depth = 0) {
   const typeColor = childType === 'design' ? '#a6adc8' : '#9399b2';
   const typeIcon = childType === 'design' ? '🎨' : '✓';
 
-  let html = `<div style="margin-left: ${depth * 16}px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">`;
+  let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">`;
 
   for (const child of node.children) {
     const hasGrandchildren = child.children && child.children.length > 0;
