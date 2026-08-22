@@ -595,15 +595,9 @@ _HTML = r"""<!DOCTYPE html>
     margin: 0;
   }
   .tree-node {
-    padding: 6px 12px;
     cursor: pointer;
-    color: #cdd6f4;
-    border-radius: 4px;
-    transition: background 0.15s;
+    color: #bac2de;
     user-select: none;
-  }
-  .tree-node:hover {
-    background: #313244;
   }
   .tree-toggle {
     display: inline-block;
@@ -615,29 +609,8 @@ _HTML = r"""<!DOCTYPE html>
     color: #a6adc8;
     user-select: none;
   }
-  .tree-toggle:hover {
-    color: #89b4fa;
-  }
-  .tree-node-project {
-    padding-left: 8px;
-    font-weight: 700;
-    color: #89b4fa;
-    font-size: 13px;
-    margin-top: 12px;
-    margin-bottom: 4px;
-  }
-  .tree-node-design {
-    padding-left: 8px;
-    color: #a6adc8;
-    font-size: 12px;
-    font-weight: 500;
-    margin-bottom: 2px;
-  }
-  .tree-node-action {
-    padding-left: 8px;
-    color: #9399b2;
-    font-size: 11px;
-    margin-bottom: 2px;
+  .tree-node-project, .tree-node-design, .tree-node-action {
+    /* Plain text styling - no colors, sizes, or margins */
   }
   .tree-node.active {
     background: #313244;
