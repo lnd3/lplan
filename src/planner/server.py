@@ -603,28 +603,38 @@ _HTML = r"""<!DOCTYPE html>
   .tree-node:hover {
     background: #313244;
   }
+  .tree-toggle {
+    display: inline-block;
+    width: 16px;
+    margin-right: 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 10px;
+    color: #a6adc8;
+    user-select: none;
+  }
+  .tree-toggle:hover {
+    color: #89b4fa;
+  }
   .tree-node-project {
-    padding-left: 12px;
+    padding-left: 0;
     font-weight: 600;
     color: #89b4fa;
     margin-top: 8px;
   }
   .tree-node-design {
-    padding-left: 28px;
+    padding-left: 0;
     color: #a6adc8;
     font-size: 12px;
   }
   .tree-node-action {
-    padding-left: 44px;
+    padding-left: 0;
     color: #9399b2;
     font-size: 11px;
   }
-  .tree-node-toggle {
-    display: inline-block;
-    width: 16px;
-    margin-right: 4px;
-    text-align: center;
-    font-size: 10px;
+  .tree-node.active {
+    background: #313244;
+    color: #a6e3a1;
   }
 
   /* Analytics Dashboard */
@@ -1026,7 +1036,7 @@ function interceptLinks(container) {
 }
 
 // ── Analytics Dashboard ────────────────────────────────────────────────────
-function showBrowser() {
+async function showBrowser() {
   // Update tab styling
   const buttons = document.querySelectorAll('#toolbar button');
   buttons.forEach(btn => btn.classList.remove('active'));
@@ -1037,6 +1047,9 @@ function showBrowser() {
   document.getElementById('tree-view').style.display = 'none';
   document.getElementById('analytics-dashboard').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
+
+  // Reload file tree (in case it was replaced by Tree view)
+  await loadTree();
 }
 
 async function showTree() {
@@ -1072,45 +1085,118 @@ async function showTree() {
   }
 }
 
+let treeHierarchy = null;
+
 function buildTreeHTML(projects) {
+  treeHierarchy = projects;
   let html = '';
   for (const project of projects) {
-    html += `<li><div class="tree-node tree-node-project" onclick="showTreeEntity('${project.id}', '${project.title}', 'project')">${project.title}</div>`;
+    const hasChildren = project.children && project.children.length > 0;
+    const toggleId = `toggle-${project.id}`;
 
-    if (project.children && project.children.length > 0) {
-      html += '<ul style="margin: 0; padding: 0; list-style: none;">';
+    html += `<li>
+      <div style="display: flex; align-items: center;">
+        ${hasChildren ? `<span class="tree-toggle" id="${toggleId}" onclick="toggleNode(event, this)">▼</span>` : '<span style="width: 16px;"></span>'}
+        <div class="tree-node tree-node-project" onclick="showTreeEntity('${project.id}', '${project.title}', 'project', this)" data-id="${project.id}">${project.title}</div>
+      </div>`;
+
+    if (hasChildren) {
+      html += `<ul id="${project.id}-children" style="margin: 0; padding: 0; list-style: none;">`;
       for (const design of project.children) {
-        html += `<li><div class="tree-node tree-node-design" onclick="showTreeEntity('${design.id}', '${design.title}', 'design')">${design.title}</div>`;
+        const hasActions = design.children && design.children.length > 0;
+        const designToggleId = `toggle-${design.id}`;
 
-        if (design.children && design.children.length > 0) {
-          html += '<ul style="margin: 0; padding: 0; list-style: none;">';
+        html += `<li>
+          <div style="display: flex; align-items: center;">
+            ${hasActions ? `<span class="tree-toggle" id="${designToggleId}" onclick="toggleNode(event, this)">▼</span>` : '<span style="width: 16px;"></span>'}
+            <div class="tree-node tree-node-design" onclick="showTreeEntity('${design.id}', '${design.title}', 'design', this)" data-id="${design.id}">${design.title}</div>
+          </div>`;
+
+        if (hasActions) {
+          html += `<ul id="${design.id}-children" style="margin: 0; padding: 0; list-style: none;">`;
           for (const action of design.children) {
-            html += `<li><div class="tree-node tree-node-action" onclick="showTreeEntity('${action.id}', '${action.title}', 'action')">${action.title}</div></li>`;
+            html += `<li><div class="tree-node tree-node-action" onclick="showTreeEntity('${action.id}', '${action.title}', 'action', this)" data-id="${action.id}">${action.title}</div></li>`;
           }
-          html += '</ul>';
+          html += `</ul>`;
         }
         html += '</li>';
       }
-      html += '</ul>';
+      html += `</ul>`;
     }
     html += '</li>';
   }
   return html;
 }
 
-function showTreeEntity(id, title, type) {
+function toggleNode(event, toggle) {
+  event.stopPropagation();
+  const parent = toggle.closest('li');
+  const nodeDiv = parent.querySelector('.tree-node');
+  const nodeId = nodeDiv.getAttribute('data-id');
+  const childrenList = document.getElementById(`${nodeId}-children`);
+
+  if (childrenList) {
+    childrenList.style.display = childrenList.style.display === 'none' ? '' : 'none';
+    toggle.textContent = childrenList.style.display === 'none' ? '▶' : '▼';
+  }
+}
+
+function showTreeEntity(id, title, type, element) {
+  // Update active selection
+  document.querySelectorAll('.tree-node').forEach(el => el.classList.remove('active'));
+  element.classList.add('active');
+
   const preview = document.getElementById('preview');
   let icon = '📋';
   if (type === 'design') icon = '🎨';
   else if (type === 'action') icon = '✓';
+
+  // Find siblings
+  let siblings = [];
+  if (type === 'project') {
+    siblings = treeHierarchy || [];
+  } else if (type === 'design') {
+    for (const proj of treeHierarchy) {
+      for (const design of proj.children || []) {
+        if (design.id === id) {
+          siblings = proj.children || [];
+          break;
+        }
+      }
+    }
+  } else if (type === 'action') {
+    for (const proj of treeHierarchy) {
+      for (const design of proj.children || []) {
+        if (design.id === id) {
+          siblings = design.children || [];
+          break;
+        }
+      }
+    }
+  }
+
+  // Build siblings display
+  let siblingsHTML = '';
+  if (siblings.length > 0) {
+    siblingsHTML = '<h3 style="color: #89b4fa; margin-top: 30px;">Related Items</h3><ul style="list-style: none; padding: 0;">';
+    for (const sibling of siblings) {
+      const sibType = type;
+      const sibIcon = type === 'project' ? '📋' : (type === 'design' ? '🎨' : '✓');
+      const isActive = sibling.id === id ? ' style="font-weight: bold; color: #a6e3a1;"' : '';
+      siblingsHTML += `<li${isActive} style="padding: 6px 0; cursor: pointer; color: #a6adc8;" onclick="showTreeEntity('${sibling.id}', '${sibling.title}', '${sibType}', this)">${sibIcon} ${sibling.title}</li>`;
+    }
+    siblingsHTML += '</ul>';
+  }
 
   preview.style.display = '';
   preview.innerHTML = `
     <div style="padding: 20px; max-width: 900px; margin: 0 auto;">
       <h1 style="color: #89b4fa; margin-top: 0;">${icon} ${title}</h1>
       <div style="color: #a6adc8; font-size: 12px; margin-bottom: 20px;">ID: ${id} • Type: ${type}</div>
-      <p style="color: #a6adc8;">Select items to view details. Click to open the full file.</p>
-      <button onclick="loadFile('${type}s/${id}-.md')" style="padding: 8px 16px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer;">Open Full File</button>
+      ${siblingsHTML}
+      <div style="margin-top: 30px;">
+        <button onclick="loadFile('${type}s/${id}-.md')" style="padding: 8px 16px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer;">📄 Open Full File</button>
+      </div>
     </div>
   `;
 }
