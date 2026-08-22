@@ -1072,13 +1072,20 @@ async function showTree() {
     const res = await fetch('/api/hierarchy');
     const hierarchy = await res.json();
 
-    const html = buildTreeHTML(hierarchy.projects || []);
-    sidebarContent.innerHTML = '<ul class="tree-hierarchy">' + html + '</ul>';
+    // Store complete hierarchy for later access
+    treeHierarchy = hierarchy.projects || [];
 
-    // Show content area for tree details
+    const html = buildTreeHTML(treeHierarchy);
+    sidebarContent.innerHTML = html;
+
+    // Show first project by default
     const preview = document.getElementById('preview');
-    preview.style.display = '';
-    preview.innerHTML = '<div style="padding: 20px; color: #a6adc8; text-align: center;">Select an item from the tree</div>';
+    if (treeHierarchy.length > 0) {
+      await showTreeRoot(treeHierarchy[0].id, treeHierarchy[0].title, 'project');
+    } else {
+      preview.style.display = '';
+      preview.innerHTML = '<div style="padding: 20px; color: #a6adc8; text-align: center;">No items in hierarchy</div>';
+    }
   } catch (e) {
     console.error('Failed to load hierarchy:', e);
     sidebarContent.innerHTML = '<div style="color: #f38ba8; padding: 20px;">Failed to load hierarchy</div>';
@@ -1088,7 +1095,6 @@ async function showTree() {
 let treeHierarchy = null;
 
 function buildTreeHTML(projects, indent = 0) {
-  treeHierarchy = projects;
   let html = '';
   for (const project of projects) {
     const hasChildren = project.children && project.children.length > 0;
