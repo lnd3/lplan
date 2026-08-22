@@ -416,21 +416,27 @@ _HTML = r"""<!DOCTYPE html>
     display: none;
   }
   .tree-item {
+    display: block;
+    padding: 4px 0;
+    cursor: pointer;
+    font-size: 12px;
+    color: #bac2de;
+    margin: 0;
+  }
+  .tree-item > div:first-child {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 4px 12px;
-    cursor: pointer;
+    border-radius: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 12px;
-    color: #bac2de;
-    border-radius: 4px;
-    margin: 1px 4px;
   }
-  .tree-item:hover   { background: #313244; }
-  .tree-item.active  { background: #45475a; color: #89b4fa; }
+  .tree-item > div:first-child:hover {
+    background: #313244;
+  }
+  .tree-item.active > div:first-child  { background: #45475a; color: #89b4fa; }
   .tree-dir {
     padding: 6px 12px 2px;
     font-size: 11px;
