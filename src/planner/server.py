@@ -104,6 +104,71 @@ def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
     return tree
 
 
+def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
+    """Build hierarchy based on actual parent-child relationships."""
+    from planner.parser import PlanParser
+
+    try:
+        parser = PlanParser()
+        files = parser.parse_directory(plan_dir)
+
+        # Collect all entities with their parents
+        projects = {}
+        designs = {}
+        actions = {}
+
+        for path_key, entity_data in files.items():
+            if isinstance(entity_data, dict) and "error" in entity_data:
+                continue
+
+            if hasattr(entity_data, 'id') and hasattr(entity_data, 'title'):
+                entity_type = entity_data.__class__.__name__.lower()
+                entity_info = {
+                    "id": entity_data.id,
+                    "title": entity_data.title,
+                    "path": path_key,
+                    "children": []
+                }
+
+                if entity_type == "project":
+                    projects[entity_data.id] = entity_info
+                elif entity_type == "design":
+                    designs[entity_data.id] = entity_info
+                    if hasattr(entity_data, 'parent'):
+                        entity_info["parent"] = entity_data.parent
+                elif entity_type == "action":
+                    actions[entity_data.id] = entity_info
+                    if hasattr(entity_data, 'parent'):
+                        entity_info["parent"] = entity_data.parent
+
+        # Build hierarchy: projects with their designs and actions
+        hierarchy = {"projects": []}
+
+        for proj_id, proj in sorted(projects.items()):
+            proj_node = {"id": proj_id, "title": proj["title"], "path": proj["path"], "children": []}
+
+            # Add designs for this project
+            for design_id, design in sorted(designs.items()):
+                if design.get("parent") == proj_id:
+                    design_node = {"id": design_id, "title": design["title"], "path": design["path"], "children": []}
+
+                    # Add actions for this design
+                    for action_id, action in sorted(actions.items()):
+                        if action.get("parent") == design_id:
+                            action_node = {"id": action_id, "title": action["title"], "path": action["path"]}
+                            design_node["children"].append(action_node)
+
+                    proj_node["children"].append(design_node)
+
+            hierarchy["projects"].append(proj_node)
+
+        return hierarchy
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"projects": [], "error": str(e)}
+
+
 def _read_file(plan_dir: Path, rel_path: str) -> str:
     """Read a file relative to plan_dir. Raises ValueError on path traversal."""
     target = (plan_dir / rel_path).resolve()
@@ -949,34 +1014,39 @@ async function showTree() {
   treeView.innerHTML = '<div style="text-align: center; color: #a6adc8;">Loading tree...</div>';
 
   try {
-    const res = await fetch('/api/tree');
-    const tree = await res.json();
+    const res = await fetch('/api/hierarchy');
+    const hierarchy = await res.json();
 
-    const html = buildHierarchyHTML(tree);
+    const html = buildTreeHTML(hierarchy.projects || []);
     treeView.innerHTML = '<ul class="tree-hierarchy">' + html + '</ul>';
   } catch (e) {
-    console.error('Failed to load tree:', e);
-    treeView.innerHTML = '<div style="color: #f38ba8;">Failed to load tree</div>';
+    console.error('Failed to load hierarchy:', e);
+    treeView.innerHTML = '<div style="color: #f38ba8;">Failed to load hierarchy</div>';
   }
 }
 
-function buildHierarchyHTML(nodes) {
+function buildTreeHTML(projects) {
   let html = '';
-  for (const node of nodes) {
-    if (node.type === 'file') {
-      const name = node.name.replace(/^[A-Z]\d+-/, '').replace(/\.md$/, '');
-      const type = node.path.split('/')[0]; // 'projects', 'designs', 'actions'
+  for (const project of projects) {
+    html += `<li><div class="tree-node tree-node-project" onclick="loadFile('${project.path}')">${project.title}</div>`;
 
-      if (type === 'projects') {
-        html += `<li><div class="tree-node tree-node-project" onclick="loadFile('${node.path}')">${name}</div></li>`;
-      } else if (type === 'designs') {
-        html += `<li><div class="tree-node tree-node-design" onclick="loadFile('${node.path}')">${name}</div></li>`;
-      } else if (type === 'actions') {
-        html += `<li><div class="tree-node tree-node-action" onclick="loadFile('${node.path}')">${name}</div></li>`;
+    if (project.children && project.children.length > 0) {
+      html += '<ul style="margin: 0; padding: 0; list-style: none;">';
+      for (const design of project.children) {
+        html += `<li><div class="tree-node tree-node-design" onclick="loadFile('${design.path}')">${design.title}</div>`;
+
+        if (design.children && design.children.length > 0) {
+          html += '<ul style="margin: 0; padding: 0; list-style: none;">';
+          for (const action of design.children) {
+            html += `<li><div class="tree-node tree-node-action" onclick="loadFile('${action.path}')">${action.title}</div></li>`;
+          }
+          html += '</ul>';
+        }
+        html += '</li>';
       }
-    } else if (node.children) {
-      html += buildHierarchyHTML(node.children);
+      html += '</ul>';
     }
+    html += '</li>';
   }
   return html;
 }
@@ -1362,6 +1432,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
     @app.route("/api/tree")
     def tree():
         return jsonify(_build_tree(plan_dir))
+
+    @app.route("/api/hierarchy")
+    def hierarchy():
+        return jsonify(_build_hierarchy(plan_dir))
 
     @app.route("/api/file")
     def get_file():
