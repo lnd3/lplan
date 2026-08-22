@@ -610,6 +610,7 @@ async function generateReport() {
 
     if (data.ok) {
       reportBtn.textContent = '✓ Report generated';
+      window.open('/report', '_blank');
       setTimeout(() => {
         reportBtn.textContent = originalText;
         reportBtn.disabled = false;
