@@ -1198,7 +1198,7 @@ async function showTreeRoot(id, title, type, path) {
     const currentNode = findNodeInHierarchy(id, treeHierarchy);
     if (!currentNode) throw new Error('Node not found');
 
-    const hierarchyHTML = renderHierarchyView(currentNode, type);
+    const hierarchyHTML = await renderHierarchyView(currentNode, type);
 
     // Format type label
     const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
@@ -1247,40 +1247,76 @@ function findNodeInHierarchy(id, nodes) {
   return null;
 }
 
-function renderHierarchyView(node, type, depth = 0) {
+async function renderHierarchyView(node, type, depth = 0) {
   if (!node.children || node.children.length === 0) return '';
 
   const childType = type === 'project' ? 'design' : 'action';
-  const sectionTitle = childType === 'design' ? 'Designs' : 'Actions';
+  const typeColor = childType === 'design' ? '#a6adc8' : '#9399b2';
+  const typeIcon = childType === 'design' ? '🎨' : '✓';
 
-  let html = `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">
-    <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #6c7086; margin: 4px 0;">${sectionTitle}</div>
-    <div style="margin-left: 12px;">`;
+  let html = `<div style="margin-left: ${depth * 16}px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">`;
 
   for (const child of node.children) {
     const hasGrandchildren = child.children && child.children.length > 0;
     const toggleId = `hierarchy-${child.id}`;
 
-    let childHtml = `<div class="tree-item" style="padding-left: 0; cursor: pointer;">
-      <div style="display: flex; align-items: center; gap: 4px; padding: 2px 4px;">`;
-
-    if (hasGrandchildren) {
-      childHtml += `<span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0;">▼</span>`;
-    } else {
-      childHtml += '<span style="width: 16px; flex-shrink: 0;"></span>';
+    // Fetch child data for full display
+    let childMeta = {};
+    let childPreview = '';
+    try {
+      const res = await fetch(`/api/file?path=${encodeURIComponent(child.path)}`);
+      if (res.ok) {
+        const content = await res.text();
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        const body = content.split('---').slice(2).join('---').trim();
+        if (frontmatterMatch) {
+          const lines = frontmatterMatch[1].split('\n');
+          for (const line of lines) {
+            if (line.includes(':')) {
+              const [key, val] = line.split(':').map(s => s.trim());
+              childMeta[key] = val;
+            }
+          }
+        }
+        childPreview = childMeta.ingress || body.split('\n').slice(0, 3).join('\n').substring(0, 200);
+      }
+    } catch (e) {
+      console.error('Failed to load child data:', e);
     }
 
-    childHtml += `<span class="tree-node" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")'>${child.id}: ${child.title}</span>
-      </div>`;
+    // Full item view for child (same as root)
+    html += `<div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #45475a;">
+      <div style="margin-bottom: 8px;">
+        <div style="color: ${typeColor}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          ${typeIcon} ${childType.charAt(0).toUpperCase() + childType.slice(1)}
+        </div>
+        <h2 style="color: #cdd6f4; margin: 0 0 4px 0; font-size: 16px; font-weight: 700; line-height: 1.2;">${child.title}</h2>
+        <div style="color: #6c7086; font-size: 11px; font-family: monospace;">${child.id}</div>
+      </div>
 
-    if (hasGrandchildren) {
-      childHtml += `<div id="${toggleId}-children" style="padding-left: 12px;">${renderHierarchyView(child, childType, depth + 1)}</div>`;
-    }
+      ${childMeta.created || childMeta.status || childMeta.priority ? `<div style="font-size: 11px; margin-bottom: 8px;">
+        ${childMeta.created ? `<span style="color: #6c7086;">Created:</span> <span style="color: #a6adc8;">${childMeta.created}</span>&nbsp;&nbsp;` : ''}
+        ${childMeta.status ? `<span style="color: #6c7086;">Status:</span> <span style="color: #a6adc8;">${childMeta.status}</span>&nbsp;&nbsp;` : ''}
+        ${childMeta.priority ? `<span style="color: #6c7086;">Priority:</span> <span style="color: #a6adc8;">${childMeta.priority}</span>` : ''}
+      </div>` : ''}
 
-    childHtml += '</div>';
-    html += childHtml;
+      ${childPreview ? `<div style="color: #a6adc8; font-size: 12px; line-height: 1.6; margin-bottom: 8px; border-left: 2px solid #89b4fa; padding: 4px 8px; white-space: pre-wrap; word-wrap: break-word;">${childPreview}</div>` : ''}
+
+      ${hasGrandchildren ? `
+        <div style="margin-top: 8px;">
+          <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+            <span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0;">▶</span>
+            <span style="font-size: 11px; text-transform: uppercase; color: #6c7086; font-weight: 600;">Children</span>
+          </div>
+          <div id="${toggleId}-children" style="display: none; padding-top: 8px;">
+            ${await renderHierarchyView(child, childType, depth + 1)}
+          </div>
+        </div>
+      ` : ''}
+    </div>`;
   }
-  html += '</div></div>';
+
+  html += '</div>';
   return html;
 }
 
