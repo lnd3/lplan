@@ -179,21 +179,30 @@ _HTML = r"""<!DOCTYPE html>
   #toolbar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
+    gap: 0;
+    padding: 0;
     background: #181825;
     border-bottom: 1px solid #313244;
     flex-shrink: 0;
   }
-  #toolbar span { color: #89b4fa; font-weight: 600; font-size: 13px; }
-  #toolbar .path { color: #6c7086; font-size: 12px; flex: 1; }
   #toolbar button {
-    padding: 4px 12px;
-    border-radius: 4px;
+    padding: 12px 24px;
     border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
+    color: #a6adc8;
+    transition: all 0.2s;
+  }
+  #toolbar button:hover {
+    color: #cdd6f4;
+    background: rgba(200, 214, 244, 0.05);
+  }
+  #toolbar button.active {
+    color: #89b4fa;
+    border-bottom-color: #89b4fa;
   }
   #btn-edit   { background: #313244; color: #cdd6f4; }
   #btn-save   { background: #a6e3a1; color: #1e1e2e; display: none; }
@@ -488,7 +497,6 @@ _HTML = r"""<!DOCTYPE html>
 <body>
 
 <div id="toolbar">
-  <span>📋 Plan</span>
   <button onclick="showBrowser()">📁 Files</button>
   <button onclick="showAnalytics()">📊 Analytics</button>
 </div>
@@ -633,6 +641,11 @@ function interceptLinks(container) {
 
 // ── Analytics Dashboard ────────────────────────────────────────────────────
 function showBrowser() {
+  // Update tab styling
+  const buttons = document.querySelectorAll('#toolbar button');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  buttons[0].classList.add('active'); // Files button
+
   document.getElementById('file-toolbar').style.display = 'flex';
   document.getElementById('preview').style.display = '';
   document.getElementById('analytics-dashboard').style.display = 'none';
@@ -678,6 +691,11 @@ async function generateReport() {
 }
 
 async function showAnalytics() {
+  // Update tab styling
+  const buttons = document.querySelectorAll('#toolbar button');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  buttons[1].classList.add('active'); // Analytics button
+
   document.getElementById('file-toolbar').style.display = 'none';
   document.getElementById('preview').style.display = 'none';
   document.getElementById('sidebar').style.display = 'none';
@@ -981,6 +999,8 @@ window.onload = async () => {
   if (!editEnabled) {
     document.getElementById('btn-edit').style.display = 'none';
   }
+  // Set Files tab as active by default
+  document.querySelectorAll('#toolbar button')[0].classList.add('active');
   await loadTree();
   loadFile('INDEX.md');
 };
