@@ -1087,7 +1087,15 @@ async function showTree() {
     // Show first project by default
     const preview = document.getElementById('preview');
     if (treeHierarchy.length > 0) {
-      await showTreeRoot(treeHierarchy[0].id, treeHierarchy[0].title, 'project');
+      const mockElement = {
+        dataset: {
+          id: treeHierarchy[0].id,
+          title: treeHierarchy[0].title,
+          type: 'project',
+          path: treeHierarchy[0].path
+        }
+      };
+      await showTreeRoot(mockElement);
     } else {
       preview.style.display = '';
       preview.innerHTML = '<div style="padding: 20px; color: #a6adc8; text-align: center;">No items in hierarchy</div>';
