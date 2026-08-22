@@ -290,6 +290,48 @@ _HTML = r"""<!DOCTYPE html>
     border-color: #89b4fa;
     box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.1);
   }
+  #search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 8px;
+    right: 8px;
+    background: #0f111b;
+    border: 1px solid #313244;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  #sidebar-search {
+    position: relative;
+  }
+  .search-result-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #313244;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .search-result-item:hover {
+    background: #313244;
+  }
+  .search-result-item:last-child {
+    border-bottom: none;
+  }
+  .search-result-file {
+    font-weight: 600;
+    color: #89b4fa;
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  .search-result-preview {
+    color: #a6adc8;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   #sidebar-content {
     flex: 1;
     overflow-y: auto;
@@ -560,7 +602,7 @@ _HTML = r"""<!DOCTYPE html>
   <div id="sidebar">
     <div id="sidebar-search">
       <input type="text" id="search-input" placeholder="🔍 Search files..." />
-      <span id="search-results" style="font-size: 11px; color: #6c7086; padding: 4px 12px; display: none;"></span>
+      <div id="search-dropdown" style="display: none;"></div>
     </div>
     <div id="sidebar-content"></div>
   </div>
@@ -656,8 +698,9 @@ document.addEventListener('mouseup', () => {
 
 // ── File search ───────────────────────────────────────────────────────────
 const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
+const searchDropdown = document.getElementById('search-dropdown');
 let allFiles = [];
+let fileContents = {};
 
 async function loadFilesForSearch() {
   try {
@@ -683,49 +726,72 @@ function collectFiles(nodes, arr) {
 searchInput.addEventListener('input', async (e) => {
   const query = e.target.value.toLowerCase().trim();
 
-  // Show/hide all items based on query
-  const items = document.querySelectorAll('.tree-item, .tree-dir, .tree-children');
-  items.forEach(item => item.classList.remove('hidden', 'match'));
-
   if (!query) {
-    searchResults.style.display = 'none';
+    searchDropdown.style.display = 'none';
     return;
   }
 
-  let matchCount = 0;
-  const matchedPaths = new Set();
+  const results = [];
 
-  // Search by filename
-  document.querySelectorAll('.tree-item').forEach(item => {
-    const name = item.textContent.toLowerCase();
-    const path = item.dataset.path;
-    if (name.includes(query)) {
-      item.classList.add('match');
-      matchedPaths.add(path);
-      matchCount++;
-    } else {
-      item.classList.add('hidden');
-    }
-  });
+  // Search through all files
+  for (const file of allFiles) {
+    try {
+      // Get file content
+      const res = await fetch(`/api/file?path=${encodeURIComponent(file.path)}`);
+      if (!res.ok) continue;
+      const content = await res.text();
 
-  // Show/hide directories and parents
-  document.querySelectorAll('.tree-dir').forEach(dir => {
-    const childContainer = dir.nextElementSibling;
-    if (childContainer && childContainer.classList.contains('tree-children')) {
-      const visibleChildren = childContainer.querySelectorAll('.tree-item:not(.hidden)');
-      if (visibleChildren.length > 0) {
-        dir.classList.remove('hidden');
-        childContainer.classList.remove('hidden');
-        dir.classList.remove('collapsed');
-      } else {
-        dir.classList.add('hidden');
-        childContainer.classList.add('hidden');
+      // Search in filename
+      const fileName = file.name.toLowerCase();
+      const fileMatch = fileName.includes(query);
+
+      // Search in content
+      const contentLines = content.split('\n');
+      const matches = [];
+      contentLines.forEach((line, idx) => {
+        if (line.toLowerCase().includes(query)) {
+          const preview = line.trim().substring(0, 70);
+          matches.push(preview);
+        }
+      });
+
+      if (fileMatch || matches.length > 0) {
+        results.push({
+          path: file.path,
+          name: file.name,
+          preview: matches[0] || '(filename match)',
+          matchType: fileMatch ? 'name' : 'content'
+        });
       }
+    } catch (e) {
+      // Skip files that fail to load
     }
-  });
 
-  searchResults.textContent = matchCount > 0 ? `${matchCount} match${matchCount !== 1 ? 'es' : ''}` : 'No matches';
-  searchResults.style.display = '';
+    // Limit to first 20 results for performance
+    if (results.length >= 20) break;
+  }
+
+  // Render results
+  if (results.length === 0) {
+    searchDropdown.innerHTML = '<div style="padding: 12px; color: #6c7086; text-align: center; font-size: 12px;">No matches found</div>';
+    searchDropdown.style.display = '';
+    return;
+  }
+
+  searchDropdown.innerHTML = results.map((r, i) => `
+    <div class="search-result-item" onclick="loadFile('${r.path}')">
+      <div class="search-result-file">${r.name}</div>
+      <div class="search-result-preview">${r.preview}</div>
+    </div>
+  `).join('');
+  searchDropdown.style.display = '';
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#sidebar-search')) {
+    searchDropdown.style.display = 'none';
+  }
 });
 
 // ── File loading ──────────────────────────────────────────────────────────
@@ -1170,6 +1236,7 @@ window.onload = async () => {
   loadFile('INDEX.md');
 };
 </script>
+
 </body>
 </html>
 """
