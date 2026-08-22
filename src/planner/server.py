@@ -1002,6 +1002,42 @@ function showPreview(markdown) {
   // Use preformatted text for CHANGELOG and REFLECTION
   if (currentPath === 'CHANGELOG.md' || currentPath === 'REFLECTION.md') {
     preview.innerHTML = `<pre style="font-family: monospace; font-size: 12px; white-space: pre-wrap; word-wrap: break-word; color: #bac2de;">${markdown.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+  } else if (markdown.startsWith('---')) {
+    // If content starts with YAML frontmatter, display with formatting
+    const parts = markdown.split('---');
+    if (parts.length >= 3) {
+      const frontmatter = parts[1].trim();
+      const body = parts.slice(2).join('---').trim();
+
+      let html = '<div style="padding: 8px 12px;">';
+
+      // Format frontmatter as a table-like structure
+      if (frontmatter) {
+        html += '<div style="font-size: 11px; color: #6c7086; margin-bottom: 12px;">';
+        frontmatter.split('\n').forEach(line => {
+          if (line.trim()) {
+            const [key, ...valueParts] = line.split(':');
+            const value = valueParts.join(':').trim();
+            html += `<div style="margin-bottom: 2px;"><span style="color: #6c7086;">${key}:</span> <span style="color: #a6adc8;">${value}</span></div>`;
+          }
+        });
+        html += '</div>';
+      }
+
+      // Show body content
+      if (body) {
+        marked.setOptions({ gfm: true, breaks: false });
+        html += marked.parse(body);
+      }
+
+      html += '</div>';
+      preview.innerHTML = html;
+      interceptLinks(preview);
+    } else {
+      marked.setOptions({ gfm: true, breaks: false });
+      preview.innerHTML = marked.parse(markdown);
+      interceptLinks(preview);
+    }
   } else {
     marked.setOptions({ gfm: true, breaks: false });
     preview.innerHTML = marked.parse(markdown);
@@ -1098,7 +1134,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})" style="display: ${hasChildren ? 'inline-block' : 'none'}">▶</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '▶' : ''}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
@@ -1118,7 +1154,7 @@ function buildChildrenHTML(parent, indent) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})" style="display: ${hasGrandchildren ? 'inline-block' : 'none'}">▶</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '▶' : ''}</span>
         <div class="tree-node tree-node-design" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
       </div>
       ${buildChildrenHTML(child, indent + 1)}
@@ -1202,7 +1238,7 @@ async function showTreeRoot(id, title, type, path) {
     const currentNode = findNodeInHierarchy(id, treeHierarchy);
     if (!currentNode) throw new Error('Node not found');
 
-    const hierarchyHTML = await renderHierarchyView(currentNode, type);
+    const hierarchyHTML = await renderHierarchyView(currentNode, type, 1);
 
     // Format type label
     const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
