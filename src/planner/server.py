@@ -617,24 +617,30 @@ _HTML = r"""<!DOCTYPE html>
     color: #89b4fa;
   }
   .tree-node-project {
-    padding-left: 0;
-    font-weight: 600;
+    padding-left: 8px;
+    font-weight: 700;
     color: #89b4fa;
-    margin-top: 8px;
+    font-size: 13px;
+    margin-top: 12px;
+    margin-bottom: 4px;
   }
   .tree-node-design {
-    padding-left: 0;
+    padding-left: 8px;
     color: #a6adc8;
     font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 2px;
   }
   .tree-node-action {
-    padding-left: 0;
+    padding-left: 8px;
     color: #9399b2;
     font-size: 11px;
+    margin-bottom: 2px;
   }
   .tree-node.active {
     background: #313244;
     color: #a6e3a1;
+    font-weight: 600;
   }
 
   /* Analytics Dashboard */
@@ -1181,20 +1187,33 @@ async function showTreeRoot(id, title, type) {
 
     const hierarchyHTML = renderHierarchyView(currentNode, type);
 
+    // Format type label
+    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+    const typeIcon = type === 'project' ? '📋' : (type === 'design' ? '🎨' : '✓');
+    const typeColor = type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2');
+
     preview.innerHTML = `
       <div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
-        <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px;">
-          <h2 style="color: #89b4fa; margin: 0; flex: 1;">${title}</h2>
-          <span style="color: #6c7086; font-size: 12px;">${id}</span>
+        <div style="margin-bottom: 24px;">
+          <div style="color: ${typeColor}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+            ${typeIcon} ${typeLabel}
+          </div>
+          <h1 style="color: #cdd6f4; margin: 0 0 8px 0; font-size: 28px; font-weight: 700; line-height: 1.2;">${title}</h1>
+          <div style="color: #6c7086; font-size: 12px; font-family: monospace;">${id}</div>
         </div>
-        <div style="background: #313244; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
-          ${meta.created ? `<div style="color: #a6adc8; font-size: 12px;">Created: ${meta.created}</div>` : ''}
-          ${meta.status ? `<div style="color: #a6adc8; font-size: 12px;">Status: ${meta.status}</div>` : ''}
+
+        <div style="background: #313244; padding: 14px; border-radius: 4px; margin-bottom: 24px; display: grid; grid-template-columns: auto auto; gap: 24px; font-size: 12px;">
+          ${meta.created ? `<div><span style="color: #6c7086;">Created</span><div style="color: #a6adc8; margin-top: 4px;">${meta.created}</div></div>` : ''}
+          ${meta.status ? `<div><span style="color: #6c7086;">Status</span><div style="color: #a6adc8; margin-top: 4px;">${meta.status}</div></div>` : ''}
+          ${meta.priority ? `<div><span style="color: #6c7086;">Priority</span><div style="color: #a6adc8; margin-top: 4px;">${meta.priority}</div></div>` : ''}
         </div>
-        ${preview_text ? `<div style="color: #a6adc8; font-size: 13px; line-height: 1.6; margin-bottom: 20px; border-left: 3px solid #313244; padding-left: 12px;">${preview_text}</div>` : ''}
+
+        ${preview_text ? `<div style="background: #0f111b; color: #a6adc8; font-size: 13px; line-height: 1.8; margin-bottom: 24px; border-left: 3px solid #89b4fa; padding: 16px; border-radius: 2px; white-space: pre-wrap; word-wrap: break-word;">${preview_text}</div>` : ''}
+
         ${hierarchyHTML}
-        <div style="margin-top: 30px;">
-          <button onclick="loadFile('${type}s/${id}-.md')" style="padding: 8px 16px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer;">📄 View Full Document</button>
+
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #313244;">
+          <button onclick="loadFile('${type}s/${id}-.md')" style="padding: 10px 20px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer; font-weight: 500; transition: all 0.15s;">📄 View Full Document</button>
         </div>
       </div>
     `;
@@ -1219,26 +1238,32 @@ function renderHierarchyView(node, type, depth = 0) {
   if (!node.children || node.children.length === 0) return '';
 
   const childType = type === 'project' ? 'design' : 'action';
-  const childIcon = type === 'project' ? '🎨' : '✓';
-  let html = `<h3 style="color: #89b4fa; margin-top: 20px; margin-bottom: 12px;">${childType === 'design' ? 'Designs' : 'Actions'}</h3>`;
+  const childColor = childType === 'design' ? '#a6adc8' : '#9399b2';
+  const sectionTitle = childType === 'design' ? 'Designs' : 'Actions';
 
-  html += '<div style="border-left: 2px solid #313244; padding-left: 16px;">';
+  let html = `<div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #313244;">
+    <h3 style="color: ${childColor}; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 16px 0;">${sectionTitle}</h3>
+    <div style="display: grid; gap: 12px;">`;
+
   for (const child of node.children) {
     const hasGrandchildren = child.children && child.children.length > 0;
     const toggleId = `hierarchy-${child.id}`;
+    const childIcon = childType === 'design' ? '🎨' : '✓';
 
-    html += `<div style="margin-bottom: 16px;">
-      <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="showTreeRoot('${child.id}', '${child.title}', '${childType}')">
-        ${hasGrandchildren ? `<span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer;">▼</span>` : '<span style="width: 16px;"></span>'}
-        <span style="color: #a6adc8; font-weight: 500;">${childIcon} ${child.title}</span>
-        <span style="color: #6c7086; font-size: 11px;">${child.id}</span>
+    html += `<div style="background: #313244; padding: 12px; border-radius: 4px; cursor: pointer; transition: background 0.15s;" onclick="showTreeRoot('${child.id}', '${child.title}', '${childType}')">
+      <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
+        ${hasGrandchildren ? `<span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0; margin-top: 2px;">▼</span>` : '<span style="width: 16px; flex-shrink: 0;"></span>'}
+        <div style="flex: 1; min-width: 0;">
+          <div style="color: #cdd6f4; font-weight: 500; word-wrap: break-word;">${childIcon} ${child.title}</div>
+          <div style="color: #6c7086; font-size: 11px; margin-top: 4px;">${child.id}</div>
+        </div>
       </div>
-      ${hasGrandchildren ? `<div id="${toggleId}-children" style="padding-left: 16px; margin-top: 8px; border-left: 2px solid #45475a;">
+      ${hasGrandchildren ? `<div id="${toggleId}-children" style="padding-left: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #45475a;">
         ${renderHierarchyView(child, childType, depth + 1)}
       </div>` : ''}
     </div>`;
   }
-  html += '</div>';
+  html += '</div></div>';
   return html;
 }
 
