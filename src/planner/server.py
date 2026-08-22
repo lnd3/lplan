@@ -1182,27 +1182,27 @@ async function showTreeRoot(id, title, type, path) {
     const typeColor = type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2');
 
     preview.innerHTML = `
-      <div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
-        <div style="margin-bottom: 24px;">
-          <div style="color: ${typeColor}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+      <div style="padding: 8px 12px; max-width: 1000px; margin: 0 auto;">
+        <div style="margin-bottom: 8px;">
+          <div style="color: ${typeColor}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
             ${typeIcon} ${typeLabel}
           </div>
-          <h1 style="color: #cdd6f4; margin: 0 0 8px 0; font-size: 28px; font-weight: 700; line-height: 1.2;">${title}</h1>
-          <div style="color: #6c7086; font-size: 12px; font-family: monospace;">${id}</div>
+          <h1 style="color: #cdd6f4; margin: 0 0 4px 0; font-size: 18px; font-weight: 700; line-height: 1.2;">${title}</h1>
+          <div style="color: #6c7086; font-size: 11px; font-family: monospace;">${id}</div>
         </div>
 
-        <div style="background: #313244; padding: 14px; border-radius: 4px; margin-bottom: 24px; display: grid; grid-template-columns: auto auto; gap: 24px; font-size: 12px;">
-          ${meta.created ? `<div><span style="color: #6c7086;">Created</span><div style="color: #a6adc8; margin-top: 4px;">${meta.created}</div></div>` : ''}
-          ${meta.status ? `<div><span style="color: #6c7086;">Status</span><div style="color: #a6adc8; margin-top: 4px;">${meta.status}</div></div>` : ''}
-          ${meta.priority ? `<div><span style="color: #6c7086;">Priority</span><div style="color: #a6adc8; margin-top: 4px;">${meta.priority}</div></div>` : ''}
-        </div>
+        ${meta.created || meta.status || meta.priority ? `<div style="font-size: 11px; margin-bottom: 8px;">
+          ${meta.created ? `<span style="color: #6c7086;">Created:</span> <span style="color: #a6adc8;">${meta.created}</span>&nbsp;&nbsp;` : ''}
+          ${meta.status ? `<span style="color: #6c7086;">Status:</span> <span style="color: #a6adc8;">${meta.status}</span>&nbsp;&nbsp;` : ''}
+          ${meta.priority ? `<span style="color: #6c7086;">Priority:</span> <span style="color: #a6adc8;">${meta.priority}</span>` : ''}
+        </div>` : ''}
 
-        ${preview_text ? `<div style="background: #0f111b; color: #a6adc8; font-size: 13px; line-height: 1.8; margin-bottom: 24px; border-left: 3px solid #89b4fa; padding: 16px; border-radius: 2px; white-space: pre-wrap; word-wrap: break-word;">${preview_text}</div>` : ''}
+        ${preview_text ? `<div style="color: #a6adc8; font-size: 12px; line-height: 1.6; margin-bottom: 8px; border-left: 2px solid #89b4fa; padding: 4px 8px; white-space: pre-wrap; word-wrap: break-word;">${preview_text}</div>` : ''}
 
         ${hierarchyHTML}
 
-        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #313244;">
-          <button onclick="loadFile('${type}s/${id}-.md')" style="padding: 10px 20px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer; font-weight: 500; transition: all 0.15s;">📄 View Full Document</button>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">
+          <button onclick="window.open('${path}', '_blank')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: all 0.15s;">📄 Full Doc</button>
         </div>
       </div>
     `;
