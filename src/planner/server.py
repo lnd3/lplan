@@ -417,7 +417,7 @@ _HTML = r"""<!DOCTYPE html>
   }
   .tree-item {
     display: block;
-    padding: 4px 0;
+    padding: 2px 0;
     cursor: pointer;
     font-size: 12px;
     color: #bac2de;
@@ -426,17 +426,13 @@ _HTML = r"""<!DOCTYPE html>
   .tree-item > div:first-child {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 4px;
+    gap: 4px;
+    padding: 2px 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .tree-item > div:first-child:hover {
-    background: #313244;
-  }
-  .tree-item.active > div:first-child  { background: #45475a; color: #89b4fa; }
+  .tree-item.active > div:first-child { color: #89b4fa; }
   .tree-dir {
     padding: 6px 12px 2px;
     font-size: 11px;
