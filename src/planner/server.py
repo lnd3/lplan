@@ -263,7 +263,47 @@ _HTML = r"""<!DOCTYPE html>
     background: #181825;
     border-right: 1px solid #313244;
     overflow-y: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #sidebar-search {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid #313244;
+  }
+  #search-input {
+    width: 100%;
+    padding: 6px 8px;
+    background: #0f111b;
+    border: 1px solid #313244;
+    border-radius: 4px;
+    color: #cdd6f4;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  #search-input::placeholder {
+    color: #6c7086;
+  }
+  #search-input:focus {
+    outline: none;
+    border-color: #89b4fa;
+    box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.1);
+  }
+  #sidebar-content {
+    flex: 1;
+    overflow-y: auto;
     padding: 8px 0;
+  }
+  .tree-item.hidden {
+    display: none;
+  }
+  .tree-item.match {
+    background: #313244;
+    color: #89b4fa;
+  }
+  .tree-dir.hidden {
+    display: none;
   }
   .tree-item {
     display: flex;
@@ -517,7 +557,13 @@ _HTML = r"""<!DOCTYPE html>
 </div>
 
 <div id="main">
-  <div id="sidebar"></div>
+  <div id="sidebar">
+    <div id="sidebar-search">
+      <input type="text" id="search-input" placeholder="🔍 Search files..." />
+      <span id="search-results" style="font-size: 11px; color: #6c7086; padding: 4px 12px; display: none;"></span>
+    </div>
+    <div id="sidebar-content"></div>
+  </div>
   <div id="resize-handle"></div>
   <div id="content">
     <div id="file-toolbar">
@@ -545,7 +591,7 @@ let editEnabled = EDIT_ENABLED;
 async function loadTree() {
   const res  = await fetch('/api/tree');
   const tree = await res.json();
-  const sb   = document.getElementById('sidebar');
+  const sb   = document.getElementById('sidebar-content');
   sb.innerHTML = '';
   renderTree(sb, tree);
 }
@@ -606,6 +652,80 @@ document.addEventListener('mouseup', () => {
     resizeHandle.classList.remove('active');
     document.body.style.cursor = 'auto';
   }
+});
+
+// ── File search ───────────────────────────────────────────────────────────
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+let allFiles = [];
+
+async function loadFilesForSearch() {
+  try {
+    const res = await fetch('/api/tree');
+    const tree = await res.json();
+    allFiles = [];
+    collectFiles(tree, allFiles);
+  } catch (e) {
+    console.error('Failed to load files for search:', e);
+  }
+}
+
+function collectFiles(nodes, arr) {
+  for (const node of nodes) {
+    if (node.type === 'file') {
+      arr.push(node);
+    } else if (node.children) {
+      collectFiles(node.children, arr);
+    }
+  }
+}
+
+searchInput.addEventListener('input', async (e) => {
+  const query = e.target.value.toLowerCase().trim();
+
+  // Show/hide all items based on query
+  const items = document.querySelectorAll('.tree-item, .tree-dir, .tree-children');
+  items.forEach(item => item.classList.remove('hidden', 'match'));
+
+  if (!query) {
+    searchResults.style.display = 'none';
+    return;
+  }
+
+  let matchCount = 0;
+  const matchedPaths = new Set();
+
+  // Search by filename
+  document.querySelectorAll('.tree-item').forEach(item => {
+    const name = item.textContent.toLowerCase();
+    const path = item.dataset.path;
+    if (name.includes(query)) {
+      item.classList.add('match');
+      matchedPaths.add(path);
+      matchCount++;
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+
+  // Show/hide directories and parents
+  document.querySelectorAll('.tree-dir').forEach(dir => {
+    const childContainer = dir.nextElementSibling;
+    if (childContainer && childContainer.classList.contains('tree-children')) {
+      const visibleChildren = childContainer.querySelectorAll('.tree-item:not(.hidden)');
+      if (visibleChildren.length > 0) {
+        dir.classList.remove('hidden');
+        childContainer.classList.remove('hidden');
+        dir.classList.remove('collapsed');
+      } else {
+        dir.classList.add('hidden');
+        childContainer.classList.add('hidden');
+      }
+    }
+  });
+
+  searchResults.textContent = matchCount > 0 ? `${matchCount} match${matchCount !== 1 ? 'es' : ''}` : 'No matches';
+  searchResults.style.display = '';
 });
 
 // ── File loading ──────────────────────────────────────────────────────────
@@ -1046,6 +1166,7 @@ window.onload = async () => {
   // Set Files tab as active by default
   document.querySelectorAll('#toolbar button')[0].classList.add('active');
   await loadTree();
+  await loadFilesForSearch();
   loadFile('INDEX.md');
 };
 </script>
