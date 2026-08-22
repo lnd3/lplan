@@ -117,29 +117,32 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
         designs = {}
         actions = {}
 
-        for path_key, entity_data in files.items():
-            if isinstance(entity_data, dict) and "error" in entity_data:
+        for path_key, file_data in files.items():
+            if isinstance(file_data, dict) and "error" in file_data:
                 continue
 
-            if hasattr(entity_data, 'id') and hasattr(entity_data, 'title'):
-                entity_type = entity_data.__class__.__name__.lower()
+            # Extract entity from PlanFile
+            entity = file_data.entity if hasattr(file_data, 'entity') else file_data
+
+            if hasattr(entity, 'id') and hasattr(entity, 'title'):
+                entity_type = entity.__class__.__name__.lower()
                 entity_info = {
-                    "id": entity_data.id,
-                    "title": entity_data.title,
+                    "id": entity.id,
+                    "title": entity.title,
                     "path": path_key,
                     "children": []
                 }
 
                 if entity_type == "project":
-                    projects[entity_data.id] = entity_info
+                    projects[entity.id] = entity_info
                 elif entity_type == "design":
-                    designs[entity_data.id] = entity_info
-                    if hasattr(entity_data, 'parent'):
-                        entity_info["parent"] = entity_data.parent
+                    designs[entity.id] = entity_info
+                    if hasattr(entity, 'project'):
+                        entity_info["parent"] = entity.project
                 elif entity_type == "action":
-                    actions[entity_data.id] = entity_info
-                    if hasattr(entity_data, 'parent'):
-                        entity_info["parent"] = entity_data.parent
+                    actions[entity.id] = entity_info
+                    if hasattr(entity, 'design'):
+                        entity_info["parent"] = entity.design
 
         # Build hierarchy: projects with their designs and actions
         hierarchy = {"projects": []}
@@ -1044,39 +1047,45 @@ async function showTree() {
 
   document.getElementById('file-toolbar').style.display = 'none';
   document.getElementById('preview').style.display = 'none';
-  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('tree-view').style.display = 'none';
   document.getElementById('analytics-dashboard').style.display = 'none';
 
-  const treeView = document.getElementById('tree-view');
-  treeView.style.display = '';
-  treeView.innerHTML = '<div style="text-align: center; color: #a6adc8;">Loading tree...</div>';
+  // Use sidebar for tree navigation like Files view
+  document.getElementById('sidebar').style.display = '';
+  const sidebarContent = document.getElementById('sidebar-content');
+  sidebarContent.innerHTML = '<div style="text-align: center; color: #a6adc8; padding: 20px;">Loading tree...</div>';
 
   try {
     const res = await fetch('/api/hierarchy');
     const hierarchy = await res.json();
 
     const html = buildTreeHTML(hierarchy.projects || []);
-    treeView.innerHTML = '<ul class="tree-hierarchy">' + html + '</ul>';
+    sidebarContent.innerHTML = '<ul class="tree-hierarchy">' + html + '</ul>';
+
+    // Show content area for tree details
+    const preview = document.getElementById('preview');
+    preview.style.display = '';
+    preview.innerHTML = '<div style="padding: 20px; color: #a6adc8; text-align: center;">Select an item from the tree</div>';
   } catch (e) {
     console.error('Failed to load hierarchy:', e);
-    treeView.innerHTML = '<div style="color: #f38ba8;">Failed to load hierarchy</div>';
+    sidebarContent.innerHTML = '<div style="color: #f38ba8; padding: 20px;">Failed to load hierarchy</div>';
   }
 }
 
 function buildTreeHTML(projects) {
   let html = '';
   for (const project of projects) {
-    html += `<li><div class="tree-node tree-node-project" onclick="loadFile('${project.path}')">${project.title}</div>`;
+    html += `<li><div class="tree-node tree-node-project" onclick="showTreeEntity('${project.id}', '${project.title}', 'project')">${project.title}</div>`;
 
     if (project.children && project.children.length > 0) {
       html += '<ul style="margin: 0; padding: 0; list-style: none;">';
       for (const design of project.children) {
-        html += `<li><div class="tree-node tree-node-design" onclick="loadFile('${design.path}')">${design.title}</div>`;
+        html += `<li><div class="tree-node tree-node-design" onclick="showTreeEntity('${design.id}', '${design.title}', 'design')">${design.title}</div>`;
 
         if (design.children && design.children.length > 0) {
           html += '<ul style="margin: 0; padding: 0; list-style: none;">';
           for (const action of design.children) {
-            html += `<li><div class="tree-node tree-node-action" onclick="loadFile('${action.path}')">${action.title}</div></li>`;
+            html += `<li><div class="tree-node tree-node-action" onclick="showTreeEntity('${action.id}', '${action.title}', 'action')">${action.title}</div></li>`;
           }
           html += '</ul>';
         }
@@ -1087,6 +1096,23 @@ function buildTreeHTML(projects) {
     html += '</li>';
   }
   return html;
+}
+
+function showTreeEntity(id, title, type) {
+  const preview = document.getElementById('preview');
+  let icon = '📋';
+  if (type === 'design') icon = '🎨';
+  else if (type === 'action') icon = '✓';
+
+  preview.style.display = '';
+  preview.innerHTML = `
+    <div style="padding: 20px; max-width: 900px; margin: 0 auto;">
+      <h1 style="color: #89b4fa; margin-top: 0;">${icon} ${title}</h1>
+      <div style="color: #a6adc8; font-size: 12px; margin-bottom: 20px;">ID: ${id} • Type: ${type}</div>
+      <p style="color: #a6adc8;">Select items to view details. Click to open the full file.</p>
+      <button onclick="loadFile('${type}s/${id}-.md')" style="padding: 8px 16px; background: #313244; color: #89b4fa; border: 1px solid #45475a; border-radius: 4px; cursor: pointer;">Open Full File</button>
+    </div>
+  `;
 }
 
 async function generateReport() {
