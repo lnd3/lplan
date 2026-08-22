@@ -1247,21 +1247,30 @@ async function showTreeRoot(id, title, type, path) {
 
     preview.innerHTML = `
       <div style="padding: 8px 12px; max-width: 1000px; margin: 0 auto;">
+        <!-- Row 1: Title -->
+        <h1 style="color: #cdd6f4; margin: 0 0 2px 0; font-size: 20px; font-weight: 700; line-height: 1.2;">${title}</h1>
+
+        <!-- Row 2: ID small, Description -->
         <div style="margin-bottom: 8px;">
-          <div style="color: ${typeColor}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
-            ${typeIcon} ${typeLabel}
-          </div>
-          <h1 style="color: #cdd6f4; margin: 0 0 4px 0; font-size: 18px; font-weight: 700; line-height: 1.2;">${title}</h1>
-          <div style="color: #6c7086; font-size: 11px; font-family: monospace;">${id}</div>
+          <div style="color: #6c7086; font-size: 10px; font-family: monospace; margin-bottom: 4px;">${typeIcon} ${typeLabel} • ${id}</div>
+          ${meta.description ? `<div style="color: #a6adc8; font-size: 12px; margin-bottom: 4px;">${meta.description}</div>` : ''}
         </div>
 
-        ${meta.created || meta.status || meta.priority ? `<div style="font-size: 11px; margin-bottom: 8px;">
-          ${meta.created ? `<span style="color: #6c7086;">Created:</span> <span style="color: #a6adc8;">${meta.created}</span>&nbsp;&nbsp;` : ''}
-          ${meta.status ? `<span style="color: #6c7086;">Status:</span> <span style="color: #a6adc8;">${meta.status}</span>&nbsp;&nbsp;` : ''}
-          ${meta.priority ? `<span style="color: #6c7086;">Priority:</span> <span style="color: #a6adc8;">${meta.priority}</span>` : ''}
+        <!-- Row 3: Meta info inline -->
+        ${meta.created || meta.status || meta.priority ? `<div style="font-size: 10px; margin-bottom: 8px; color: #6c7086;">
+          ${meta.created ? `Created: <span style="color: #a6adc8;">${meta.created}</span>&nbsp;&nbsp;` : ''}
+          ${meta.status ? `Status: <span style="color: #a6adc8;">${meta.status}</span>&nbsp;&nbsp;` : ''}
+          ${meta.priority ? `Priority: <span style="color: #a6adc8;">${meta.priority}</span>` : ''}
         </div>` : ''}
 
-        ${preview_text ? `<div style="color: #a6adc8; font-size: 12px; line-height: 1.6; margin-bottom: 8px; border-left: 2px solid #89b4fa; padding: 4px 8px; white-space: pre-wrap; word-wrap: break-word;">${preview_text}</div>` : ''}
+        <!-- Preview text as collapsable area -->
+        ${preview_text ? `<div style="margin-bottom: 8px; border: 1px solid #313244; border-radius: 2px; cursor: pointer;" onclick="this.querySelector('.collapse-content').style.display = this.querySelector('.collapse-content').style.display === 'none' ? '' : 'none'; this.querySelector('.collapse-toggle').textContent = this.querySelector('.collapse-content').style.display === 'none' ? '▶' : '▼';">
+          <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 11px;">
+            <span class="collapse-toggle" style="flex-shrink: 0; width: 12px;">▼</span>
+            <span>Content</span>
+          </div>
+          <div class="collapse-content" style="padding: 4px 8px; border-top: 1px solid #313244; max-height: 200px; overflow: hidden; color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; text-overflow: ellipsis; line-height: 1.4;">${preview_text}</div>
+        </div>` : ''}
 
         ${hierarchyHTML}
 
@@ -1294,11 +1303,12 @@ async function renderHierarchyView(node, type, depth = 0) {
   const typeColor = childType === 'design' ? '#a6adc8' : '#9399b2';
   const typeIcon = childType === 'design' ? '🎨' : '✓';
 
-  let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #313244;">`;
+  let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px; ${depth > 0 ? '' : 'border-top: 1px solid #313244;'}">`;
 
   for (const child of node.children) {
     const hasGrandchildren = child.children && child.children.length > 0;
     const toggleId = `hierarchy-${child.id}`;
+    const contentId = `hierarchy-content-${child.id}`;
 
     // Fetch child data for full display
     let childMeta = {};
@@ -1318,39 +1328,43 @@ async function renderHierarchyView(node, type, depth = 0) {
             }
           }
         }
-        childPreview = childMeta.ingress || body.split('\n').slice(0, 3).join('\n').substring(0, 200);
+        childPreview = childMeta.ingress || body.split('\n').slice(0, 10).join('\n');
       }
     } catch (e) {
       console.error('Failed to load child data:', e);
     }
 
-    // Full item view for child (same as root)
+    // 3-row layout for each child item
     html += `<div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #45475a;">
-      <div style="margin-bottom: 8px;">
-        <div style="color: ${typeColor}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
-          ${typeIcon} ${childType.charAt(0).toUpperCase() + childType.slice(1)}
-        </div>
-        <h2 style="color: #cdd6f4; margin: 0 0 4px 0; font-size: 16px; font-weight: 700; line-height: 1.2;">${child.title}</h2>
-        <div style="color: #6c7086; font-size: 11px; font-family: monospace;">${child.id}</div>
-      </div>
+      <!-- Row 1: Title -->
+      <h3 style="color: #cdd6f4; margin: 0 0 2px 0; font-size: 15px; font-weight: 700;">${child.title}</h3>
 
-      ${childMeta.created || childMeta.status || childMeta.priority ? `<div style="font-size: 11px; margin-bottom: 8px;">
-        ${childMeta.created ? `<span style="color: #6c7086;">Created:</span> <span style="color: #a6adc8;">${childMeta.created}</span>&nbsp;&nbsp;` : ''}
-        ${childMeta.status ? `<span style="color: #6c7086;">Status:</span> <span style="color: #a6adc8;">${childMeta.status}</span>&nbsp;&nbsp;` : ''}
-        ${childMeta.priority ? `<span style="color: #6c7086;">Priority:</span> <span style="color: #a6adc8;">${childMeta.priority}</span>` : ''}
+      <!-- Row 2: Meta info inline + Description -->
+      <div style="font-size: 10px; color: #6c7086; margin-bottom: 4px;">
+        ${typeIcon} ${childType} • ${child.id}
+        ${childMeta.created ? ` • Created: <span style="color: #a6adc8;">${childMeta.created}</span>` : ''}
+        ${childMeta.status ? ` • Status: <span style="color: #a6adc8;">${childMeta.status}</span>` : ''}
+        ${childMeta.priority ? ` • Priority: <span style="color: #a6adc8;">${childMeta.priority}</span>` : ''}
+      </div>
+      ${childMeta.description ? `<div style="color: #a6adc8; font-size: 11px; margin-bottom: 4px;">${childMeta.description}</div>` : ''}
+
+      <!-- Row 3: Collapsable content area -->
+      ${childPreview ? `<div style="border: 1px solid #313244; border-radius: 2px; cursor: pointer; margin-bottom: 8px;" onclick="const content = document.getElementById('${contentId}'); const toggle = document.getElementById('${toggleId}-content'); content.style.display = content.style.display === 'none' ? '' : 'none'; toggle.textContent = content.style.display === 'none' ? '▶' : '▼';">
+        <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px; background: #1e1e2e;">
+          <span id="${toggleId}-content" style="flex-shrink: 0; width: 12px;">▼</span>
+          <span>Content</span>
+        </div>
+        <div id="${contentId}" style="padding: 4px 8px; max-height: 160px; overflow: hidden; color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4;">${childPreview}</div>
       </div>` : ''}
 
-      ${childPreview ? `<div style="color: #a6adc8; font-size: 12px; line-height: 1.6; margin-bottom: 8px; border-left: 2px solid #89b4fa; padding: 4px 8px; white-space: pre-wrap; word-wrap: break-word;">${childPreview}</div>` : ''}
-
+      <!-- Children of this item (if any) -->
       ${hasGrandchildren ? `
-        <div style="margin-top: 8px;">
-          <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-            <span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0;">▶</span>
-            <span style="font-size: 11px; text-transform: uppercase; color: #6c7086; font-weight: 600;">Children</span>
-          </div>
-          <div id="${toggleId}-children" style="display: none; padding-top: 8px;">
-            ${await renderHierarchyView(child, childType, depth + 1)}
-          </div>
+        <div style="display: flex; align-items: center; gap: 4px; margin-top: 8px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '▶' : '▼';">
+          <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0;">▶</span>
+          <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
+        </div>
+        <div id="${toggleId}-children" style="display: none; padding-top: 8px; margin-top: 8px;">
+          ${await renderHierarchyView(child, childType, depth + 1)}
         </div>
       ` : ''}
     </div>`;
