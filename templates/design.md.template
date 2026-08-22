@@ -8,27 +8,56 @@ updated: YYYY-MM-DD
 doc_link: ""
 ---
 
-## Summary
+## What
 
-One paragraph: What problem does this design solve? What's the approach?
+What problem does this design solve? What is explicitly out of scope?
 
-## Architecture
+## Why
 
-High-level structure and components.
+Why this approach? What alternatives were considered and rejected, and why?
+(This is the most underwritten section in most designs. Invisible constraints
+and rejected paths belong here — without them, future contributors re-discover
+the same dead ends.)
 
-## Implementation Status
+## How
 
-- [ ] Phase 1: Description
-- [ ] Phase 2: Description
+Mechanism, algorithm, protocol, or data flow. How does it work?
+
+## Where
+
+**Architectural placement**: Where does this fit in the system? What calls it,
+and what does it call?
+
+**Data ownership**: For each significant data type — where does it live, who
+owns it, and what is its lifetime? Configuration, credentials, and runtime
+state are separate concerns. State which category each piece falls into.
+
+**Initialization & lifecycle**: When is this constructed? When is it valid?
+What is the teardown order?
+
+## Constraints
+
+Things that must remain true. Thread safety, performance bounds, backward
+compatibility requirements, platform limits. Each constraint here is a future
+bug if violated silently.
+
+## Migration
+
+How do existing callers adapt? What breaks? Is this backward compatible?
+What is the migration path for stored data or config files?
+
+## Testability
+
+Can this be tested without the full system? What needs to be extracted or
+mocked to make it testable in isolation?
 
 ## Key Decisions
 
-- **Decision 1**: Why we chose X (tradeoff: Y)
-- **Decision 2**: Why we chose A (tradeoff: B)
+- **Decision**: Why we chose X over Y (tradeoff: ...)
 
 ## Open Questions
 
-What's not yet decided?
+What is not yet decided?
 
 ## Related
 
