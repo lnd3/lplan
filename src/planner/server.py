@@ -296,6 +296,21 @@ _HTML = r"""<!DOCTYPE html>
   .tree-dir:hover { color: #9399b2; }
   .tree-dir .arrow { font-size: 9px; transition: transform 0.15s; }
   .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
+
+  /* ── Resize handle ── */
+  #resize-handle {
+    width: 4px;
+    background: #313244;
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  #resize-handle:hover {
+    background: #45475a;
+  }
+  #resize-handle.active {
+    background: #89b4fa;
+  }
   .tree-children.hidden { display: none; }
 
   /* ── Content ── */
@@ -503,6 +518,7 @@ _HTML = r"""<!DOCTYPE html>
 
 <div id="main">
   <div id="sidebar"></div>
+  <div id="resize-handle"></div>
   <div id="content">
     <div id="file-toolbar">
       <span class="path" id="current-path">—</span>
@@ -563,6 +579,34 @@ function renderTree(parent, nodes) {
     }
   }
 }
+
+// ── Resize handle ─────────────────────────────────────────────────────────
+let isResizing = false;
+const resizeHandle = document.getElementById('resize-handle');
+const sidebar = document.getElementById('sidebar');
+
+resizeHandle.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  resizeHandle.classList.add('active');
+  document.body.style.cursor = 'col-resize';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const mainRect = document.getElementById('main').getBoundingClientRect();
+  const newWidth = e.clientX - mainRect.left;
+  if (newWidth > 100 && newWidth < 500) {
+    sidebar.style.width = newWidth + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isResizing) {
+    isResizing = false;
+    resizeHandle.classList.remove('active');
+    document.body.style.cursor = 'auto';
+  }
+});
 
 // ── File loading ──────────────────────────────────────────────────────────
 async function loadFile(path) {
