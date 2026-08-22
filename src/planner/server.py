@@ -511,6 +511,54 @@ _HTML = r"""<!DOCTYPE html>
   #validate-banner.ok    { background: #1e3a2f; color: #a6e3a1; }
   #validate-banner.error { background: #3a1e1e; color: #f38ba8; }
 
+  /* Tree View */
+  #tree-view {
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .tree-hierarchy {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .tree-hierarchy li {
+    margin: 0;
+  }
+  .tree-node {
+    padding: 6px 12px;
+    cursor: pointer;
+    color: #cdd6f4;
+    border-radius: 4px;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .tree-node:hover {
+    background: #313244;
+  }
+  .tree-node-project {
+    padding-left: 12px;
+    font-weight: 600;
+    color: #89b4fa;
+    margin-top: 8px;
+  }
+  .tree-node-design {
+    padding-left: 28px;
+    color: #a6adc8;
+    font-size: 12px;
+  }
+  .tree-node-action {
+    padding-left: 44px;
+    color: #9399b2;
+    font-size: 11px;
+  }
+  .tree-node-toggle {
+    display: inline-block;
+    width: 16px;
+    margin-right: 4px;
+    text-align: center;
+    font-size: 10px;
+  }
+
   /* Analytics Dashboard */
   #analytics-dashboard {
     padding: 20px;
@@ -595,6 +643,7 @@ _HTML = r"""<!DOCTYPE html>
 
 <div id="toolbar">
   <button onclick="showBrowser()">📁 Files</button>
+  <button onclick="showTree()">🌳 Tree</button>
   <button onclick="showAnalytics()">📊 Analytics</button>
 </div>
 
@@ -619,6 +668,7 @@ _HTML = r"""<!DOCTYPE html>
     <div id="preview"></div>
     <div id="editor-wrap"></div>
     <div id="validate-banner"></div>
+    <div id="tree-view" style="display: none;"></div>
     <div id="analytics-dashboard" style="display: none;"></div>
   </div>
 </div>
@@ -878,8 +928,57 @@ function showBrowser() {
 
   document.getElementById('file-toolbar').style.display = 'flex';
   document.getElementById('preview').style.display = '';
+  document.getElementById('tree-view').style.display = 'none';
   document.getElementById('analytics-dashboard').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
+}
+
+async function showTree() {
+  // Update tab styling
+  const buttons = document.querySelectorAll('#toolbar button');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  buttons[1].classList.add('active'); // Tree button
+
+  document.getElementById('file-toolbar').style.display = 'none';
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('analytics-dashboard').style.display = 'none';
+
+  const treeView = document.getElementById('tree-view');
+  treeView.style.display = '';
+  treeView.innerHTML = '<div style="text-align: center; color: #a6adc8;">Loading tree...</div>';
+
+  try {
+    const res = await fetch('/api/tree');
+    const tree = await res.json();
+
+    const html = buildHierarchyHTML(tree);
+    treeView.innerHTML = '<ul class="tree-hierarchy">' + html + '</ul>';
+  } catch (e) {
+    console.error('Failed to load tree:', e);
+    treeView.innerHTML = '<div style="color: #f38ba8;">Failed to load tree</div>';
+  }
+}
+
+function buildHierarchyHTML(nodes) {
+  let html = '';
+  for (const node of nodes) {
+    if (node.type === 'file') {
+      const name = node.name.replace(/^[A-Z]\d+-/, '').replace(/\.md$/, '');
+      const type = node.path.split('/')[0]; // 'projects', 'designs', 'actions'
+
+      if (type === 'projects') {
+        html += `<li><div class="tree-node tree-node-project" onclick="loadFile('${node.path}')">${name}</div></li>`;
+      } else if (type === 'designs') {
+        html += `<li><div class="tree-node tree-node-design" onclick="loadFile('${node.path}')">${name}</div></li>`;
+      } else if (type === 'actions') {
+        html += `<li><div class="tree-node tree-node-action" onclick="loadFile('${node.path}')">${name}</div></li>`;
+      }
+    } else if (node.children) {
+      html += buildHierarchyHTML(node.children);
+    }
+  }
+  return html;
 }
 
 async function generateReport() {
@@ -924,10 +1023,11 @@ async function showAnalytics() {
   // Update tab styling
   const buttons = document.querySelectorAll('#toolbar button');
   buttons.forEach(btn => btn.classList.remove('active'));
-  buttons[1].classList.add('active'); // Analytics button
+  buttons[2].classList.add('active'); // Analytics button
 
   document.getElementById('file-toolbar').style.display = 'none';
   document.getElementById('preview').style.display = 'none';
+  document.getElementById('tree-view').style.display = 'none';
   document.getElementById('sidebar').style.display = 'none';
 
   const dashboard = document.getElementById('analytics-dashboard');
