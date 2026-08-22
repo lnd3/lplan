@@ -199,6 +199,47 @@ _HTML = r"""<!DOCTYPE html>
   #btn-save   { background: #a6e3a1; color: #1e1e2e; display: none; }
   #btn-cancel { background: #45475a; color: #cdd6f4; display: none; }
 
+  /* ── File toolbar ── */
+  #file-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #1e1e2e;
+    border-bottom: 1px solid #313244;
+    flex-shrink: 0;
+  }
+  #file-toolbar .path {
+    color: #a6adc8;
+    font-size: 12px;
+    flex: 1;
+    font-weight: 500;
+  }
+  .file-controls {
+    display: flex;
+    gap: 6px;
+  }
+  .file-controls button {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid #313244;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    background: #313244;
+    color: #cdd6f4;
+  }
+  .file-controls #btn-save {
+    background: #a6e3a1;
+    color: #1e1e2e;
+    border-color: #94e2d5;
+  }
+  .file-controls #btn-cancel {
+    background: #45475a;
+    color: #cdd6f4;
+    border-color: #45475a;
+  }
+
   /* ── Main layout ── */
   #main {
     display: flex;
@@ -448,17 +489,21 @@ _HTML = r"""<!DOCTYPE html>
 
 <div id="toolbar">
   <span>📋 Plan</span>
-  <span class="path" id="current-path">—</span>
   <button onclick="showBrowser()">📁 Files</button>
   <button onclick="showAnalytics()">📊 Analytics</button>
-  <button id="btn-edit"   onclick="enterEdit()">Edit</button>
-  <button id="btn-save"   onclick="saveFile()">Save</button>
-  <button id="btn-cancel" onclick="cancelEdit()">Cancel</button>
 </div>
 
 <div id="main">
   <div id="sidebar"></div>
   <div id="content">
+    <div id="file-toolbar">
+      <span class="path" id="current-path">—</span>
+      <div class="file-controls">
+        <button id="btn-edit"   onclick="enterEdit()">Edit</button>
+        <button id="btn-save"   onclick="saveFile()">Save</button>
+        <button id="btn-cancel" onclick="cancelEdit()">Cancel</button>
+      </div>
+    </div>
     <div id="preview"></div>
     <div id="editor-wrap"></div>
     <div id="validate-banner"></div>
@@ -588,10 +633,10 @@ function interceptLinks(container) {
 
 // ── Analytics Dashboard ────────────────────────────────────────────────────
 function showBrowser() {
+  document.getElementById('file-toolbar').style.display = 'flex';
   document.getElementById('preview').style.display = '';
   document.getElementById('analytics-dashboard').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
-  document.getElementById('btn-edit').style.display = '';
 }
 
 async function generateReport() {
@@ -633,11 +678,9 @@ async function generateReport() {
 }
 
 async function showAnalytics() {
+  document.getElementById('file-toolbar').style.display = 'none';
   document.getElementById('preview').style.display = 'none';
   document.getElementById('sidebar').style.display = 'none';
-  document.getElementById('btn-edit').style.display = 'none';
-  document.getElementById('btn-save').style.display = 'none';
-  document.getElementById('btn-cancel').style.display = 'none';
 
   const dashboard = document.getElementById('analytics-dashboard');
   dashboard.style.display = '';
