@@ -1258,18 +1258,22 @@ function renderHierarchyView(node, type, depth = 0) {
     const toggleId = `hierarchy-${child.id}`;
     const childIcon = childType === 'design' ? '🎨' : '✓';
 
-    html += `<div style="background: #313244; padding: 12px; border-radius: 4px; cursor: pointer; transition: background 0.15s;" class="tree-node" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")'>`
-      <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
-        ${hasGrandchildren ? `<span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0; margin-top: 2px;">▼</span>` : '<span style="width: 16px; flex-shrink: 0;"></span>'}
-        <div style="flex: 1; min-width: 0;">
-          <div style="color: #cdd6f4; font-weight: 500; word-wrap: break-word;">${childIcon} ${child.title}</div>
-          <div style="color: #6c7086; font-size: 11px; margin-top: 4px;">${child.id}</div>
-        </div>
-      </div>
-      ${hasGrandchildren ? `<div id="${toggleId}-children" style="padding-left: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #45475a;">
-        ${renderHierarchyView(child, childType, depth + 1)}
-      </div>` : ''}
-    </div>`;
+    let childHtml = `<div style="background: #313244; padding: 12px; border-radius: 4px; cursor: pointer; transition: background 0.15s;" class="tree-node" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")'><div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">`;
+
+    if (hasGrandchildren) {
+      childHtml += `<span id="${toggleId}-toggle" class="tree-toggle" onclick="event.stopPropagation(); toggleHierarchyNode(event, '${toggleId}')" style="cursor: pointer; flex-shrink: 0; margin-top: 2px;">▼</span>`;
+    } else {
+      childHtml += '<span style="width: 16px; flex-shrink: 0;"></span>';
+    }
+
+    childHtml += `<div style="flex: 1; min-width: 0;"><div style="color: #cdd6f4; font-weight: 500; word-wrap: break-word;">${childIcon} ${child.title}</div><div style="color: #6c7086; font-size: 11px; margin-top: 4px;">${child.id}</div></div></div>`;
+
+    if (hasGrandchildren) {
+      childHtml += `<div id="${toggleId}-children" style="padding-left: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #45475a;">${renderHierarchyView(child, childType, depth + 1)}</div>`;
+    }
+
+    childHtml += '</div>';
+    html += childHtml;
   }
   html += '</div></div>';
   return html;
