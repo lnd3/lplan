@@ -924,6 +924,44 @@ async function loadFile(path) {
   document.getElementById('current-path').textContent = path;
   hideBanner();
   showPreview(currentRaw);
+
+  // Extract and display parent context
+  displayParentContext(currentRaw, path);
+}
+
+function displayParentContext(markdown, path) {
+  const lines = markdown.split('\n');
+  let inFrontmatter = false;
+  let parent = null;
+
+  for (const line of lines) {
+    if (line.trim() === '---') {
+      if (!inFrontmatter) {
+        inFrontmatter = true;
+        continue;
+      } else {
+        break;
+      }
+    }
+    if (inFrontmatter && line.includes('parent:')) {
+      const match = line.match(/parent:\s*(.+)/);
+      if (match) parent = match[1].trim();
+    }
+  }
+
+  // Display parent as breadcrumb if found
+  const pathEl = document.getElementById('current-path');
+  if (parent) {
+    const type = path.split('/')[0];
+    let icon = '📁';
+    if (type === 'projects') icon = '📋';
+    else if (type === 'designs') icon = '🎨';
+    else if (type === 'actions') icon = '✓';
+
+    pathEl.innerHTML = `<span style="opacity: 0.6;">${parent}</span> <span style="opacity: 0.8;">/</span> <span style="font-weight: 500;">${icon} ${path.split('/').pop()}</span>`;
+  } else {
+    pathEl.textContent = path;
+  }
 }
 
 async function autoValidateAndPriority() {
