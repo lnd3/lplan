@@ -1268,7 +1268,16 @@ async function showTreeRoot(id, title, type, path) {
           <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid rgba(88, 166, 255, 0.2); color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${preview_text}</div>
         </div>` : ''}
 
-        ${hierarchyHTML}
+        <!-- Children section with collapse toggle -->
+        ${hierarchyHTML ? `<div style="margin-top: 8px;">
+          <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '▶' : '▼';">
+            <span class="children-toggle" style="flex-shrink: 0; width: 12px;">▼</span>
+            <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${type === 'project' ? 'Designs' : 'Actions'}</span>
+          </div>
+          <div style="padding-top: 8px;">
+            ${hierarchyHTML}
+          </div>
+        </div>` : ''}
 
         <div style="margin-top: 8px; padding-top: 8px;">
           <button onclick="loadFile('${path}')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: all 0.15s;">📄 Full Doc</button>
