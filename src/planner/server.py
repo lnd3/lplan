@@ -1272,7 +1272,7 @@ async function showTreeRoot(id, title, type, path) {
         <!-- Row 3: Expandable content area with + button -->
         ${preview_text ? `<div style="margin-bottom: 8px; background: rgba(88, 166, 255, 0.1); border-radius: 2px; border: 1px solid rgba(88, 166, 255, 0.2);">
           <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px; cursor: pointer;" onclick="const expanded = this.parentElement.querySelector('.content-expanded'); expanded.style.display = expanded.style.display === 'none' ? '' : 'none'; this.querySelector('.expand-btn').textContent = expanded.style.display === 'none' ? '+' : '-';">
-            <span class="expand-btn" style="flex-shrink: 0; width: 12px; text-align: center; font-weight: bold; font-size: 14px;">+</span>
+            <span class="expand-btn" style="flex-shrink: 0; width: 12px; text-align: center; font-weight: bold; font-size: 14px; transition: all 0.15s;">+</span>
             <span>Content</span>
           </div>
           <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid rgba(88, 166, 255, 0.2); color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${preview_text}</div>
@@ -1281,7 +1281,7 @@ async function showTreeRoot(id, title, type, path) {
         <!-- Children section with collapse toggle -->
         ${hierarchyHTML ? `<div style="margin-top: 8px;">
           <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '+' : '-';">
-            <span class="children-toggle" style="flex-shrink: 0; width: 12px; font-size: 14px;">-</span>
+            <span class="children-toggle" style="flex-shrink: 0; width: 12px; font-size: 14px; transition: all 0.15s;">-</span>
             <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${type === 'project' ? 'Designs' : 'Actions'}</span>
           </div>
           <div style="padding-top: 8px;">
@@ -1376,7 +1376,7 @@ async function renderHierarchyView(node, type, depth = 0) {
       <!-- Children of this item (if any, with toggle arrow) -->
       ${hasGrandchildren ? `
         <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '+' : '-';">
-          <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0; font-size: 14px;">+</span>
+          <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0; font-size: 14px; transition: all 0.15s;">+</span>
           <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
         </div>
         <div id="${toggleId}-children" style="display: none; padding-top: 8px; margin-top: 8px;">
