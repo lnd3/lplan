@@ -1,0 +1,289 @@
+class TreeView {
+  static treeHierarchy = null;
+  static selectedTreeItem = null;
+
+  static buildTreeHTML(projects, indent = 0) {
+    let html = '';
+    for (const project of projects) {
+      const hasChildren = project.children && project.children.length > 0;
+      const paddingLeft = indent * 20;
+
+      html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
+        <div style="display: flex; align-items: center;">
+          <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${project.id}" data-has-children="${hasChildren}">${hasChildren ? '+' : '•'}</span>
+          <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
+        </div>
+        ${TreeView.buildChildrenHTML(project, indent + 1)}
+      </div>`;
+    }
+    return html;
+  }
+
+  static buildChildrenHTML(parent, indent) {
+    if (!parent.children || parent.children.length === 0) return '';
+
+    let html = `<div id="children-${parent.id}" class="tree-children" style="display: none;">`;
+    for (const child of parent.children) {
+      const hasGrandchildren = child.children && child.children.length > 0;
+      const paddingLeft = indent * 20;
+      const childType = parent.children[0].id.charAt(0) === 'D' ? 'design' : 'action';
+
+      html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
+        <div style="display: flex; align-items: center;">
+          <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${child.id}" data-has-children="${hasGrandchildren}">${hasGrandchildren ? '+' : '•'}</span>
+          <div class="tree-node tree-node-design" onclick='TreeView.showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
+        </div>
+        ${TreeView.buildChildrenHTML(child, indent + 1)}
+      </div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  static toggleTreeItem(event, id, hasChildren) {
+    if (!hasChildren) return;
+    event.stopPropagation();
+
+    const childrenDiv = document.getElementById(`children-${id}`);
+    const toggle = event.currentTarget;
+    const treeItem = document.getElementById(`tree-${id}`);
+
+    if (childrenDiv) {
+      const isHidden = childrenDiv.style.display === 'none';
+      childrenDiv.style.display = isHidden ? '' : 'none';
+      toggle.textContent = isHidden ? '-' : '+';
+      if (treeItem) {
+        treeItem.classList.toggle('collapsed');
+      }
+    }
+  }
+
+  static highlightTreeItem(id) {
+    if (TreeView.selectedTreeItem) {
+      const prevItem = document.getElementById(`tree-${TreeView.selectedTreeItem}`);
+      if (prevItem) prevItem.classList.remove('active');
+    }
+
+    const item = document.getElementById(`tree-${id}`);
+    if (item) {
+      item.classList.add('active');
+      TreeView.selectedTreeItem = id;
+    }
+  }
+
+  static async showTree() {
+    const buttons = document.querySelectorAll('#toolbar button');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    buttons[1].classList.add('active');
+
+    document.getElementById('file-toolbar').style.display = 'none';
+    document.getElementById('preview').style.display = 'none';
+    document.getElementById('tree-view').style.display = 'none';
+    document.getElementById('analytics-dashboard').style.display = 'none';
+
+    document.getElementById('sidebar').style.display = '';
+    const sidebarContent = document.getElementById('sidebar-content');
+    sidebarContent.innerHTML = '<div style="text-align: center; color: #a6adc8; padding: 20px;">Loading tree...</div>';
+
+    try {
+      const res = await fetch('/api/hierarchy');
+      const hierarchy = await res.json();
+
+      TreeView.treeHierarchy = hierarchy.projects || [];
+
+      const html = TreeView.buildTreeHTML(TreeView.treeHierarchy);
+      sidebarContent.innerHTML = html;
+
+      const preview = document.getElementById('preview');
+      if (TreeView.treeHierarchy.length > 0) {
+        await TreeView.showTreeRoot(TreeView.treeHierarchy[0].id, TreeView.treeHierarchy[0].title, 'project', TreeView.treeHierarchy[0].path);
+      } else {
+        preview.style.display = '';
+        preview.innerHTML = '<div style="padding: 20px; color: #a6adc8; text-align: center;">No items in hierarchy</div>';
+      }
+    } catch (e) {
+      console.error('Failed to load hierarchy:', e);
+      sidebarContent.innerHTML = '<div style="color: #f38ba8; padding: 20px;">Failed to load hierarchy</div>';
+    }
+  }
+
+  static async showTreeRoot(id, title, type, path) {
+    if (typeof id === 'object' && id.dataset) {
+      const element = id;
+      id = element.dataset.id;
+      title = element.dataset.title;
+      type = element.dataset.type;
+      path = element.dataset.path;
+    }
+
+    TreeView.highlightTreeItem(id);
+
+    const preview = document.getElementById('preview');
+    preview.style.display = '';
+    preview.innerHTML = '<div style="text-align: center; color: #a6adc8;">Loading...</div>';
+
+    try {
+      const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
+      if (!res.ok) throw new Error('File not found');
+      const content = await res.text();
+
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const body = content.split('---').slice(2).join('---').trim();
+      const meta = {};
+
+      if (frontmatterMatch) {
+        const lines = frontmatterMatch[1].split('\n');
+        for (const line of lines) {
+          if (line.includes(':')) {
+            const [key, val] = line.split(':').map(s => s.trim());
+            meta[key] = val;
+          }
+        }
+      }
+
+      const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
+
+      const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
+      if (!currentNode) throw new Error('Node not found');
+
+      const hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
+
+      const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+      const typeIcon = type === 'project' ? '📋' : (type === 'design' ? '🎨' : '✓');
+      const typeColor = type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2');
+
+      preview.innerHTML = `
+        <div style="padding: 8px 12px; max-width: 1000px; margin: 0 auto;">
+          <h1 style="color: #cdd6f4; margin: 0 0 2px 0; font-size: 20px; font-weight: 700; line-height: 1.2;">${title}</h1>
+
+          <div style="font-size: 10px; color: #6c7086; margin-bottom: 4px;">
+            ${typeIcon} ${typeLabel} • ${id}
+            ${meta.created ? ` • Created: <span style="color: #a6adc8;">${meta.created}</span>` : ''}
+            ${meta.status ? ` • Status: <span style="color: #a6adc8;">${meta.status}</span>` : ''}
+            ${meta.priority ? ` • Priority: <span style="color: #a6adc8;">${meta.priority}</span>` : ''}
+          </div>
+          ${meta.description ? `<div style="color: #a6adc8; font-size: 12px; margin-bottom: 8px;">${meta.description}</div>` : ''}
+
+          ${preview_text ? `<div style="margin-bottom: 8px; background: rgba(88, 166, 255, 0.1); border-radius: 2px; border: 1px solid rgba(88, 166, 255, 0.2);">
+            <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px; cursor: pointer;" onclick="const expanded = this.parentElement.querySelector('.content-expanded'); expanded.style.display = expanded.style.display === 'none' ? '' : 'none'; this.querySelector('.expand-btn').textContent = expanded.style.display === 'none' ? '+' : '-';">
+              <span class="expand-btn" style="flex-shrink: 0; width: 12px; text-align: center; font-weight: bold; font-size: 14px; transition: transform 0.15s;">+</span>
+              <span>Content</span>
+            </div>
+            <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid rgba(88, 166, 255, 0.2); color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${preview_text}</div>
+          </div>` : ''}
+
+          ${hierarchyHTML ? `<div style="margin-top: 8px;">
+            <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '+' : '-';">
+              <span class="children-toggle" style="flex-shrink: 0; width: 12px; font-size: 14px; transition: transform 0.15s;">-</span>
+              <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${type === 'project' ? 'Designs' : 'Actions'}</span>
+            </div>
+            <div style="padding-top: 8px;">
+              ${hierarchyHTML}
+            </div>
+          </div>` : ''}
+
+          <div style="margin-top: 8px; padding-top: 8px;">
+            <button onclick="FileBrowser.loadFile('${path}')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: transform 0.15s;">📄 Full Doc</button>
+          </div>
+        </div>
+      `;
+    } catch (e) {
+      console.error(e);
+      preview.innerHTML = `<div style="color: #f38ba8; padding: 20px;">Error loading entity</div>`;
+    }
+  }
+
+  static findNodeInHierarchy(id, nodes) {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children) {
+        const found = TreeView.findNodeInHierarchy(id, node.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  static async renderHierarchyView(node, type, depth = 0) {
+    if (!node.children || node.children.length === 0) return '';
+
+    const childType = type === 'project' ? 'design' : 'action';
+    const typeIcon = childType === 'design' ? '🎨' : '✓';
+    const bgColor = childType === 'design' ? 'rgba(166, 172, 200, 0.1)' : 'rgba(147, 153, 178, 0.1)';
+    const borderColor = childType === 'design' ? 'rgba(166, 172, 200, 0.2)' : 'rgba(147, 153, 178, 0.2)';
+
+    let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px;">`;
+
+    for (const child of node.children) {
+      const hasGrandchildren = child.children && child.children.length > 0;
+      const toggleId = `hierarchy-${child.id}`;
+      const contentId = `hierarchy-content-${child.id}`;
+
+      let childMeta = {};
+      let childPreview = '';
+      try {
+        const res = await fetch(`/api/file?path=${encodeURIComponent(child.path)}`);
+        if (res.ok) {
+          const content = await res.text();
+          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          const body = content.split('---').slice(2).join('---').trim();
+          if (frontmatterMatch) {
+            const lines = frontmatterMatch[1].split('\n');
+            for (const line of lines) {
+              if (line.includes(':')) {
+                const [key, val] = line.split(':').map(s => s.trim());
+                childMeta[key] = val;
+              }
+            }
+          }
+          childPreview = childMeta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
+        }
+      } catch (e) {
+        console.error('Failed to load child data:', e);
+      }
+
+      html += `<div style="padding: 8px; background: ${bgColor}; border-radius: 2px; margin-bottom: 4px; border: 1px solid ${borderColor};">
+        <h3 style="color: #cdd6f4; margin: 0 0 2px 0; font-size: 14px; font-weight: 700;">${child.title}</h3>
+
+        <div style="font-size: 10px; color: #6c7086; margin-bottom: 4px;">
+          ${typeIcon} ${childType} • ${child.id}
+          ${childMeta.created ? ` • Created: <span style="color: #a6adc8;">${childMeta.created}</span>` : ''}
+          ${childMeta.status ? ` • Status: <span style="color: #a6adc8;">${childMeta.status}</span>` : ''}
+          ${childMeta.priority ? ` • Priority: <span style="color: #a6adc8;">${childMeta.priority}</span>` : ''}
+        </div>
+        ${childMeta.description ? `<div style="color: #a6adc8; font-size: 11px; margin-bottom: 4px;">${childMeta.description}</div>` : ''}
+
+        ${childPreview ? `<div style="background: #1e1e2e; border-radius: 2px; margin-bottom: 8px;">
+          <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px; cursor: pointer;" onclick="const expanded = this.parentElement.querySelector('.content-expanded'); expanded.style.display = expanded.style.display === 'none' ? '' : 'none'; this.querySelector('.expand-btn').textContent = expanded.style.display === 'none' ? '+' : '-';">
+            <span class="expand-btn" style="flex-shrink: 0; width: 12px; text-align: center; font-weight: bold;">+</span>
+            <span>Content</span>
+          </div>
+          <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid #313244; color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${childPreview}</div>
+        </div>` : ''}
+
+        ${hasGrandchildren ? `
+          <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); const wrapper = toggle.parentElement; const isHidden = kids.style.display === 'none'; kids.style.display = isHidden ? '' : 'none'; toggle.textContent = isHidden ? '-' : '+'; wrapper.classList.toggle('collapsed');">
+            <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0; font-size: 14px; transition: transform 0.15s;">+</span>
+            <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
+          </div>
+          <div id="${toggleId}-children" style="display: none; padding-top: 8px; margin-top: 8px;">
+            ${await TreeView.renderHierarchyView(child, childType, depth + 1)}
+          </div>
+        ` : ''}
+      </div>`;
+    }
+
+    html += '</div>';
+    return html;
+  }
+}
+
+document.addEventListener('click', (event) => {
+  if (event.target.classList.contains('tree-toggle') && event.target.dataset.toggleId) {
+    const id = event.target.dataset.toggleId;
+    const hasChildren = event.target.dataset.hasChildren === 'true';
+    TreeView.toggleTreeItem(event, id, hasChildren);
+  }
+});
+
+window.TreeView = TreeView;
