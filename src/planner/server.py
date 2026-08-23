@@ -1259,12 +1259,13 @@ async function showTreeRoot(id, title, type, path) {
         </div>
         ${meta.description ? `<div style="color: #a6adc8; font-size: 12px; margin-bottom: 8px;">${meta.description}</div>` : ''}
 
-        <!-- Row 3: Collapsable content area (starts collapsed) -->
-        ${preview_text ? `<div style="margin-bottom: 8px; background: #1e1e2e; border-radius: 2px; cursor: pointer;" onclick="const content = this.querySelector('.collapse-content'); content.style.display = content.style.display === 'none' ? '' : 'none'; this.querySelector('.collapse-preview').style.display = content.style.display === 'none' ? '' : 'none';">
-          <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px;">
-            <span class="collapse-preview" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${preview_text.split('\n')[0] || 'Content'}</span>
+        <!-- Row 3: Expandable content area with + button -->
+        ${preview_text ? `<div style="margin-bottom: 8px; background: rgba(88, 166, 255, 0.1); border-radius: 2px; border: 1px solid rgba(88, 166, 255, 0.2);">
+          <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px; cursor: pointer;" onclick="const expanded = this.parentElement.querySelector('.content-expanded'); expanded.style.display = expanded.style.display === 'none' ? '' : 'none'; this.querySelector('.expand-btn').textContent = expanded.style.display === 'none' ? '+' : '−';">
+            <span class="expand-btn" style="flex-shrink: 0; width: 12px; text-align: center; font-weight: bold;">+</span>
+            <span>Content</span>
           </div>
-          <div class="collapse-content" style="display: none; padding: 4px 8px; max-height: 160px; overflow: hidden; color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; border-top: 1px solid #313244;">${preview_text}</div>
+          <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid rgba(88, 166, 255, 0.2); color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${preview_text}</div>
         </div>` : ''}
 
         ${hierarchyHTML}
@@ -1296,6 +1297,8 @@ async function renderHierarchyView(node, type, depth = 0) {
 
   const childType = type === 'project' ? 'design' : 'action';
   const typeIcon = childType === 'design' ? '🎨' : '✓';
+  const bgColor = childType === 'design' ? 'rgba(166, 172, 200, 0.1)' : 'rgba(147, 153, 178, 0.1)';
+  const borderColor = childType === 'design' ? 'rgba(166, 172, 200, 0.2)' : 'rgba(147, 153, 178, 0.2)';
 
   let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px;">`;
 
@@ -1328,10 +1331,8 @@ async function renderHierarchyView(node, type, depth = 0) {
       console.error('Failed to load child data:', e);
     }
 
-    const firstLine = childPreview ? childPreview.split('\n')[0] : 'Content';
-
-    // 3-row layout for each child item with light background instead of borders
-    html += `<div style="margin-bottom: 0; padding: 8px; background: rgba(49, 50, 68, 0.5); border-radius: 2px; margin-bottom: 4px;">
+    // 3-row layout for each child item with type-specific colors
+    html += `<div style="padding: 8px; background: ${bgColor}; border-radius: 2px; margin-bottom: 4px; border: 1px solid ${borderColor};">
       <!-- Row 1: Title -->
       <h3 style="color: #cdd6f4; margin: 0 0 2px 0; font-size: 14px; font-weight: 700;">${child.title}</h3>
 
@@ -1344,12 +1345,13 @@ async function renderHierarchyView(node, type, depth = 0) {
       </div>
       ${childMeta.description ? `<div style="color: #a6adc8; font-size: 11px; margin-bottom: 4px;">${childMeta.description}</div>` : ''}
 
-      <!-- Row 3: Collapsable content area (starts collapsed) -->
-      ${childPreview ? `<div style="background: #1e1e2e; border-radius: 2px; cursor: pointer; margin-bottom: 8px;" onclick="const content = document.getElementById('${contentId}'); const preview = document.getElementById('${contentId}-preview'); content.style.display = content.style.display === 'none' ? '' : 'none'; preview.style.display = content.style.display === 'none' ? '' : 'none';">
-        <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px;">
-          <span class="collapse-preview" id="${contentId}-preview" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${firstLine}</span>
+      <!-- Row 3: Expandable content area with + button -->
+      ${childPreview ? `<div style="background: #1e1e2e; border-radius: 2px; margin-bottom: 8px;">
+        <div style="padding: 4px 8px; display: flex; align-items: center; gap: 4px; color: #a6adc8; font-size: 10px; cursor: pointer;" onclick="const expanded = this.parentElement.querySelector('.content-expanded'); expanded.style.display = expanded.style.display === 'none' ? '' : 'none'; this.querySelector('.expand-btn').textContent = expanded.style.display === 'none' ? '+' : '−';">
+          <span class="expand-btn" style="flex-shrink: 0; width: 12px; text-align: center; font-weight: bold;">+</span>
+          <span>Content</span>
         </div>
-        <div id="${contentId}" style="display: none; padding: 4px 8px; max-height: 160px; overflow: hidden; color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; border-top: 1px solid #313244;">${childPreview}</div>
+        <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid #313244; color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${childPreview}</div>
       </div>` : ''}
 
       <!-- Children of this item (if any, with toggle arrow) -->
