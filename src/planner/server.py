@@ -614,9 +614,9 @@ _HTML = r"""<!DOCTYPE html>
     text-align: center;
     cursor: pointer;
     font-size: 14px;
-    font-size: 10px;
     color: #a6adc8;
     user-select: none;
+    transition: all 0.15s;
   }
   .tree-node-project, .tree-node-design, .tree-node-action {
     /* Plain text styling - no colors, sizes, or margins */
