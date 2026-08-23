@@ -1147,7 +1147,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" style="transition: transform 0.15s;" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '-' : '·'}</span>
+        <span class="tree-toggle" style="transition: transform 0.15s;" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '·'}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
@@ -1188,7 +1188,7 @@ function toggleTreeItem(event, id, hasChildren) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '+' : '-';
+    toggle.textContent = isHidden ? '-' : '+';
     if (treeItem) {
       treeItem.classList.toggle('collapsed');
     }
@@ -1404,7 +1404,7 @@ function toggleHierarchyNode(event, id) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '+' : '-';
+    toggle.textContent = isHidden ? '-' : '+';
   }
 }
 
