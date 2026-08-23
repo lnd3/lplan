@@ -613,10 +613,11 @@ _HTML = r"""<!DOCTYPE html>
     margin-right: 4px;
     text-align: center;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 18px;
     color: #a6adc8;
     user-select: none;
     transition: transform 0.15s;
+    line-height: 1;
   }
   .tree-item:not(.collapsed) .tree-toggle {
     transform: rotate(90deg);
