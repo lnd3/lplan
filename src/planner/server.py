@@ -454,7 +454,7 @@ _HTML = r"""<!DOCTYPE html>
     gap: 4px;
   }
   .tree-dir:hover { color: #9399b2; }
-  .tree-dir .arrow { display: inline-block; width: 12px; font-size: 9px; text-align: center; transition: transform 0.15s; }
+  .tree-dir .arrow { display: inline-block; width: 12px; font-size: 14px; text-align: center; transition: transform 0.15s; }
   .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
 
   /* ── Resize handle ── */
@@ -613,6 +613,7 @@ _HTML = r"""<!DOCTYPE html>
     margin-right: 4px;
     text-align: center;
     cursor: pointer;
+    font-size: 14px;
     font-size: 10px;
     color: #a6adc8;
     user-select: none;
