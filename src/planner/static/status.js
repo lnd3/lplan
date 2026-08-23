@@ -50,11 +50,14 @@ class StatusView {
     const container = document.getElementById('status-view');
 
     if (!container.querySelector('.status-filter-bar')) {
-      let html = '<div style="padding: 20px;">';
+      let html = '<div style="padding: 20px; display: flex; flex-direction: column; height: 100%; overflow: hidden;">';
       html += StatusView.renderFilterBar();
-      html += '<div class="status-results-container"></div>';
+      html += '<div class="status-results-container" style="flex: 1; overflow-y: auto; overflow-x: auto; margin-top: 12px;"></div>';
       html += '</div>';
       container.innerHTML = html;
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.overflow = 'hidden';
       StatusView.attachEventListeners();
     }
 
