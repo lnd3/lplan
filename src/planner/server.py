@@ -768,7 +768,7 @@ function renderTree(parent, nodes) {
       // Directory header
       const hdr = document.createElement('div');
       hdr.className = 'tree-dir';
-      hdr.innerHTML = `<span class="arrow">.</span> ${node.name}`;
+      hdr.innerHTML = `<span class="arrow">·</span> ${node.name}`;
       parent.appendChild(hdr);
 
       // Children container
@@ -1134,7 +1134,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '.'}</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '·'}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
