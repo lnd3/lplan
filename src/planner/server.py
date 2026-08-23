@@ -774,7 +774,7 @@ function renderTree(parent, nodes) {
       hdr.className = 'tree-dir';
       const toggle = document.createElement('span');
       toggle.className = 'arrow';
-      toggle.textContent = node.children && node.children.length > 0 ? '-' : '·';
+      toggle.textContent = node.children && node.children.length > 0 ? '-' : '•';
       hdr.appendChild(toggle);
       const nameSpan = document.createElement('span');
       nameSpan.textContent = node.name;
@@ -1147,7 +1147,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" style="transition: transform 0.15s;" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '·'}</span>
+        <span class="tree-toggle" style="transition: transform 0.15s;" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '•'}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
