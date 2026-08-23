@@ -787,7 +787,7 @@ function renderTree(parent, nodes) {
         hdr.classList.toggle('collapsed');
         children.classList.toggle('hidden');
         if (node.children && node.children.length > 0) {
-          toggle.textContent = children.classList.contains('hidden') ? '-' : '+';
+          toggle.textContent = children.classList.contains('hidden') ? '+' : '-';
         }
       };
     }
