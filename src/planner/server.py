@@ -618,7 +618,7 @@ _HTML = r"""<!DOCTYPE html>
     user-select: none;
     transition: transform 0.15s;
   }
-  .tree-item.expanded .tree-toggle {
+  .tree-item.collapsed .tree-toggle {
     transform: rotate(-90deg);
   }
   .tree-node-project, .tree-node-design, .tree-node-action {
@@ -1190,7 +1190,7 @@ function toggleTreeItem(event, id, hasChildren) {
     childrenDiv.style.display = isHidden ? '' : 'none';
     toggle.textContent = isHidden ? '-' : '+';
     if (treeItem) {
-      treeItem.classList.toggle('expanded');
+      treeItem.classList.toggle('collapsed', isHidden);
     }
   }
 }
@@ -1382,7 +1382,7 @@ async function renderHierarchyView(node, type, depth = 0) {
 
       <!-- Children of this item (if any, with toggle arrow) -->
       ${hasGrandchildren ? `
-        <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); const wrapper = toggle.parentElement; kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '+' : '-'; wrapper.classList.toggle('expanded');">
+        <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); const wrapper = toggle.parentElement; const isHidden = kids.style.display === 'none'; kids.style.display = isHidden ? '' : 'none'; toggle.textContent = isHidden ? '-' : '+'; wrapper.classList.toggle('collapsed', isHidden);">
           <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0; font-size: 14px; transition: transform 0.15s;">+</span>
           <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
         </div>
