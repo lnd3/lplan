@@ -1232,7 +1232,7 @@ async function showTreeRoot(id, title, type, path) {
     }
 
     // Get preview content
-    const preview_text = meta.ingress || body.split('\n').slice(0, 3).join('\n').substring(0, 200);
+    const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
     // Find current node and render hierarchy
     const currentNode = findNodeInHierarchy(id, treeHierarchy);
@@ -1334,7 +1334,7 @@ async function renderHierarchyView(node, type, depth = 0) {
             }
           }
         }
-        childPreview = childMeta.ingress || body.split('\n').slice(0, 10).join('\n');
+        childPreview = childMeta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
       }
     } catch (e) {
       console.error('Failed to load child data:', e);
