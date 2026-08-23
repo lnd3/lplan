@@ -764,9 +764,20 @@ function renderTree(parent, nodes) {
     if (node.type === 'file') {
       const el = document.createElement('div');
       el.className = 'tree-item';
-      el.textContent = node.name;
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
       el.dataset.path = node.path;
       el.onclick = () => loadFile(node.path);
+
+      const spacer = document.createElement('span');
+      spacer.className = 'arrow';
+      spacer.style.visibility = 'hidden';
+      el.appendChild(spacer);
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = node.name;
+      el.appendChild(nameSpan);
+
       parent.appendChild(el);
     } else {
       // Directory header
