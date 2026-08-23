@@ -768,7 +768,13 @@ function renderTree(parent, nodes) {
       // Directory header
       const hdr = document.createElement('div');
       hdr.className = 'tree-dir';
-      hdr.innerHTML = `<span class="arrow">·</span> ${node.name}`;
+      const toggle = document.createElement('span');
+      toggle.className = 'arrow';
+      toggle.textContent = node.children && node.children.length > 0 ? '-' : '·';
+      hdr.appendChild(toggle);
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = node.name;
+      hdr.appendChild(nameSpan);
       parent.appendChild(hdr);
 
       // Children container
@@ -780,6 +786,9 @@ function renderTree(parent, nodes) {
       hdr.onclick = () => {
         hdr.classList.toggle('collapsed');
         children.classList.toggle('hidden');
+        if (node.children && node.children.length > 0) {
+          toggle.textContent = children.classList.contains('hidden') ? '-' : '+';
+        }
       };
     }
   }
@@ -1134,7 +1143,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '·'}</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '-' : '·'}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
@@ -1154,7 +1163,7 @@ function buildChildrenHTML(parent, indent) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '+' : '−'}</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '-' : '·'}</span>
         <div class="tree-node tree-node-design" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
       </div>
       ${buildChildrenHTML(child, indent + 1)}
@@ -1174,7 +1183,7 @@ function toggleTreeItem(event, id, hasChildren) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '+' : '-';
+    toggle.textContent = isHidden ? '-' : '+';
   }
 }
 
@@ -1387,7 +1396,7 @@ function toggleHierarchyNode(event, id) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '+' : '-';
+    toggle.textContent = isHidden ? '-' : '+';
   }
 }
 
