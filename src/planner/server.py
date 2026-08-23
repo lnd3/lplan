@@ -768,7 +768,7 @@ function renderTree(parent, nodes) {
       // Directory header
       const hdr = document.createElement('div');
       hdr.className = 'tree-dir';
-      hdr.innerHTML = `<span class="arrow">▼</span> ${node.name}`;
+      hdr.innerHTML = `<span class="arrow">−</span> ${node.name}`;
       parent.appendChild(hdr);
 
       // Children container
@@ -1134,7 +1134,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '▶' : ''}</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '−'}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
@@ -1154,7 +1154,7 @@ function buildChildrenHTML(parent, indent) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '▶' : ''}</span>
+        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '+' : '−'}</span>
         <div class="tree-node tree-node-design" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
       </div>
       ${buildChildrenHTML(child, indent + 1)}
@@ -1174,7 +1174,7 @@ function toggleTreeItem(event, id, hasChildren) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '▼' : '▶';
+    toggle.textContent = isHidden ? '+' : '−';
   }
 }
 
@@ -1270,8 +1270,8 @@ async function showTreeRoot(id, title, type, path) {
 
         <!-- Children section with collapse toggle -->
         ${hierarchyHTML ? `<div style="margin-top: 8px;">
-          <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '▶' : '▼';">
-            <span class="children-toggle" style="flex-shrink: 0; width: 12px;">▼</span>
+          <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '+' : '−';">
+            <span class="children-toggle" style="flex-shrink: 0; width: 12px;">−</span>
             <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${type === 'project' ? 'Designs' : 'Actions'}</span>
           </div>
           <div style="padding-top: 8px;">
@@ -1365,8 +1365,8 @@ async function renderHierarchyView(node, type, depth = 0) {
 
       <!-- Children of this item (if any, with toggle arrow) -->
       ${hasGrandchildren ? `
-        <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '▶' : '▼';">
-          <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0;">▶</span>
+        <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '+' : '−';">
+          <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0;">+</span>
           <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
         </div>
         <div id="${toggleId}-children" style="display: none; padding-top: 8px; margin-top: 8px;">
@@ -1387,7 +1387,7 @@ function toggleHierarchyNode(event, id) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '▼' : '▶';
+    toggle.textContent = isHidden ? '+' : '−';
   }
 }
 
