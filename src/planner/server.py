@@ -613,7 +613,7 @@ _HTML = r"""<!DOCTYPE html>
     margin-right: 4px;
     text-align: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     color: #a6adc8;
     user-select: none;
     transition: transform 0.15s;
