@@ -236,9 +236,9 @@ ${_LIBRARIES_HEAD}
 <body>
 
 <div id="toolbar">
-  <button onclick="FileBrowser.showBrowser()">📁 Files</button>
-  <button onclick="TreeView.showTree()">🌳 Tree</button>
-  <button onclick="Analytics.showAnalytics()">📊 Analytics</button>
+  <button data-action="show-browser">📁 Files</button>
+  <button data-action="show-tree">🌳 Tree</button>
+  <button data-action="show-analytics">📊 Analytics</button>
 </div>
 
 <div id="main">
@@ -254,9 +254,9 @@ ${_LIBRARIES_HEAD}
     <div id="file-toolbar">
       <span class="path" id="current-path">—</span>
       <div class="file-controls">
-        <button id="btn-edit"   onclick="FileEditor.enterEdit()">Edit</button>
-        <button id="btn-save"   onclick="FileEditor.saveFile()">Save</button>
-        <button id="btn-cancel" onclick="FileEditor.cancelEdit()">Cancel</button>
+        <button id="btn-edit"   data-action="edit-file">Edit</button>
+        <button id="btn-save"   data-action="save-file">Save</button>
+        <button id="btn-cancel" data-action="cancel-edit">Cancel</button>
       </div>
     </div>
     <div id="preview"></div>
@@ -309,6 +309,7 @@ document.addEventListener('mouseup', () => {
 <script src="/static/preview.js"></script>
 <script src="/static/tree.js"></script>
 <script src="/static/analytics.js"></script>
+<script src="/static/dispatcher.js"></script>
 
 <script>
 // Initialize search input listener
@@ -320,6 +321,7 @@ FileSearch.initSearchInput();
 
 
 window.onload = async () => {
+  EventDispatcher.init();
   if (!window.editEnabled) {
     document.getElementById('btn-edit').style.display = 'none';
   }
