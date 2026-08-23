@@ -1183,7 +1183,7 @@ function toggleTreeItem(event, id, hasChildren) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '+' : '-';
+    toggle.textContent = isHidden ? '-' : '+';
   }
 }
 
@@ -1396,7 +1396,7 @@ function toggleHierarchyNode(event, id) {
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
-    toggle.textContent = isHidden ? '+' : '-';
+    toggle.textContent = isHidden ? '-' : '+';
   }
 }
 
