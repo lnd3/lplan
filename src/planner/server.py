@@ -619,7 +619,7 @@ _HTML = r"""<!DOCTYPE html>
     transition: transform 0.15s;
   }
   .tree-item.expanded .tree-toggle {
-    transform: rotate(90deg);
+    transform: rotate(-90deg);
   }
   .tree-node-project, .tree-node-design, .tree-node-action {
     /* Plain text styling - no colors, sizes, or margins */
