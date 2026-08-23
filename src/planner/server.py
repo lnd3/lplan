@@ -454,7 +454,7 @@ _HTML = r"""<!DOCTYPE html>
     gap: 4px;
   }
   .tree-dir:hover { color: #9399b2; }
-  .tree-dir .arrow { font-size: 9px; transition: transform 0.15s; }
+  .tree-dir .arrow { display: inline-block; width: 12px; font-size: 9px; text-align: center; transition: transform 0.15s; }
   .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
 
   /* ── Resize handle ── */
@@ -770,7 +770,7 @@ function renderTree(parent, nodes) {
       hdr.className = 'tree-dir';
       const toggle = document.createElement('span');
       toggle.className = 'arrow';
-      toggle.textContent = node.children && node.children.length > 0 ? '-' : '·';
+      toggle.textContent = node.children && node.children.length > 0 ? '+' : '·';
       hdr.appendChild(toggle);
       const nameSpan = document.createElement('span');
       nameSpan.textContent = node.name;
