@@ -19,6 +19,9 @@ class EventDispatcher {
         case 'show-analytics':
           Analytics.showAnalytics();
           break;
+        case 'show-status':
+          StatusView.show();
+          break;
         case 'edit-file':
           FileEditor.enterEdit();
           break;

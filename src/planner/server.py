@@ -239,6 +239,7 @@ ${_LIBRARIES_HEAD}
   <button data-action="show-browser">📁 Files</button>
   <button data-action="show-tree">🌳 Tree</button>
   <button data-action="show-analytics">📊 Analytics</button>
+  <button data-action="show-status">📊 Status</button>
 </div>
 
 <div id="main">
@@ -264,6 +265,7 @@ ${_LIBRARIES_HEAD}
     <div id="validate-banner"></div>
     <div id="tree-view" style="display: none;"></div>
     <div id="analytics-dashboard" style="display: none;"></div>
+    <div id="status-view" style="display: none;"></div>
   </div>
 </div>
 
@@ -309,6 +311,7 @@ document.addEventListener('mouseup', () => {
 <script src="/static/preview.js"></script>
 <script src="/static/tree.js"></script>
 <script src="/static/analytics.js"></script>
+<script src="/static/status.js"></script>
 <script src="/static/dispatcher.js"></script>
 
 <script>
@@ -554,6 +557,92 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
             svg = generate_burndown_svg(projects)
 
             return jsonify({"ok": True, "svg": svg})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    @app.route("/api/status")
+    def get_status():
+        """Get status view data: all entities with metadata for table display."""
+        try:
+            from datetime import datetime
+            from planner.models import Design, Action
+
+            parsed = PlanParser.parse_directory(plan_dir)
+            projects = {}
+            designs = {}
+            actions = {}
+
+            for result in parsed.values():
+                if isinstance(result, dict) and "error" in result:
+                    continue
+                entity = result.entity
+                if isinstance(entity, Project):
+                    projects[entity.id] = entity
+                elif isinstance(entity, Design):
+                    designs[entity.id] = entity
+                elif isinstance(entity, Action):
+                    actions[entity.id] = entity
+
+            graph = DependencyGraph(projects)
+            entities = []
+
+            for proj in projects.values():
+                entities.append({
+                    "id": proj.id,
+                    "title": proj.title,
+                    "type": "project",
+                    "status": proj.status,
+                    "priority": proj.priority or "MEDIUM",
+                    "created": proj.created.isoformat() if proj.created else None,
+                    "updated": proj.updated.isoformat() if proj.updated else None,
+                    "description": proj.description[:100] + "..." if proj.description and len(proj.description) > 100 else proj.description,
+                    "depends_on_count": len(graph.get_blocking_deps(proj.id)),
+                    "blocks_count": len(graph.get_blocked_by(proj.id)),
+                })
+
+            for design in designs.values():
+                entities.append({
+                    "id": design.id,
+                    "title": design.title,
+                    "type": "design",
+                    "status": design.status,
+                    "priority": getattr(design, 'priority', None) or "MEDIUM",
+                    "created": design.created.isoformat() if design.created else None,
+                    "updated": design.updated.isoformat() if design.updated else None,
+                    "description": design.description[:100] + "..." if design.description and len(design.description) > 100 else design.description,
+                    "parent": design.parent,
+                    "depends_on_count": len(design.depends_on) if design.depends_on else 0,
+                    "blocks_count": len(design.blocks) if design.blocks else 0,
+                })
+
+            for action in actions.values():
+                entities.append({
+                    "id": action.id,
+                    "title": action.title,
+                    "type": "action",
+                    "status": action.status,
+                    "priority": getattr(action, 'priority', None) or "MEDIUM",
+                    "created": action.created.isoformat() if action.created else None,
+                    "updated": action.updated.isoformat() if action.updated else None,
+                    "description": action.description[:100] + "..." if action.description and len(action.description) > 100 else action.description,
+                    "parent": action.parent,
+                    "depends_on_count": len(action.depends_on) if action.depends_on else 0,
+                    "blocks_count": len(action.blocks) if action.blocks else 0,
+                })
+
+            return jsonify({
+                "ok": True,
+                "data": {
+                    "timestamp": datetime.now().isoformat(),
+                    "entities": entities,
+                    "summary": {
+                        "total": len(entities),
+                        "projects": len(projects),
+                        "designs": len(designs),
+                        "actions": len(actions),
+                    }
+                }
+            })
         except Exception as e:
             return jsonify({"ok": False, "error": str(e)}), 500
 
