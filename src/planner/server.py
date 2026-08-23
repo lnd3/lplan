@@ -770,7 +770,7 @@ function renderTree(parent, nodes) {
       hdr.className = 'tree-dir';
       const toggle = document.createElement('span');
       toggle.className = 'arrow';
-      toggle.textContent = node.children && node.children.length > 0 ? '+' : '·';
+      toggle.textContent = node.children && node.children.length > 0 ? '-' : '·';
       hdr.appendChild(toggle);
       const nameSpan = document.createElement('span');
       nameSpan.textContent = node.name;
