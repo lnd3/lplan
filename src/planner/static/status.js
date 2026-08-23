@@ -48,15 +48,20 @@ class StatusView {
 
   static render() {
     const container = document.getElementById('status-view');
-    let html = '<div style="padding: 20px;">';
 
-    html += StatusView.renderFilterBar();
-    html += StatusView.renderTable();
-    html += StatusView.renderPagination();
+    if (!container.querySelector('.status-filter-bar')) {
+      let html = '<div style="padding: 20px;">';
+      html += StatusView.renderFilterBar();
+      html += '<div class="status-results-container"></div>';
+      html += '</div>';
+      container.innerHTML = html;
+      StatusView.attachEventListeners();
+    }
 
-    html += '</div>';
-    container.innerHTML = html;
-    StatusView.attachEventListeners();
+    const resultsContainer = container.querySelector('.status-results-container');
+    let html = StatusView.renderTable() + StatusView.renderPagination();
+    resultsContainer.innerHTML = html;
+    StatusView.attachTableEventListeners();
   }
 
   static renderFilterBar() {
@@ -66,38 +71,35 @@ class StatusView {
                          StatusView.filters.priorities.length +
                          StatusView.filters.types.length;
 
-    let html = `<div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">`;
+    let html = `<div class="status-filter-bar" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">`;
 
     html += `<input type="text" id="status-search" placeholder="🔍 Search ID, title, description..."
       style="padding: 6px 12px; background: #0f111b; border: 1px solid #313244; border-radius: 4px;
              color: #cdd6f4; font-size: 13px; flex: 1; min-width: 200px;" value="${StatusView.filters.search}">`;
 
     html += `<select id="status-filter" multiple style="padding: 6px 8px; background: #313244;
-             border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px;">
-      <option value="">-- Status --</option>
-      <option value="IDEA">IDEA</option>
-      <option value="PLANNING">PLANNING</option>
-      <option value="IN_PROGRESS">IN_PROGRESS</option>
-      <option value="BLOCKED">BLOCKED</option>
-      <option value="DONE">DONE</option>
-      <option value="DEFERRED">DEFERRED</option>
-      <option value="CANCELLED">CANCELLED</option>
+             border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <option value="IDEA" ${StatusView.filters.statuses.includes('IDEA') ? 'selected' : ''}>IDEA</option>
+      <option value="PLANNING" ${StatusView.filters.statuses.includes('PLANNING') ? 'selected' : ''}>PLANNING</option>
+      <option value="IN_PROGRESS" ${StatusView.filters.statuses.includes('IN_PROGRESS') ? 'selected' : ''}>IN_PROGRESS</option>
+      <option value="BLOCKED" ${StatusView.filters.statuses.includes('BLOCKED') ? 'selected' : ''}>BLOCKED</option>
+      <option value="DONE" ${StatusView.filters.statuses.includes('DONE') ? 'selected' : ''}>DONE</option>
+      <option value="DEFERRED" ${StatusView.filters.statuses.includes('DEFERRED') ? 'selected' : ''}>DEFERRED</option>
+      <option value="CANCELLED" ${StatusView.filters.statuses.includes('CANCELLED') ? 'selected' : ''}>CANCELLED</option>
     </select>`;
 
     html += `<select id="priority-filter" multiple style="padding: 6px 8px; background: #313244;
-             border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px;">
-      <option value="">-- Priority --</option>
-      <option value="HIGH">HIGH</option>
-      <option value="MEDIUM">MEDIUM</option>
-      <option value="LOW">LOW</option>
+             border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <option value="HIGH" ${StatusView.filters.priorities.includes('HIGH') ? 'selected' : ''}>HIGH</option>
+      <option value="MEDIUM" ${StatusView.filters.priorities.includes('MEDIUM') ? 'selected' : ''}>MEDIUM</option>
+      <option value="LOW" ${StatusView.filters.priorities.includes('LOW') ? 'selected' : ''}>LOW</option>
     </select>`;
 
     html += `<select id="type-filter" multiple style="padding: 6px 8px; background: #313244;
-             border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px;">
-      <option value="">-- Type --</option>
-      <option value="project">Project</option>
-      <option value="design">Design</option>
-      <option value="action">Action</option>
+             border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <option value="project" ${StatusView.filters.types.includes('project') ? 'selected' : ''}>Project</option>
+      <option value="design" ${StatusView.filters.types.includes('design') ? 'selected' : ''}>Design</option>
+      <option value="action" ${StatusView.filters.types.includes('action') ? 'selected' : ''}>Action</option>
     </select>`;
 
     html += `<button id="clear-filters" style="padding: 6px 12px; background: #45475a;
@@ -188,56 +190,84 @@ class StatusView {
   }
 
   static attachEventListeners() {
-    document.getElementById('status-search')?.addEventListener('input', (e) => {
-      StatusView.filters.search = e.target.value;
-      StatusView.currentPage = 1;
-      StatusView.applyFilters();
-      StatusView.render();
-    });
-
-    document.getElementById('status-filter')?.addEventListener('change', (e) => {
-      StatusView.filters.statuses = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v);
-      StatusView.currentPage = 1;
-      StatusView.applyFilters();
-      StatusView.render();
-    });
-
-    document.getElementById('priority-filter')?.addEventListener('change', (e) => {
-      StatusView.filters.priorities = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v);
-      StatusView.currentPage = 1;
-      StatusView.applyFilters();
-      StatusView.render();
-    });
-
-    document.getElementById('type-filter')?.addEventListener('change', (e) => {
-      StatusView.filters.types = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v);
-      StatusView.currentPage = 1;
-      StatusView.applyFilters();
-      StatusView.render();
-    });
-
-    document.getElementById('clear-filters')?.addEventListener('click', () => {
-      StatusView.filters = { search: '', statuses: [], priorities: [], types: [] };
-      StatusView.currentPage = 1;
-      document.getElementById('status-search').value = '';
-      StatusView.applyFilters();
-      StatusView.render();
-    });
-
-    document.querySelectorAll('th[data-column]').forEach(th => {
-      th.addEventListener('click', () => {
-        const column = th.dataset.column;
-        if (StatusView.sortConfig.column === column) {
-          StatusView.sortConfig.direction = StatusView.sortConfig.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-          StatusView.sortConfig.column = column;
-          StatusView.sortConfig.direction = 'asc';
-        }
+    const searchInput = document.getElementById('status-search');
+    if (searchInput && !searchInput._attached) {
+      searchInput._attached = true;
+      searchInput.addEventListener('input', (e) => {
+        StatusView.filters.search = e.target.value;
+        StatusView.currentPage = 1;
         StatusView.applyFilters();
         StatusView.render();
       });
-    });
+    }
 
+    const statusFilter = document.getElementById('status-filter');
+    if (statusFilter && !statusFilter._attached) {
+      statusFilter._attached = true;
+      statusFilter.addEventListener('change', (e) => {
+        StatusView.filters.statuses = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v);
+        StatusView.currentPage = 1;
+        StatusView.applyFilters();
+        StatusView.render();
+      });
+    }
+
+    const priorityFilter = document.getElementById('priority-filter');
+    if (priorityFilter && !priorityFilter._attached) {
+      priorityFilter._attached = true;
+      priorityFilter.addEventListener('change', (e) => {
+        StatusView.filters.priorities = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v);
+        StatusView.currentPage = 1;
+        StatusView.applyFilters();
+        StatusView.render();
+      });
+    }
+
+    const typeFilter = document.getElementById('type-filter');
+    if (typeFilter && !typeFilter._attached) {
+      typeFilter._attached = true;
+      typeFilter.addEventListener('change', (e) => {
+        StatusView.filters.types = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v);
+        StatusView.currentPage = 1;
+        StatusView.applyFilters();
+        StatusView.render();
+      });
+    }
+
+    const clearBtn = document.getElementById('clear-filters');
+    if (clearBtn && !clearBtn._attached) {
+      clearBtn._attached = true;
+      clearBtn.addEventListener('click', () => {
+        StatusView.filters = { search: '', statuses: [], priorities: [], types: [] };
+        StatusView.currentPage = 1;
+        document.getElementById('status-search').value = '';
+        document.getElementById('status-filter').value = '';
+        document.getElementById('priority-filter').value = '';
+        document.getElementById('type-filter').value = '';
+        StatusView.applyFilters();
+        StatusView.render();
+      });
+    }
+
+    document.querySelectorAll('th[data-column]').forEach(th => {
+      if (!th._attached) {
+        th._attached = true;
+        th.addEventListener('click', () => {
+          const column = th.dataset.column;
+          if (StatusView.sortConfig.column === column) {
+            StatusView.sortConfig.direction = StatusView.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+          } else {
+            StatusView.sortConfig.column = column;
+            StatusView.sortConfig.direction = 'asc';
+          }
+          StatusView.applyFilters();
+          StatusView.render();
+        });
+      }
+    });
+  }
+
+  static attachTableEventListeners() {
     document.querySelectorAll('.pagination-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         StatusView.currentPage = parseInt(btn.dataset.page);
