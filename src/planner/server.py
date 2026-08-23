@@ -1812,6 +1812,16 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         html = _HTML.replace("EDIT_ENABLED", "true" if edit else "false")
         return Response(html, mimetype="text/html")
 
+    @app.route("/static/<path:filename>")
+    def serve_static(filename):
+        static_dir = Path(__file__).parent / "static"
+        file_path = (static_dir / filename).resolve()
+        if not str(file_path).startswith(str(static_dir.resolve())):
+            return "Not found", 404
+        if not file_path.exists():
+            return "Not found", 404
+        return Response(file_path.read_text(encoding="utf-8"), mimetype="application/javascript")
+
     @app.route("/api/tree")
     def tree():
         return jsonify(_build_tree(plan_dir))
