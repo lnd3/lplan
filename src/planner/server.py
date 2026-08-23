@@ -351,7 +351,8 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
 
     @app.route("/")
     def index():
-        html = _HTML.replace("EDIT_ENABLED", "true" if edit else "false")
+        html = _HTML.replace("${_LIBRARIES_HEAD}", _LIBRARIES_HEAD)
+        html = html.replace("EDIT_ENABLED", "true" if edit else "false")
         return Response(html, mimetype="text/html")
 
     @app.route("/static/<path:filename>")
