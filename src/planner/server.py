@@ -618,6 +618,9 @@ _HTML = r"""<!DOCTYPE html>
     user-select: none;
     transition: transform 0.15s;
   }
+  .tree-item.expanded .tree-toggle {
+    transform: scale(1.1);
+  }
   .tree-node-project, .tree-node-design, .tree-node-action {
     /* Plain text styling - no colors, sizes, or margins */
   }
@@ -1180,11 +1183,15 @@ function toggleTreeItem(event, id, hasChildren) {
 
   const childrenDiv = document.getElementById(`children-${id}`);
   const toggle = event.currentTarget;
+  const treeItem = document.getElementById(`tree-${id}`);
 
   if (childrenDiv) {
     const isHidden = childrenDiv.style.display === 'none';
     childrenDiv.style.display = isHidden ? '' : 'none';
     toggle.textContent = isHidden ? '-' : '+';
+    if (treeItem) {
+      treeItem.classList.toggle('expanded');
+    }
   }
 }
 
@@ -1375,7 +1382,7 @@ async function renderHierarchyView(node, type, depth = 0) {
 
       <!-- Children of this item (if any, with toggle arrow) -->
       ${hasGrandchildren ? `
-        <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '+' : '-';">
+        <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px; cursor: pointer;" onclick="const kids = document.getElementById('${toggleId}-children'); const toggle = document.getElementById('${toggleId}-toggle'); const wrapper = toggle.parentElement; kids.style.display = kids.style.display === 'none' ? '' : 'none'; toggle.textContent = kids.style.display === 'none' ? '+' : '-'; wrapper.classList.toggle('expanded');">
           <span id="${toggleId}-toggle" class="tree-toggle" style="flex-shrink: 0; font-size: 14px; transition: transform 0.15s;">+</span>
           <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
         </div>
