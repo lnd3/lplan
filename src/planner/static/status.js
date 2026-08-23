@@ -22,9 +22,10 @@ class StatusView {
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('sidebar').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
+    document.getElementById('editor-wrap').style.display = 'none';
 
     const statusContainer = document.getElementById('status-view');
-    statusContainer.style.display = '';
+    statusContainer.style.display = 'block';
 
     await StatusView.loadStatus();
     StatusView.render();
