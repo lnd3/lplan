@@ -1147,7 +1147,7 @@ function buildTreeHTML(projects, indent = 0) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '·'}</span>
+        <span class="tree-toggle" style="transition: transform 0.15s;" onclick="toggleTreeItem(event, '${project.id}', ${hasChildren})">${hasChildren ? '+' : '·'}</span>
         <div class="tree-node tree-node-project" onclick='showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
       </div>
       ${buildChildrenHTML(project, indent + 1)}
@@ -1167,7 +1167,7 @@ function buildChildrenHTML(parent, indent) {
 
     html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
       <div style="display: flex; align-items: center;">
-        <span class="tree-toggle" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '+' : '·'}</span>
+        <span class="tree-toggle" style="transition: transform 0.15s;" onclick="toggleTreeItem(event, '${child.id}', ${hasGrandchildren})">${hasGrandchildren ? '+' : '·'}</span>
         <div class="tree-node tree-node-design" onclick='showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
       </div>
       ${buildChildrenHTML(child, indent + 1)}
