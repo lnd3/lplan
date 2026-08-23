@@ -618,7 +618,7 @@ _HTML = r"""<!DOCTYPE html>
     user-select: none;
     transition: transform 0.15s;
   }
-  .tree-item.collapsed .tree-toggle {
+  .tree-item:not(.collapsed) .tree-toggle {
     transform: rotate(90deg);
   }
   .tree-node-project, .tree-node-design, .tree-node-action {
