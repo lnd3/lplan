@@ -3,46 +3,53 @@ id: MXXX
 title: Master Plan Title Here
 status: IDEA
 stakeholder: Stakeholder Name
-vision: High-level strategic vision statement (5-year outlook)
+vision: One sentence — what changes in the world when this succeeds?
 priority: MEDIUM
 goals:
-  - Goal 1
-  - Goal 2
+  - Observable external outcome 1 (market, user, or competitive)
+  - Observable external outcome 2
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 
 ## Goal
 
-1–2 paragraph statement of the strategic vision and long-term objectives this master plan represents. What direction does the organization/team move in? Why is this vision important?
+1–2 paragraphs on WHY this matters — framed outward. What is happening in
+the market, in technology, or among competitors that makes this worth pursuing?
+What opportunity or threat does this respond to? What would be lost by not
+pursuing it, and what would be gained by pursuing it well?
 
-## Scope
+Do not describe the solution here. Describe the world this master plan bets on.
 
-Bullet-point list of what's included in this master plan:
-- Strategic Direction A
-- Strategic Direction B
-- Organizational Priorities
-- Not included: X, Y, Z
+## Market Window
+
+When is this worth pursuing, and when does that window close?
+
+- **Opens**: What condition or event makes this timely now?
+- **Closes**: What compresses the opportunity — competition, regulation, technology maturity?
+- **Peak value**: When is the return on investment highest?
+
+## External Forces
+
+What is happening outside the organization that this master plan responds to?
+
+- **Market**: trends, structural shifts, pricing dynamics
+- **Competition**: who else is moving here, how fast, and with what advantage?
+- **Technology**: which emerging or maturing technologies enable or threaten this?
+- **Regulatory / macro**: constraints or tailwinds from policy, economics, geography
+
+## Success Looks Like
+
+What is the externally observable signal that this master plan paid off? Not
+internal deliverables — describe what changes in the world, for users, or in
+competitive position when this succeeds. Frame it as something you could read
+in a market report or observe in a P&L.
 
 ## Linked
 
 - **Projects**: (projects that implement this master plan)
-- **Other Master Plans**: (related strategic visions)
-- **References**: (upstream visions this builds on)
-
-## Tasks
-
-### Phase 1 (Year 1)
-- [ ] Establish foundational goal 1
-- [ ] Establish foundational goal 2
-
-### Phase 2 (Year 2-3)
-- [ ] Build on established goals
-- [ ] Expand scope
-
-### Phase 3 (Year 4-5)
-- [ ] Consolidate vision
-- [ ] Plan next evolution
+- **Other Master Plans**: (related or dependent strategic visions)
+- **References**: (external reports, competitor moves, technology signals)
 
 ## Log
 
