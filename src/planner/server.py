@@ -311,6 +311,7 @@ document.addEventListener('mouseup', () => {
 <script src="/static/preview.js"></script>
 <script src="/static/tree.js"></script>
 <script src="/static/analytics.js"></script>
+<script src="/static/viewer.js"></script>
 <script src="/static/status.js"></script>
 <script src="/static/dispatcher.js"></script>
 
@@ -596,6 +597,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "created": proj.created.isoformat() if proj.created else None,
                     "updated": proj.updated.isoformat() if proj.updated else None,
                     "description": proj.description[:100] + "..." if proj.description and len(proj.description) > 100 else proj.description,
+                    "path": f"projects/{proj.id}.md",
                     "depends_on_count": len(graph.get_blocking_deps(proj.id)),
                     "blocks_count": len(graph.get_blocked_by(proj.id)),
                 })
@@ -610,6 +612,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "created": design.created.isoformat() if design.created else None,
                     "updated": design.updated.isoformat() if design.updated else None,
                     "description": design.description[:100] + "..." if design.description and len(design.description) > 100 else design.description,
+                    "path": f"designs/{design.id}.md",
                     "parent": getattr(design, 'parent', None),
                     "depends_on_count": len(getattr(design, 'depends_on', [])) if getattr(design, 'depends_on', None) else 0,
                     "blocks_count": len(getattr(design, 'blocks', [])) if getattr(design, 'blocks', None) else 0,
@@ -625,6 +628,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "created": action.created.isoformat() if action.created else None,
                     "updated": action.updated.isoformat() if action.updated else None,
                     "description": action.description[:100] + "..." if action.description and len(action.description) > 100 else action.description,
+                    "path": f"actions/{action.id}.md",
                     "parent": getattr(action, 'parent', None),
                     "depends_on_count": len(getattr(action, 'depends_on', [])) if getattr(action, 'depends_on', None) else 0,
                     "blocks_count": len(getattr(action, 'blocks', [])) if getattr(action, 'blocks', None) else 0,

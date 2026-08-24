@@ -282,15 +282,13 @@ class StatusView {
       row.addEventListener('click', () => {
         const id = row.dataset.id;
         const type = row.dataset.type;
-        if (type === 'project') {
-          const proj = StatusView.data.find(e => e.id === id && e.type === 'project');
-          if (proj) TreeView.showTreeRoot(id, proj.title, 'project', proj.path || `projects/${id}.md`);
-        } else {
-          const entity = StatusView.data.find(e => e.id === id);
-          if (entity?.path) FileBrowser.loadFile(entity.path);
+        const entity = StatusView.data.find(e => e.id === id && e.type === type);
+        if (entity) {
+          const path = entity.path || `${type === 'project' ? 'projects' : type === 'design' ? 'designs' : 'actions'}/${id}.md`;
+          EntityViewer.show(id, entity.title, type, path);
         }
       });
-      row.style.transition = 'background 0.15s';
+      row.style.transition = 'background 0.15s; cursor: pointer;';
       row.addEventListener('mouseover', () => row.style.background = '#313244');
       row.addEventListener('mouseout', () => row.style.background = '');
     });
