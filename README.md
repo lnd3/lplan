@@ -1,22 +1,45 @@
 # lplan — Structured Planning Framework
 
-A generic, reusable planning system for organising projects, designs, and actions across software repositories. Designed to work as a git submodule.
+A generic, reusable planning system for organising decisions across software
+repositories. Designed to work as a git submodule.
+
+> *This document is not philosophy for its own sake. It is a reminder of what
+> planning is for: to make decisions better, faster, and with less waste — in
+> service of an existence that is finite and will not be repeated.
+> That is sufficient reason to plan well.*
+
+---
 
 ## Core Idea
 
-Plans scale by adding files, not by adding fields. Each concern gets its own flat, readable document:
+Every plan is downstream of a decision to plan.
+Every decision is downstream of an existence that decided to show up.
+
+The framework makes that chain explicit. Six layers, each answering a different
+question — moving from unconstrained belief to concrete action:
+
+| Layer | Prefix | Question answered |
+|-------|--------|-------------------|
+| `ORIGIN.md` | — | Why plan at all? |
+| `AXIOMS.md` | — | What constraints apply to all decisions? |
+| `theses/` | T | What do I believe about the world? *(falsifiable)* |
+| `master_plans/` | M | When are conditions right to act on it? |
+| `projects/` | P | What will we build? |
+| `designs/` | D | How will we build it? |
+| `actions/` | A | What specifically needs to be done? |
+
+Plans scale by adding files, not by adding fields. Each concern gets its own
+flat, readable document.
+
+### Session documents
 
 | File | Purpose | Updated |
 |------|---------|---------|
-| `INDEX.md` | Dashboard — all projects, designs, actions at a glance | Auto-generated or manually maintained |
-| `FOCUS.md` | Current active work, what's blocked, what's next | Rewritten each session |
-| `CHANGELOG.md` | Append-only status change log | Appended on every status change |
-| `REFLECTION.md` | Learnings, gotchas, patterns — accumulated project intuition | Appended as insights are discovered |
+| `INDEX.md` | Dashboard — full hierarchy at a glance | Auto-generated or hand-maintained |
+| `FOCUS.md` | Current work, blockers, what's next | Rewritten each session |
+| `CHANGELOG.md` | Append-only status change log | On every status change |
+| `REFLECTION.md` | Learnings, gotchas, patterns | Appended as insights arrive |
 | `VALIDATION.md` | Validation workflow and common errors | Reference |
-| `README.md` | This file — framework overview | Reference |
-| `projects/` | High-level goals (P001, P002, …) | Edited directly |
-| `designs/` | Architectural decisions (D001, D002, …) | Edited directly |
-| `actions/` | Concrete task lists (A001, A002, …) | Edited directly |
 
 ---
 
@@ -39,7 +62,9 @@ pip install flask
 ./deps/lplan/bin/plan init ./plan --name "MyProject"
 ```
 
-Creates: `INDEX.md`, `FOCUS.md`, `CHANGELOG.md`, `REFLECTION.md`, `VALIDATION.md`, `README.md`, `projects/`, `designs/`, `actions/`
+Creates: `ORIGIN.md`, `AXIOMS.md`, `INDEX.md`, `FOCUS.md`, `CHANGELOG.md`,
+`REFLECTION.md`, `VALIDATION.md`, `theses/`, `master_plans/`, `projects/`,
+`designs/`, `actions/`
 
 ### 3. Validate before committing
 
@@ -100,7 +125,7 @@ plan restart ./plan                     # Restart with same options
 ### Other
 
 ```bash
-plan report ./plan -o report.html       # Generate HTML report (also available in web UI)
+plan report ./plan -o report.html       # Generate HTML report
 plan commit ./plan -m "Update P001"     # Validate + git commit in one step
 plan watch ./plan                       # Watch for changes (Ctrl-C to stop)
 plan init ./plan --name "Name"          # Initialise new plan directory
@@ -109,6 +134,87 @@ plan init ./plan --name "Name"          # Initialise new plan directory
 ---
 
 ## Plan File Formats
+
+### Thesis (`theses/T001-name.md`)
+
+Unconstrained belief about the world. Has a falsification condition —
+without one, it is a preference, not a thesis.
+
+```yaml
+---
+id: T001
+title: One sentence — a falsifiable belief about how the world works
+status: HELD
+conviction: 8
+created: 2026-08-20
+updated: 2026-08-20
+---
+
+## The Belief
+State the conviction plainly. Write it so someone could argue against it.
+
+## Why This Could Be True
+Two or three grounding observations. Brief — not a proof.
+
+## What Would Change My Mind
+Explicit falsification criteria. What evidence moves this to QUESTIONING or ABANDONED?
+
+## Entropic Constraints
+- **Decay mechanism**: what force works against this thesis?
+- **Horizon**: rough timeframe before the edge compresses
+- **Early warning signs**: observable signals of compression
+- **What comes after**: successor thesis, or domain becomes unplayable?
+
+## Master Plans Seeded by This
+- [[M001]] — activated when [condition]
+
+## Log
+2026-08-20 — Thesis formed.
+```
+
+### Master Plan (`master_plans/M001-name.md`)
+
+Constrained possibility: a thesis made actionable by current market,
+technology, and competitive conditions. Answers *when*, not *how*.
+
+```yaml
+---
+id: M001
+title: Strategic direction in one sentence
+status: IN_PROGRESS
+stakeholder: Name
+vision: What changes in the world when this succeeds?
+priority: HIGH
+parent_thesis: [T001, T002]
+goals:
+  - Observable external outcome 1
+  - Observable external outcome 2
+created: 2026-08-20
+updated: 2026-08-20
+---
+
+## Goal
+WHY this matters — framed outward. What market or technology condition makes
+this worth pursuing now? Do not describe the solution.
+
+## Market Window
+- **Opens**: what makes this timely now?
+- **Closes**: what compresses the opportunity?
+- **Peak value**: when is return highest?
+
+## External Forces
+Market trends, competition, technology, regulatory context.
+
+## Success Looks Like
+Externally observable outcome — not internal deliverables.
+
+## Linked
+- **Projects**: P001, P002
+- **Other Master Plans**: M002
+
+## Log
+2026-08-20 — Master plan created.
+```
 
 ### Project (`projects/P001-name.md`)
 
@@ -120,25 +226,18 @@ status: IN_PROGRESS
 priority: HIGH
 priority_drivers:
   - strategic_edge
+parent_master_plan: [M001]
 created: 2026-08-20
 updated: 2026-08-20
 depends: [P002]
-external_dependencies: []
-enables: [P003]
 ---
 
 ## Goal
-What this project achieves and why.
-
 ## Scope
-- Included: A, B, C
-- Not included: X, Y
-
 ## Tasks
 ### Phase 1
 - [x] Done item
 - [ ] Pending item
-
 ## Log
 2026-08-20 — Project created.
 ```
@@ -170,8 +269,6 @@ design: D001
 project: P001
 created: 2026-08-20
 updated: 2026-08-20
-depends: []
-external_dependencies: []
 ---
 ```
 
@@ -179,19 +276,24 @@ external_dependencies: []
 
 ## Status Values
 
-`IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+Standard: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+
+Thesis-specific: `HELD` · `QUESTIONING` · `ABANDONED`
 
 ## Priority Values
 
 `HIGH` · `MEDIUM` · `LOW`
 
-Priority is computed from `priority_drivers`. See `schema/priority-framework.md` for driver weights.
+Priority is computed from `priority_drivers`. See `schema/priority-framework.md`.
 
 ---
 
 ## FOCUS.md Workflow
 
-`FOCUS.md` is rewritten (not appended) each session. It answers: *what is being worked on right now, what is blocked, and what comes next.* Keeping it current costs one minute per session and eliminates the "where were we?" reconstruction cost at session start.
+`FOCUS.md` is rewritten (not appended) each session. It answers: *what is being
+worked on right now, what is blocked, and what comes next.* Keeping it current
+costs one minute per session and eliminates the "where were we?" reconstruction
+cost at session start.
 
 ## REFLECTION.md Workflow
 
@@ -203,7 +305,8 @@ YYYY-MM-DD | CATEGORY | insight text
 
 Categories: `GOTCHA` · `PATTERN` · `LEARNING` · `WARNING` · `DECISION`
 
-Write an entry when something surprises you, when an assumption turns out to be wrong, or when a pattern generalises across multiple situations. This builds up project intuition that persists across context resets.
+Write an entry when something surprises you, when an assumption turns out to
+be wrong, or when a pattern generalises across multiple situations.
 
 ---
 
