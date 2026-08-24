@@ -91,12 +91,37 @@ class TreeView {
       const hierarchy = await res.json();
 
       TreeView.treeHierarchy = hierarchy.projects || [];
+      const masterPlans = hierarchy.master_plans || [];
 
-      const html = TreeView.buildTreeHTML(TreeView.treeHierarchy);
+      let html = '';
+
+      // Add master plans section if any exist
+      if (masterPlans.length > 0) {
+        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
+        html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
+        for (const mp of masterPlans) {
+          html += `<div class="tree-item" style="padding-left: 10px;" id="tree-${mp.id}">
+            <div style="display: flex; align-items: center;">
+              <span class="tree-toggle" style="visibility: hidden;">•</span>
+              <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">🎯 ${mp.title}</div>
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      // Add projects section
+      html += '<div style="padding: 10px 0;">';
+      html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">PROJECTS</div>';
+      html += TreeView.buildTreeHTML(TreeView.treeHierarchy);
+      html += '</div>';
+
       sidebarContent.innerHTML = html;
 
       const preview = document.getElementById('preview');
-      if (TreeView.treeHierarchy.length > 0) {
+      if (masterPlans.length > 0) {
+        await TreeView.showTreeRoot(masterPlans[0].id, masterPlans[0].title, 'master_plan', masterPlans[0].path);
+      } else if (TreeView.treeHierarchy.length > 0) {
         await TreeView.showTreeRoot(TreeView.treeHierarchy[0].id, TreeView.treeHierarchy[0].title, 'project', TreeView.treeHierarchy[0].path);
       } else {
         preview.style.display = '';
@@ -144,13 +169,16 @@ class TreeView {
 
       const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
-      const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
-      if (!currentNode) throw new Error('Node not found');
+      let hierarchyHTML = '';
+      if (type !== 'master_plan') {
+        const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
+        if (!currentNode) throw new Error('Node not found');
+        hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
+      }
 
-      const hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
-
-      const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
-      const typeIcon = type === 'project' ? '📋' : (type === 'design' ? '🎨' : '✓');
+      const typeLabel = type === 'master_plan' ? 'Master Plan' : (type.charAt(0).toUpperCase() + type.slice(1));
+      const typeIcons = { master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+      const typeIcon = typeIcons[type] || '•';
       const typeColor = type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2');
 
       preview.innerHTML = `

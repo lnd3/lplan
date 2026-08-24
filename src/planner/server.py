@@ -89,7 +89,7 @@ def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
             tree.append({"name": name, "path": name, "type": "file"})
 
     # Category directories
-    for category in ["projects", "designs", "actions"]:
+    for category in ["master_plans", "projects", "designs", "actions"]:
         cat_dir = plan_dir / category
         if not cat_dir.exists():
             continue
@@ -113,6 +113,7 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
         files = parser.parse_directory(plan_dir)
 
         # Collect all entities with their parents
+        master_plans = {}
         projects = {}
         designs = {}
         actions = {}
@@ -133,7 +134,9 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     "children": []
                 }
 
-                if entity_type == "project":
+                if entity_type == "masterplan":
+                    master_plans[entity.id] = entity_info
+                elif entity_type == "project":
                     projects[entity.id] = entity_info
                 elif entity_type == "design":
                     designs[entity.id] = entity_info
@@ -144,8 +147,12 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     if hasattr(entity, 'design'):
                         entity_info["parent"] = entity.design
 
-        # Build hierarchy: projects with their designs and actions
-        hierarchy = {"projects": []}
+        # Build hierarchy: master plans, then projects with their designs and actions
+        hierarchy = {"master_plans": [], "projects": []}
+
+        for mp_id, mp in sorted(master_plans.items()):
+            mp_node = {"id": mp_id, "title": mp["title"], "path": mp["path"]}
+            hierarchy["master_plans"].append(mp_node)
 
         for proj_id, proj in sorted(projects.items()):
             proj_node = {"id": proj_id, "title": proj["title"], "path": proj["path"], "children": []}
