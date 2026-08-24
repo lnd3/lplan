@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class Status(str, Enum):
-    """Project/Design/Action status."""
+    """Entity status. HELD/QUESTIONING/ABANDONED are thesis-specific."""
     IDEA = "IDEA"
     PLANNING = "PLANNING"
     IN_PROGRESS = "IN_PROGRESS"
@@ -15,6 +15,9 @@ class Status(str, Enum):
     DONE = "DONE"
     DEFERRED = "DEFERRED"
     CANCELLED = "CANCELLED"
+    HELD = "HELD"             # Thesis: currently believed and acted on
+    QUESTIONING = "QUESTIONING"  # Thesis: evidence is mixed, re-evaluating
+    ABANDONED = "ABANDONED"   # Thesis: evidence contradicts; no longer held
 
 
 class Priority(str, Enum):
@@ -66,13 +69,32 @@ class PlanEntity(BaseModel):
         return updated
 
 
+class Thesis(PlanEntity):
+    """Thesis entity - unconstrained belief about the world, above master plans."""
+    conviction: Optional[int] = None  # 0–10: how strongly this is held right now
+
+    @field_validator("status")
+    @classmethod
+    def validate_thesis_status(cls, v: Status) -> Status:
+        """Theses use HELD, QUESTIONING, or ABANDONED."""
+        return v
+
+    @field_validator("conviction")
+    @classmethod
+    def validate_conviction(cls, v: Optional[int]) -> Optional[int]:
+        if v is not None and not (0 <= v <= 10):
+            raise ValueError("conviction must be between 0 and 10")
+        return v
+
+
 class MasterPlan(PlanEntity):
-    """Master Plan entity - strategic vision and goals for stakeholders."""
-    stakeholder: str  # Stakeholder/team owning this vision
+    """Master Plan entity - constrained possibility seeded by a thesis."""
+    stakeholder: str
     priority: Optional[Priority] = None
-    vision: Optional[str] = None  # High-level strategic vision statement
-    goals: List[str] = Field(default_factory=list)  # Strategic goals (5-year outlook)
-    scope: Optional[str] = None  # Scope of influence
+    vision: Optional[str] = None
+    goals: List[str] = Field(default_factory=list)
+    scope: Optional[str] = None
+    parent_thesis: List[str] = Field(default_factory=list)  # Theses this master plan acts on
 
     @field_validator("status")
     @classmethod

@@ -3,6 +3,15 @@
 *Last updated: YYYY-MM-DD*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+Thesis status: `HELD` · `QUESTIONING` · `ABANDONED`
+
+---
+
+## Theses
+
+| ID | Title | Status | Conviction |
+| --- | --- | --- | --- |
+| [TXXX](theses/TXXX.md) | Thesis statement | HELD | 7/10 |
 
 ---
 

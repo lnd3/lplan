@@ -113,6 +113,7 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
         files = parser.parse_directory(plan_dir)
 
         # Collect all entities with their parents
+        theses = {}
         master_plans = {}
         projects = {}
         designs = {}
@@ -134,7 +135,9 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     "children": []
                 }
 
-                if entity_type == "masterplan":
+                if entity_type == "thesis":
+                    theses[entity.id] = entity_info
+                elif entity_type == "masterplan":
                     master_plans[entity.id] = entity_info
                 elif entity_type == "project":
                     projects[entity.id] = entity_info
@@ -147,8 +150,11 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     if hasattr(entity, 'design'):
                         entity_info["parent"] = entity.design
 
-        # Build hierarchy: master plans, then projects with their designs and actions
-        hierarchy = {"master_plans": [], "projects": []}
+        # Build hierarchy: theses → master plans → projects → designs → actions
+        hierarchy = {"theses": [], "master_plans": [], "projects": []}
+
+        for t_id, t in sorted(theses.items()):
+            hierarchy["theses"].append({"id": t_id, "title": t["title"], "path": t["path"]})
 
         for mp_id, mp in sorted(master_plans.items()):
             mp_node = {"id": mp_id, "title": mp["title"], "path": mp["path"]}
@@ -573,9 +579,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         """Get status view data: all entities with metadata for table display."""
         try:
             from datetime import datetime
-            from planner.models import Design, Action, MasterPlan
+            from planner.models import Design, Action, MasterPlan, Thesis
 
             parsed = PlanParser.parse_directory(plan_dir)
+            theses = {}
             master_plans = {}
             projects = {}
             designs = {}
@@ -586,7 +593,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                 if isinstance(result, dict) and "error" in result:
                     continue
                 entity = result.entity
-                if isinstance(entity, MasterPlan):
+                if isinstance(entity, Thesis):
+                    theses[entity.id] = entity
+                    path_map[f"thesis_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
+                elif isinstance(entity, MasterPlan):
                     master_plans[entity.id] = entity
                     path_map[f"master_plan_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
                 elif isinstance(entity, Project):
@@ -601,6 +611,20 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
 
             graph = DependencyGraph(projects)
             entities = []
+
+            for t in theses.values():
+                entities.append({
+                    "id": t.id,
+                    "title": t.title,
+                    "type": "thesis",
+                    "status": t.status,
+                    "priority": "HIGH",
+                    "created": t.created.isoformat() if t.created else None,
+                    "updated": t.updated.isoformat() if t.updated else None,
+                    "description": t.description[:100] + "..." if t.description and len(t.description) > 100 else t.description,
+                    "path": path_map.get(f"thesis_{t.id}", f"theses/{t.id}.md"),
+                    "conviction": t.conviction,
+                })
 
             for mp in master_plans.values():
                 entities.append({

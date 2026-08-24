@@ -1,0 +1,38 @@
+---
+id: TXXX
+title: One sentence — a falsifiable belief about how the world works
+status: HELD
+conviction: 7
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## The Belief
+
+State the conviction plainly in one paragraph. No hedging, no caveats.
+Write it so someone could argue against it. Describe what you believe
+to be structurally true about markets, technology, or human behaviour —
+not what you plan to build in response.
+
+## Why This Could Be True
+
+Two or three pieces of evidence or reasoning. Brief — this is not a proof.
+Just enough to show the belief is grounded in something observable.
+
+## What Would Change My Mind
+
+Explicit falsification criteria. What evidence or event would cause you
+to move this from HELD to QUESTIONING or ABANDONED?
+
+This is the most important section. A thesis that cannot be falsified
+is not a thesis — it is a preference. Being specific here is what
+makes the thesis useful as a planning input.
+
+## Master Plans Seeded by This
+
+- [[MXXX]] — activated when [condition that made the thesis actionable]
+- [[MXXX]] — waiting for [condition that would open the window]
+
+## Log
+
+YYYY-MM-DD — Thesis formed.

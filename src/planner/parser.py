@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import yaml
 from .models import (
-    Project, Design, Action, MasterPlan, PlanEntity, PlanFile, Status, Priority,
+    Project, Design, Action, MasterPlan, Thesis, PlanEntity, PlanFile, Status, Priority,
     ExternalDependency
 )
 
@@ -73,7 +73,9 @@ class PlanParser:
 
         # Create appropriate entity
         entity: PlanEntity
-        if entity_type == "M":
+        if entity_type == "T":
+            entity = PlanParser._parse_thesis(frontmatter)
+        elif entity_type == "M":
             entity = PlanParser._parse_master_plan(frontmatter)
         elif entity_type == "P":
             entity = PlanParser._parse_project(frontmatter)
@@ -104,7 +106,7 @@ class PlanParser:
         """
         results: Dict[str, PlanFile] = {}
 
-        for subdirs in ["master_plans", "projects", "designs", "actions"]:
+        for subdirs in ["theses", "master_plans", "projects", "designs", "actions"]:
             subdir = plan_dir / subdirs
             if not subdir.exists():
                 continue
@@ -220,6 +222,26 @@ class PlanParser:
         )
 
     @staticmethod
+    def _parse_thesis(data: Dict[str, Any]) -> Thesis:
+        """Parse thesis frontmatter into Thesis model."""
+        created = data.get("created")
+        updated = data.get("updated")
+        if isinstance(created, str):
+            created = date.fromisoformat(created)
+        if isinstance(updated, str):
+            updated = date.fromisoformat(updated)
+
+        return Thesis(
+            id=data["id"],
+            title=data["title"],
+            status=Status(data["status"]),
+            created=created,
+            updated=updated,
+            description=data.get("description"),
+            conviction=data.get("conviction"),
+        )
+
+    @staticmethod
     def _parse_master_plan(data: Dict[str, Any]) -> MasterPlan:
         """Parse master plan frontmatter into MasterPlan model."""
         created = data.get("created")
@@ -245,6 +267,7 @@ class PlanParser:
             vision=data.get("vision"),
             goals=data.get("goals", []),
             scope=data.get("scope"),
+            parent_thesis=data.get("parent_thesis", []),
         )
 
     @staticmethod
