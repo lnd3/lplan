@@ -1,17 +1,8 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-24*
+*Last updated: 2026-08-24 17:03:23 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
-
----
-
-## Master Plans
-
-| ID | Title | Status | Stakeholder | Vision |
-| --- | --- | --- | --- | --- |
-| [M001](master_plans/M001-developer-experience.md) | Developer Experience Excellence | IN_PROGRESS | Engineering Leadership | Establish world-class developer experience through tooling and automation |
-| [M002](master_plans/M002-scalability-foundation.md) | Scalability Foundation | PLANNING | Infrastructure Team | Build scalable, resilient infrastructure for 10x growth |
 
 ---
 
