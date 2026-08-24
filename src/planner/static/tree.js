@@ -120,16 +120,17 @@ class TreeView {
         for (const t of theses) {
           const hasMPs = t.master_plans && t.master_plans.length > 0;
           const childrenId = `thesis-children-${t.id}`;
+          // Start open (no .collapsed class) so CSS rotates the + to show expanded state
           html += `<div class="tree-item" id="tree-${t.id}">
             <div style="display: flex; align-items: center; flex-wrap: wrap;">
               <span class="tree-toggle" style="transition: transform 0.15s; cursor:pointer; user-select:none;"
                 data-has-children="${hasMPs}"
-                onclick="const c=document.getElementById('${childrenId}'); const open=c.style.display!=='none'; c.style.display=open?'none':''; this.textContent=open?'+':'-';">${hasMPs ? '-' : '•'}</span>
+                onclick="const item=document.getElementById('tree-${t.id}'); const c=document.getElementById('${childrenId}'); const closing=!item.classList.contains('collapsed'); c.style.display=closing?'none':''; item.classList.toggle('collapsed', closing);">${hasMPs ? '+' : '•'}</span>
               ${TreeView.parentBadge(t.id, TreeView.TYPE_COLORS.thesis)}
               <div class="tree-node tree-node-project" style="color:#cba6f7;"
                 onclick='TreeView.showTreeRoot("${t.id}", "${t.title}", "thesis", "${t.path}")' data-id="${t.id}">${t.title}</div>
             </div>
-            <div id="${childrenId}" style="padding-left: 18px;">
+            <div id="${childrenId}" style="padding-left: 18px; display:${hasMPs ? '' : 'none'};">
               ${hasMPs ? t.master_plans.map(mp => `
               <div class="tree-item" id="tree-${t.id}-${mp.id}">
                 <div style="display: flex; align-items: center; flex-wrap: wrap;">
