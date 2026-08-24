@@ -1,0 +1,49 @@
+---
+id: MXXX
+title: Master Plan Title Here
+status: IDEA
+stakeholder: Stakeholder Name
+vision: High-level strategic vision statement (5-year outlook)
+priority: MEDIUM
+goals:
+  - Goal 1
+  - Goal 2
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## Goal
+
+1–2 paragraph statement of the strategic vision and long-term objectives this master plan represents. What direction does the organization/team move in? Why is this vision important?
+
+## Scope
+
+Bullet-point list of what's included in this master plan:
+- Strategic Direction A
+- Strategic Direction B
+- Organizational Priorities
+- Not included: X, Y, Z
+
+## Linked
+
+- **Projects**: (projects that implement this master plan)
+- **Other Master Plans**: (related strategic visions)
+- **References**: (upstream visions this builds on)
+
+## Tasks
+
+### Phase 1 (Year 1)
+- [ ] Establish foundational goal 1
+- [ ] Establish foundational goal 2
+
+### Phase 2 (Year 2-3)
+- [ ] Build on established goals
+- [ ] Expand scope
+
+### Phase 3 (Year 4-5)
+- [ ] Consolidate vision
+- [ ] Plan next evolution
+
+## Log
+
+YYYY-MM-DD — Master plan created.

@@ -66,6 +66,21 @@ class PlanEntity(BaseModel):
         return updated
 
 
+class MasterPlan(PlanEntity):
+    """Master Plan entity - strategic vision and goals for stakeholders."""
+    stakeholder: str  # Stakeholder/team owning this vision
+    priority: Optional[Priority] = None
+    vision: Optional[str] = None  # High-level strategic vision statement
+    goals: List[str] = Field(default_factory=list)  # Strategic goals (5-year outlook)
+    scope: Optional[str] = None  # Scope of influence
+
+    @field_validator("status")
+    @classmethod
+    def validate_master_plan_status(cls, v: Status) -> Status:
+        """Master plans can have all statuses."""
+        return v
+
+
 class Project(PlanEntity):
     """Project entity - high-level goal."""
     priority: Priority
@@ -75,6 +90,8 @@ class Project(PlanEntity):
     enables: List[str] = Field(default_factory=list)
     project: Optional[str] = None  # Parent project if nested
     estimate: Optional[Estimate] = None
+    parent_master_plan: List[str] = Field(default_factory=list)  # Master plans this project serves
+    stakeholder: Optional[str] = None  # Stakeholder driving this project
 
     @field_validator("status")
     @classmethod

@@ -100,6 +100,7 @@ class StatusView {
 
     html += `<select id="type-filter" multiple style="padding: 6px 8px; background: #313244;
              border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <option value="master_plan" ${StatusView.filters.types.includes('master_plan') ? 'selected' : ''}>Master Plan</option>
       <option value="project" ${StatusView.filters.types.includes('project') ? 'selected' : ''}>Project</option>
       <option value="design" ${StatusView.filters.types.includes('design') ? 'selected' : ''}>Design</option>
       <option value="action" ${StatusView.filters.types.includes('action') ? 'selected' : ''}>Action</option>
@@ -358,7 +359,7 @@ class StatusView {
   }
 
   static getTypeIcon(type) {
-    const icons = { project: '📋', design: '🎨', action: '✓' };
+    const icons = { master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
     return icons[type] || '•';
   }
 

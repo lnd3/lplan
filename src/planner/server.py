@@ -345,7 +345,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
     """Create and return the Flask app."""
     from flask import Flask, jsonify, request, Response
     from planner.parser import PlanParser
-    from planner.models import Project
+    from planner.models import Project, MasterPlan
     from planner.graph import DependencyGraph
 
     app = Flask(__name__)
@@ -566,9 +566,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         """Get status view data: all entities with metadata for table display."""
         try:
             from datetime import datetime
-            from planner.models import Design, Action
+            from planner.models import Design, Action, MasterPlan
 
             parsed = PlanParser.parse_directory(plan_dir)
+            master_plans = {}
             projects = {}
             designs = {}
             actions = {}
@@ -578,7 +579,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                 if isinstance(result, dict) and "error" in result:
                     continue
                 entity = result.entity
-                if isinstance(entity, Project):
+                if isinstance(entity, MasterPlan):
+                    master_plans[entity.id] = entity
+                    path_map[f"master_plan_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
+                elif isinstance(entity, Project):
                     projects[entity.id] = entity
                     path_map[f"project_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
                 elif isinstance(entity, Design):
@@ -590,6 +594,20 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
 
             graph = DependencyGraph(projects)
             entities = []
+
+            for mp in master_plans.values():
+                entities.append({
+                    "id": mp.id,
+                    "title": mp.title,
+                    "type": "master_plan",
+                    "status": mp.status,
+                    "priority": mp.priority or "MEDIUM",
+                    "created": mp.created.isoformat() if mp.created else None,
+                    "updated": mp.updated.isoformat() if mp.updated else None,
+                    "description": mp.description[:100] + "..." if mp.description and len(mp.description) > 100 else mp.description,
+                    "path": path_map.get(f"master_plan_{mp.id}", f"master_plans/{mp.id}.md"),
+                    "stakeholder": mp.stakeholder or "N/A",
+                })
 
             for proj in projects.values():
                 entities.append({

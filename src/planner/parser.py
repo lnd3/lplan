@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import yaml
 from .models import (
-    Project, Design, Action, PlanEntity, PlanFile, Status, Priority,
+    Project, Design, Action, MasterPlan, PlanEntity, PlanFile, Status, Priority,
     ExternalDependency
 )
 
@@ -73,7 +73,9 @@ class PlanParser:
 
         # Create appropriate entity
         entity: PlanEntity
-        if entity_type == "P":
+        if entity_type == "M":
+            entity = PlanParser._parse_master_plan(frontmatter)
+        elif entity_type == "P":
             entity = PlanParser._parse_project(frontmatter)
         elif entity_type == "D":
             entity = PlanParser._parse_design(frontmatter)
@@ -102,7 +104,7 @@ class PlanParser:
         """
         results: Dict[str, PlanFile] = {}
 
-        for subdirs in ["projects", "designs", "actions"]:
+        for subdirs in ["master_plans", "projects", "designs", "actions"]:
             subdir = plan_dir / subdirs
             if not subdir.exists():
                 continue
@@ -160,6 +162,8 @@ class PlanParser:
             enables=data.get("enables", []),
             project=data.get("project"),
             estimate=estimate,
+            parent_master_plan=data.get("parent_master_plan", []),
+            stakeholder=data.get("stakeholder"),
         )
 
     @staticmethod
@@ -213,6 +217,34 @@ class PlanParser:
             design=data.get("design"),
             project=data.get("project"),
             priority=priority,
+        )
+
+    @staticmethod
+    def _parse_master_plan(data: Dict[str, Any]) -> MasterPlan:
+        """Parse master plan frontmatter into MasterPlan model."""
+        created = data.get("created")
+        updated = data.get("updated")
+        if isinstance(created, str):
+            created = date.fromisoformat(created)
+        if isinstance(updated, str):
+            updated = date.fromisoformat(updated)
+
+        priority = None
+        if "priority" in data and data["priority"]:
+            priority = Priority(data["priority"])
+
+        return MasterPlan(
+            id=data["id"],
+            title=data["title"],
+            status=Status(data["status"]),
+            created=created,
+            updated=updated,
+            description=data.get("description"),
+            stakeholder=data.get("stakeholder", ""),
+            priority=priority,
+            vision=data.get("vision"),
+            goals=data.get("goals", []),
+            scope=data.get("scope"),
         )
 
     @staticmethod

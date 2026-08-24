@@ -6,11 +6,14 @@ priority: HIGH
 priority_drivers:
   - critical_live_path_only
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-08-24
 description: Programmatic priority scoring and dependency analysis
 enables:
   - P002
   - P003
+parent_master_plan:
+  - M001
+stakeholder: Engineering Leadership
 ---
 
 ## Goal

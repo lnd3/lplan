@@ -6,6 +6,14 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 
 ---
 
+## Master Plans
+
+| ID | Title | Status | Stakeholder | Vision |
+| --- | --- | --- | --- | --- |
+| [MXXX](master_plans/MXXX.md) | Master Plan Title | IDEA | Stakeholder | Vision statement |
+
+---
+
 ## Projects
 
 | ID | Title | Status | Priority | Key Open Work |

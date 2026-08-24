@@ -22,8 +22,9 @@ class EntityViewer {
         }
       }
 
-      const typeIcon = type === 'project' ? '📋' : (type === 'design' ? '🎨' : '✓');
-      const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+      const typeIcons = { master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+      const typeIcon = typeIcons[type] || '•';
+      const typeLabel = type === 'master_plan' ? 'Master Plan' : (type.charAt(0).toUpperCase() + type.slice(1));
 
       let contentHtml = `
         <div style="padding: 20px; color: #cdd6f4; max-height: 70vh; overflow-y: auto;">
