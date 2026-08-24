@@ -28,6 +28,15 @@ This is the most important section. A thesis that cannot be falsified
 is not a thesis — it is a preference. Being specific here is what
 makes the thesis useful as a planning input.
 
+## Entropic Constraints
+
+How will this specific edge evaporate? At what rate?
+
+- **Decay mechanism**: what force is working against this thesis?
+- **Horizon**: rough timeframe before the edge compresses significantly
+- **Early warning signs**: what observable signals indicate compression is underway?
+- **What comes after**: is there a successor thesis, or does this domain become unplayable?
+
 ## Master Plans Seeded by This
 
 - [[MXXX]] — activated when [condition that made the thesis actionable]
