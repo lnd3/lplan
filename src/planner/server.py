@@ -193,8 +193,16 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
             }
             hierarchy["master_plans"].append(mp_node)
 
+        for path_key, file_data in files.items():
+            if isinstance(file_data, dict) and "error" in file_data:
+                continue
+            entity = file_data.entity if hasattr(file_data, 'entity') else file_data
+            if hasattr(entity, 'parent_master_plan') and entity.parent_master_plan and entity.id in projects:
+                projects[entity.id]["parent_master_plan"] = entity.parent_master_plan
+
         for proj_id, proj in sorted(projects.items()):
-            proj_node = {"id": proj_id, "title": proj["title"], "path": proj["path"], "children": []}
+            proj_node = {"id": proj_id, "title": proj["title"], "path": proj["path"],
+                         "parent_master_plan": proj.get("parent_master_plan", []), "children": []}
 
             # Add designs for this project
             for design_id, design in sorted(designs.items()):
@@ -674,51 +682,49 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "stakeholder": mp.stakeholder or "N/A",
                 })
 
-            for proj in projects.values():
+            for proj in sorted(projects.values(), key=lambda x: x.id):
                 entities.append({
                     "id": proj.id,
                     "title": proj.title,
                     "type": "project",
                     "status": proj.status,
                     "priority": proj.priority or "MEDIUM",
+                    "parent_master_plan": getattr(proj, 'parent_master_plan', []) or [],
                     "created": proj.created.isoformat() if proj.created else None,
                     "updated": proj.updated.isoformat() if proj.updated else None,
                     "description": proj.description[:100] + "..." if proj.description and len(proj.description) > 100 else proj.description,
                     "path": path_map.get(f"project_{proj.id}", f"projects/{proj.id}.md"),
                     "depends_on_count": len(graph.get_blocking_deps(proj.id)),
-                    "blocks_count": len(graph.get_blocked_by(proj.id)),
                 })
 
-            for design in designs.values():
+            for design in sorted(designs.values(), key=lambda x: x.id):
                 entities.append({
                     "id": design.id,
                     "title": design.title,
                     "type": "design",
                     "status": design.status,
                     "priority": getattr(design, 'priority', None) or "MEDIUM",
+                    "parent_project": getattr(design, 'project', None),
                     "created": design.created.isoformat() if design.created else None,
                     "updated": design.updated.isoformat() if design.updated else None,
                     "description": design.description[:100] + "..." if design.description and len(design.description) > 100 else design.description,
                     "path": path_map.get(f"design_{design.id}", f"designs/{design.id}.md"),
-                    "parent": getattr(design, 'parent', None),
-                    "depends_on_count": len(getattr(design, 'depends_on', [])) if getattr(design, 'depends_on', None) else 0,
-                    "blocks_count": len(getattr(design, 'blocks', [])) if getattr(design, 'blocks', None) else 0,
+                    "depends_on_count": 0,
                 })
 
-            for action in actions.values():
+            for action in sorted(actions.values(), key=lambda x: x.id):
                 entities.append({
                     "id": action.id,
                     "title": action.title,
                     "type": "action",
                     "status": action.status,
                     "priority": getattr(action, 'priority', None) or "MEDIUM",
+                    "parent_design": getattr(action, 'design', None),
                     "created": action.created.isoformat() if action.created else None,
                     "updated": action.updated.isoformat() if action.updated else None,
                     "description": action.description[:100] + "..." if action.description and len(action.description) > 100 else action.description,
                     "path": path_map.get(f"action_{action.id}", f"actions/{action.id}.md"),
-                    "parent": getattr(action, 'parent', None),
-                    "depends_on_count": len(getattr(action, 'depends_on', [])) if getattr(action, 'depends_on', None) else 0,
-                    "blocks_count": len(getattr(action, 'blocks', [])) if getattr(action, 'blocks', None) else 0,
+                    "depends_on_count": 0,
                 })
 
             return jsonify({

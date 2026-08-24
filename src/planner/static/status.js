@@ -150,22 +150,24 @@ class StatusView {
     for (const entity of pageData) {
       const statusColor = StatusView.getStatusColor(entity.status);
       const typeIcon = StatusView.getTypeIcon(entity.type);
+      const typeColor = StatusView.getTypeColor(entity.type);
 
-      // Extra badges: conviction for theses, parent_thesis tags for master plans
+      // Parent badges + conviction
       let extraBadges = '';
       if (entity.type === 'thesis' && entity.conviction) {
-        extraBadges = `<span style="font-size: 10px; color: #cba6f7; background: rgba(203,166,247,0.15);
-          border: 1px solid rgba(203,166,247,0.3); border-radius: 3px; padding: 1px 5px; margin-left: 4px;">
-          💡 ${entity.conviction}</span>`;
-      } else if (entity.type === 'master_plan' && entity.parent_thesis && entity.parent_thesis.length > 0) {
-        extraBadges = entity.parent_thesis.map(t =>
-          `<span style="font-size: 10px; color: #cba6f7; background: rgba(203,166,247,0.1);
-            border-radius: 3px; padding: 1px 4px; margin-left: 2px;">${t}</span>`
-        ).join('');
+        extraBadges = StatusView.badge(entity.conviction, '#cba6f7', true);
+      } else if (entity.type === 'master_plan') {
+        extraBadges = StatusView.parentBadges(entity.parent_thesis, '#cba6f7');
+      } else if (entity.type === 'project') {
+        extraBadges = StatusView.parentBadges(entity.parent_master_plan, '#f9e2af');
+      } else if (entity.type === 'design' && entity.parent_project) {
+        extraBadges = StatusView.badge(entity.parent_project, '#89b4fa');
+      } else if (entity.type === 'action' && entity.parent_design) {
+        extraBadges = StatusView.badge(entity.parent_design, '#a6adc8');
       }
 
       html += `<tr style="border-bottom: 1px solid #313244; cursor: pointer;" data-id="${entity.id}" data-type="${entity.type}">
-        <td style="padding: 8px 12px; color: #89b4fa;">${entity.id}</td>
+        <td style="padding: 8px 12px; color: ${typeColor};">${entity.id}</td>
         <td style="padding: 8px 12px; color: #cdd6f4;">${entity.title}${extraBadges}</td>
         <td style="padding: 8px 12px; color: #a6adc8;">${typeIcon}</td>
         <td style="padding: 8px 12px;"><span style="background: ${statusColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: #1e1e2e; font-weight: 600;">${entity.status}</span></td>
@@ -360,6 +362,31 @@ class StatusView {
     });
   }
 
+  // type → color (used for IDs and badges throughout)
+  static TYPE_COLORS = {
+    thesis:      '#cba6f7',  // pink
+    master_plan: '#f9e2af',  // deep yellow
+    project:     '#89b4fa',  // blue
+    design:      '#a6adc8',  // gray
+    action:      '#9399b2',  // dark gray
+  };
+
+  static getTypeColor(type) {
+    return StatusView.TYPE_COLORS[type] || '#cdd6f4';
+  }
+
+  // Render a single parent badge
+  static badge(id, color, bordered = false) {
+    const border = bordered ? `border: 1px solid ${color}4d;` : '';
+    return `<span style="font-size:10px;color:${color};background:${color}1a;${border}border-radius:3px;padding:1px 5px;margin-left:3px;">${id}</span>`;
+  }
+
+  // Render multiple parent badges from an array
+  static parentBadges(ids, color) {
+    if (!ids || ids.length === 0) return '';
+    return ids.map(id => StatusView.badge(id, color)).join('');
+  }
+
   static getStatusColor(status) {
     const colors = {
       'DONE': '#a6e3a1',
@@ -378,7 +405,7 @@ class StatusView {
 
   static getTypeIcon(type) {
     const icons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
-    return icons[type] || '•';
+    return `<span style="color:${StatusView.getTypeColor(type)}">${icons[type] || '•'}</span>`;
   }
 
   static formatDate(dateStr) {

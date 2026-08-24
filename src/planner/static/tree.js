@@ -2,16 +2,25 @@ class TreeView {
   static treeHierarchy = null;
   static selectedTreeItem = null;
 
+  static TYPE_COLORS = { thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
+
+  static parentBadge(id, color) {
+    return `<span style="font-size:10px;color:${color};background:${color}1a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;">${id}</span>`;
+  }
+
   static buildTreeHTML(projects, indent = 0) {
     let html = '';
     for (const project of projects) {
       const hasChildren = project.children && project.children.length > 0;
       const paddingLeft = indent * 20;
+      const mpBadges = (project.parent_master_plan || [])
+        .map(m => TreeView.parentBadge(m, TreeView.TYPE_COLORS.master_plan)).join('');
 
       html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; flex-wrap: wrap;">
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${project.id}" data-has-children="${hasChildren}">${hasChildren ? '+' : '•'}</span>
           <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
+          ${mpBadges}
         </div>
         ${TreeView.buildChildrenHTML(project, indent + 1)}
       </div>`;
@@ -26,12 +35,18 @@ class TreeView {
     for (const child of parent.children) {
       const hasGrandchildren = child.children && child.children.length > 0;
       const paddingLeft = indent * 20;
-      const childType = parent.children[0].id.charAt(0) === 'D' ? 'design' : 'action';
+      const childType = child.id.charAt(0) === 'D' ? 'design' : 'action';
+      const childColor = TreeView.TYPE_COLORS[childType] || '#a6adc8';
+      // Parent badge: designs show project ID (blue), actions show design ID (gray)
+      const parentId = childType === 'design' ? parent.id : (child.parent_design || '');
+      const parentColor = childType === 'design' ? TreeView.TYPE_COLORS.project : TreeView.TYPE_COLORS.design;
+      const parentBadge = parentId ? TreeView.parentBadge(parentId, parentColor) : '';
 
       html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; flex-wrap: wrap;">
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${child.id}" data-has-children="${hasGrandchildren}">${hasGrandchildren ? '+' : '•'}</span>
-          <div class="tree-node tree-node-design" onclick='TreeView.showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
+          <div class="tree-node tree-node-design" style="color:${childColor};" onclick='TreeView.showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
+          ${parentBadge}
         </div>
         ${TreeView.buildChildrenHTML(child, indent + 1)}
       </div>`;
@@ -116,7 +131,7 @@ class TreeView {
               <div class="tree-item" id="tree-${t.id}-${mp.id}">
                 <div style="display: flex; align-items: center;">
                   <span style="padding: 0 4px; color: #6c7086; font-size: 11px;">·</span>
-                  <div class="tree-node tree-node-project" style="color: #89b4fa; font-size: 12px;"
+                  <div class="tree-node tree-node-project" style="color:#f9e2af; font-size: 12px;"
                     onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.id}: ${mp.title}</div>
                 </div>
               </div>`).join('') : ''}
@@ -134,11 +149,14 @@ class TreeView {
         html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
         for (const mp of masterPlans) {
           const thesisLabels = (mp.theses || []).join(', ');
+          const thesisBadges = (mp.theses || []).map(t =>
+            `<span style="font-size:10px;color:#cba6f7;background:#cba6f71a;border-radius:3px;padding:1px 4px;margin-left:2px;">${t}</span>`
+          ).join('');
           html += `<div class="tree-item" id="tree-mp-${mp.id}">
-            <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
               <span style="padding: 0 4px; color: #6c7086; font-size: 11px;">·</span>
-              <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
-              ${thesisLabels ? `<span style="font-size: 10px; color: #cba6f7; background: rgba(203,166,247,0.1); border-radius: 3px; padding: 1px 4px;">${thesisLabels}</span>` : ''}
+              <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
+              ${thesisBadges}
             </div>
           </div>`;
         }
@@ -214,9 +232,10 @@ class TreeView {
       }
 
       const typeLabel = { master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
-      const typeIcons = { master_plan: '🎯', thesis: '💡', project: '📋', design: '🎨', action: '✓' };
+      const typeIcons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
       const typeIcon = typeIcons[type] || '•';
-      const typeColor = type === 'thesis' ? '#cba6f7' : (type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2'));
+      const TYPE_COLORS = { thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
+      const typeColor = TYPE_COLORS[type] || '#cdd6f4';
 
       preview.innerHTML = `
         <div style="padding: 8px 12px; max-width: 1000px; margin: 0 auto;">
