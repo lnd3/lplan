@@ -100,6 +100,7 @@ class StatusView {
 
     html += `<select id="type-filter" multiple style="padding: 6px 8px; background: #313244;
              border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <option value="thesis" ${StatusView.filters.types.includes('thesis') ? 'selected' : ''}>Thesis</option>
       <option value="master_plan" ${StatusView.filters.types.includes('master_plan') ? 'selected' : ''}>Master Plan</option>
       <option value="project" ${StatusView.filters.types.includes('project') ? 'selected' : ''}>Project</option>
       <option value="design" ${StatusView.filters.types.includes('design') ? 'selected' : ''}>Design</option>
@@ -149,9 +150,23 @@ class StatusView {
     for (const entity of pageData) {
       const statusColor = StatusView.getStatusColor(entity.status);
       const typeIcon = StatusView.getTypeIcon(entity.type);
+
+      // Extra badges: conviction for theses, parent_thesis tags for master plans
+      let extraBadges = '';
+      if (entity.type === 'thesis' && entity.conviction) {
+        extraBadges = `<span style="font-size: 10px; color: #cba6f7; background: rgba(203,166,247,0.15);
+          border: 1px solid rgba(203,166,247,0.3); border-radius: 3px; padding: 1px 5px; margin-left: 4px;">
+          💡 ${entity.conviction}</span>`;
+      } else if (entity.type === 'master_plan' && entity.parent_thesis && entity.parent_thesis.length > 0) {
+        extraBadges = entity.parent_thesis.map(t =>
+          `<span style="font-size: 10px; color: #cba6f7; background: rgba(203,166,247,0.1);
+            border-radius: 3px; padding: 1px 4px; margin-left: 2px;">${t}</span>`
+        ).join('');
+      }
+
       html += `<tr style="border-bottom: 1px solid #313244; cursor: pointer;" data-id="${entity.id}" data-type="${entity.type}">
         <td style="padding: 8px 12px; color: #89b4fa;">${entity.id}</td>
-        <td style="padding: 8px 12px; color: #cdd6f4;">${entity.title}</td>
+        <td style="padding: 8px 12px; color: #cdd6f4;">${entity.title}${extraBadges}</td>
         <td style="padding: 8px 12px; color: #a6adc8;">${typeIcon}</td>
         <td style="padding: 8px 12px;"><span style="background: ${statusColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: #1e1e2e; font-weight: 600;">${entity.status}</span></td>
         <td style="padding: 8px 12px; color: #a6adc8;">${entity.priority}</td>
@@ -353,13 +368,16 @@ class StatusView {
       'IDEA': '#f5c2e7',
       'BLOCKED': '#f38ba8',
       'DEFERRED': '#9399b2',
-      'CANCELLED': '#6c7086'
+      'CANCELLED': '#6c7086',
+      'HELD': '#cba6f7',
+      'QUESTIONING': '#fab387',
+      'ABANDONED': '#6c7086'
     };
     return colors[status] || '#a6adc8';
   }
 
   static getTypeIcon(type) {
-    const icons = { master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+    const icons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
     return icons[type] || '•';
   }
 

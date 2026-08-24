@@ -150,14 +150,47 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     if hasattr(entity, 'design'):
                         entity_info["parent"] = entity.design
 
+        # Build many-to-many thesis ↔ master_plan links from parent_thesis fields
+        # thesis_mp_map: thesis_id → [mp_id, ...]
+        # mp_thesis_map: mp_id → [thesis_id, ...]
+        thesis_mp_map: Dict[str, list] = {t_id: [] for t_id in theses}
+        mp_thesis_map: Dict[str, list] = {mp_id: [] for mp_id in master_plans}
+
+        for path_key, file_data in files.items():
+            if isinstance(file_data, dict) and "error" in file_data:
+                continue
+            entity = file_data.entity if hasattr(file_data, 'entity') else file_data
+            if hasattr(entity, 'parent_thesis') and entity.parent_thesis:
+                for t_id in entity.parent_thesis:
+                    if t_id in thesis_mp_map:
+                        thesis_mp_map[t_id].append(entity.id)
+                    if entity.id in mp_thesis_map:
+                        mp_thesis_map[entity.id].append(t_id)
+
         # Build hierarchy: theses → master plans → projects → designs → actions
         hierarchy = {"theses": [], "master_plans": [], "projects": []}
 
         for t_id, t in sorted(theses.items()):
-            hierarchy["theses"].append({"id": t_id, "title": t["title"], "path": t["path"]})
+            # Embed linked master plans so the UI can render the many-to-many relationship
+            linked_mps = []
+            for mp_id in thesis_mp_map.get(t_id, []):
+                if mp_id in master_plans:
+                    mp = master_plans[mp_id]
+                    linked_mps.append({"id": mp_id, "title": mp["title"], "path": mp["path"]})
+            hierarchy["theses"].append({
+                "id": t_id,
+                "title": t["title"],
+                "path": t["path"],
+                "master_plans": linked_mps,
+            })
 
         for mp_id, mp in sorted(master_plans.items()):
-            mp_node = {"id": mp_id, "title": mp["title"], "path": mp["path"]}
+            mp_node = {
+                "id": mp_id,
+                "title": mp["title"],
+                "path": mp["path"],
+                "theses": mp_thesis_map.get(mp_id, []),
+            }
             hierarchy["master_plans"].append(mp_node)
 
         for proj_id, proj in sorted(projects.items()):
@@ -612,7 +645,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
             graph = DependencyGraph(projects)
             entities = []
 
-            for t in theses.values():
+            for t in sorted(theses.values(), key=lambda x: x.id):
                 entities.append({
                     "id": t.id,
                     "title": t.title,
@@ -623,14 +656,15 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "updated": t.updated.isoformat() if t.updated else None,
                     "description": t.description[:100] + "..." if t.description and len(t.description) > 100 else t.description,
                     "path": path_map.get(f"thesis_{t.id}", f"theses/{t.id}.md"),
-                    "conviction": t.conviction,
+                    "conviction": f"{t.conviction}/10" if t.conviction is not None else None,
                 })
 
-            for mp in master_plans.values():
+            for mp in sorted(master_plans.values(), key=lambda x: x.id):
                 entities.append({
                     "id": mp.id,
                     "title": mp.title,
                     "type": "master_plan",
+                    "parent_thesis": mp.parent_thesis if mp.parent_thesis else [],
                     "status": mp.status,
                     "priority": mp.priority or "MEDIUM",
                     "created": mp.created.isoformat() if mp.created else None,

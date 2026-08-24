@@ -91,26 +91,61 @@ class TreeView {
       const hierarchy = await res.json();
 
       TreeView.treeHierarchy = hierarchy.projects || [];
+      const theses = hierarchy.theses || [];
       const masterPlans = hierarchy.master_plans || [];
 
       let html = '';
 
-      // Add master plans section if any exist
-      if (masterPlans.length > 0) {
-        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
-        html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
-        for (const mp of masterPlans) {
-          html += `<div class="tree-item" id="tree-${mp.id}">
+      // Theses → Master Plans (many-to-many)
+      if (theses.length > 0) {
+        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 4px;">';
+        html += '<div style="font-weight: bold; color: #cba6f7; padding: 5px 10px; font-size: 12px;">THESES</div>';
+        for (const t of theses) {
+          const hasMPs = t.master_plans && t.master_plans.length > 0;
+          const toggleId = `thesis-toggle-${t.id}`;
+          const childrenId = `thesis-children-${t.id}`;
+          html += `<div class="tree-item" id="tree-${t.id}">
             <div style="display: flex; align-items: center;">
-              <span class="tree-toggle" style="transition: transform 0.15s;">•</span>
-              <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
+              <span id="${toggleId}" style="cursor:pointer; padding: 0 4px; color: #6c7086; font-size: 11px; transition: transform 0.15s; user-select: none;"
+                onclick="const c=document.getElementById('${childrenId}'); const open=c.style.display!=='none'; c.style.display=open?'none':''; this.textContent=open?'▶':'▼';">${hasMPs ? '▼' : '·'}</span>
+              <div class="tree-node tree-node-project" style="color: #cba6f7;"
+                onclick='TreeView.showTreeRoot("${t.id}", "${t.title}", "thesis", "${t.path}")' data-id="${t.id}">${t.title}</div>
+            </div>
+            <div id="${childrenId}" style="padding-left: 18px; ${hasMPs ? '' : 'display:none;'}">
+              ${hasMPs ? t.master_plans.map(mp => `
+              <div class="tree-item" id="tree-${t.id}-${mp.id}">
+                <div style="display: flex; align-items: center;">
+                  <span style="padding: 0 4px; color: #6c7086; font-size: 11px;">·</span>
+                  <div class="tree-node tree-node-project" style="color: #89b4fa; font-size: 12px;"
+                    onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.id}: ${mp.title}</div>
+                </div>
+              </div>`).join('') : ''}
             </div>
           </div>`;
         }
         html += '</div>';
       }
 
-      // Add projects section
+      // Master Plans (flat list for plans not linked to any thesis)
+      const linkedMPIds = new Set(theses.flatMap(t => (t.master_plans || []).map(mp => mp.id)));
+      const unlinkedMPs = masterPlans.filter(mp => !linkedMPIds.has(mp.id));
+      if (masterPlans.length > 0) {
+        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
+        html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
+        for (const mp of masterPlans) {
+          const thesisLabels = (mp.theses || []).join(', ');
+          html += `<div class="tree-item" id="tree-mp-${mp.id}">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="padding: 0 4px; color: #6c7086; font-size: 11px;">·</span>
+              <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
+              ${thesisLabels ? `<span style="font-size: 10px; color: #cba6f7; background: rgba(203,166,247,0.1); border-radius: 3px; padding: 1px 4px;">${thesisLabels}</span>` : ''}
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      // Projects section
       html += '<div style="padding: 10px 0;">';
       html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">PROJECTS</div>';
       html += TreeView.buildTreeHTML(TreeView.treeHierarchy);
@@ -119,7 +154,9 @@ class TreeView {
       sidebarContent.innerHTML = html;
 
       const preview = document.getElementById('preview');
-      if (masterPlans.length > 0) {
+      if (theses.length > 0) {
+        await TreeView.showTreeRoot(theses[0].id, theses[0].title, 'thesis', theses[0].path);
+      } else if (masterPlans.length > 0) {
         await TreeView.showTreeRoot(masterPlans[0].id, masterPlans[0].title, 'master_plan', masterPlans[0].path);
       } else if (TreeView.treeHierarchy.length > 0) {
         await TreeView.showTreeRoot(TreeView.treeHierarchy[0].id, TreeView.treeHierarchy[0].title, 'project', TreeView.treeHierarchy[0].path);
@@ -170,16 +207,16 @@ class TreeView {
       const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
       let hierarchyHTML = '';
-      if (type !== 'master_plan') {
+      if (type !== 'master_plan' && type !== 'thesis') {
         const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
         if (!currentNode) throw new Error('Node not found');
         hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
       }
 
-      const typeLabel = type === 'master_plan' ? 'Master Plan' : (type.charAt(0).toUpperCase() + type.slice(1));
-      const typeIcons = { master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+      const typeLabel = { master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
+      const typeIcons = { master_plan: '🎯', thesis: '💡', project: '📋', design: '🎨', action: '✓' };
       const typeIcon = typeIcons[type] || '•';
-      const typeColor = type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2');
+      const typeColor = type === 'thesis' ? '#cba6f7' : (type === 'project' ? '#89b4fa' : (type === 'design' ? '#a6adc8' : '#9399b2'));
 
       preview.innerHTML = `
         <div style="padding: 8px 12px; max-width: 1000px; margin: 0 auto;">
