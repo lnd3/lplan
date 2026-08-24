@@ -166,9 +166,10 @@ class StatusView {
         extraBadges = StatusView.badge(entity.parent_design, '#a6adc8');
       }
 
+      const ownBadge = StatusView.badge(entity.id, typeColor);
       html += `<tr style="border-bottom: 1px solid #313244; cursor: pointer;" data-id="${entity.id}" data-type="${entity.type}">
         <td style="padding: 8px 12px; color: ${typeColor};">${entity.id}</td>
-        <td style="padding: 8px 12px; color: #cdd6f4;">${entity.title}${extraBadges}</td>
+        <td style="padding: 8px 12px; color: #cdd6f4;">${ownBadge} ${entity.title}${extraBadges}</td>
         <td style="padding: 8px 12px; color: #a6adc8;">${typeIcon}</td>
         <td style="padding: 8px 12px;"><span style="background: ${statusColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: #1e1e2e; font-weight: 600;">${entity.status}</span></td>
         <td style="padding: 8px 12px; color: #a6adc8;">${entity.priority}</td>

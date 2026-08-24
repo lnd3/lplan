@@ -19,6 +19,7 @@ class TreeView {
       html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
         <div style="display: flex; align-items: center; flex-wrap: wrap;">
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${project.id}" data-has-children="${hasChildren}">${hasChildren ? '+' : '•'}</span>
+          ${TreeView.parentBadge(project.id, TreeView.TYPE_COLORS.project)}
           <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
           ${mpBadges}
         </div>
@@ -45,6 +46,7 @@ class TreeView {
       html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${child.id}">
         <div style="display: flex; align-items: center; flex-wrap: wrap;">
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${child.id}" data-has-children="${hasGrandchildren}">${hasGrandchildren ? '+' : '•'}</span>
+          ${TreeView.parentBadge(child.id, childColor)}
           <div class="tree-node tree-node-design" style="color:${childColor};" onclick='TreeView.showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
           ${parentBadge}
         </div>
@@ -117,22 +119,24 @@ class TreeView {
         html += '<div style="font-weight: bold; color: #cba6f7; padding: 5px 10px; font-size: 12px;">THESES</div>';
         for (const t of theses) {
           const hasMPs = t.master_plans && t.master_plans.length > 0;
-          const toggleId = `thesis-toggle-${t.id}`;
           const childrenId = `thesis-children-${t.id}`;
           html += `<div class="tree-item" id="tree-${t.id}">
-            <div style="display: flex; align-items: center;">
-              <span id="${toggleId}" style="cursor:pointer; padding: 0 4px; color: #6c7086; font-size: 11px; transition: transform 0.15s; user-select: none;"
-                onclick="const c=document.getElementById('${childrenId}'); const open=c.style.display!=='none'; c.style.display=open?'none':''; this.textContent=open?'▶':'▼';">${hasMPs ? '▼' : '·'}</span>
-              <div class="tree-node tree-node-project" style="color: #cba6f7;"
+            <div style="display: flex; align-items: center; flex-wrap: wrap;">
+              <span class="tree-toggle" style="transition: transform 0.15s; cursor:pointer; user-select:none;"
+                data-has-children="${hasMPs}"
+                onclick="const c=document.getElementById('${childrenId}'); const open=c.style.display!=='none'; c.style.display=open?'none':''; this.textContent=open?'+':'-';">${hasMPs ? '-' : '•'}</span>
+              ${TreeView.parentBadge(t.id, TreeView.TYPE_COLORS.thesis)}
+              <div class="tree-node tree-node-project" style="color:#cba6f7;"
                 onclick='TreeView.showTreeRoot("${t.id}", "${t.title}", "thesis", "${t.path}")' data-id="${t.id}">${t.title}</div>
             </div>
-            <div id="${childrenId}" style="padding-left: 18px; ${hasMPs ? '' : 'display:none;'}">
+            <div id="${childrenId}" style="padding-left: 18px;">
               ${hasMPs ? t.master_plans.map(mp => `
               <div class="tree-item" id="tree-${t.id}-${mp.id}">
-                <div style="display: flex; align-items: center;">
-                  <span style="padding: 0 4px; color: #6c7086; font-size: 11px;">·</span>
-                  <div class="tree-node tree-node-project" style="color:#f9e2af; font-size: 12px;"
-                    onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.id}: ${mp.title}</div>
+                <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                  <span class="tree-toggle" style="cursor:default;" data-has-children="false">•</span>
+                  ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
+                  <div class="tree-node tree-node-project" style="color:#f9e2af; font-size:12px;"
+                    onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
                 </div>
               </div>`).join('') : ''}
             </div>
@@ -148,13 +152,12 @@ class TreeView {
         html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
         html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
         for (const mp of masterPlans) {
-          const thesisLabels = (mp.theses || []).join(', ');
-          const thesisBadges = (mp.theses || []).map(t =>
-            `<span style="font-size:10px;color:#cba6f7;background:#cba6f71a;border-radius:3px;padding:1px 4px;margin-left:2px;">${t}</span>`
-          ).join('');
+          const thesisBadges = (mp.theses || [])
+            .map(t => TreeView.parentBadge(t, TreeView.TYPE_COLORS.thesis)).join('');
           html += `<div class="tree-item" id="tree-mp-${mp.id}">
-            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-              <span style="padding: 0 4px; color: #6c7086; font-size: 11px;">·</span>
+            <div style="display: flex; align-items: center; flex-wrap: wrap;">
+              <span class="tree-toggle" data-has-children="false">•</span>
+              ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
               <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
               ${thesisBadges}
             </div>
