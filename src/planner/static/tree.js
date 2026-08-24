@@ -102,7 +102,7 @@ class TreeView {
         for (const mp of masterPlans) {
           html += `<div class="tree-item" id="tree-${mp.id}">
             <div style="display: flex; align-items: center;">
-              <span class="tree-toggle" style="transition: transform 0.15s;">🎯</span>
+              <span class="tree-toggle" style="transition: transform 0.15s;">•</span>
               <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
             </div>
           </div>`;
