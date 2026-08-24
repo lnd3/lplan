@@ -151,7 +151,7 @@ class TreeView {
       const unlinkedMPs = masterPlans.filter(mp => !linkedMPIds.has(mp.id));
       if (masterPlans.length > 0) {
         html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
-        html += '<div style="font-weight: bold; color: #89b4fa; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
+        html += '<div style="font-weight: bold; color: #f9e2af; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
         for (const mp of masterPlans) {
           const thesisBadges = (mp.theses || [])
             .map(t => TreeView.parentBadge(t, TreeView.TYPE_COLORS.thesis)).join('');
