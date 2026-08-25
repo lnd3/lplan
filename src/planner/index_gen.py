@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List
-from .models import PlanEntity, Project, Design, Action
+from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan
 
 
 def generate_index(
@@ -25,12 +25,18 @@ def generate_index(
         id_to_filename = {}
 
     # Separate entities by type
+    theses: Dict[str, Thesis] = {}
+    master_plans: Dict[str, MasterPlan] = {}
     projects: Dict[str, Project] = {}
     designs: Dict[str, Design] = {}
     actions: Dict[str, Action] = {}
 
     for entity_id, entity in entities.items():
-        if isinstance(entity, Project):
+        if isinstance(entity, Thesis):
+            theses[entity.id] = entity
+        elif isinstance(entity, MasterPlan):
+            master_plans[entity.id] = entity
+        elif isinstance(entity, Project):
             projects[entity.id] = entity
         elif isinstance(entity, Design):
             designs[entity.id] = entity
@@ -49,11 +55,40 @@ def generate_index(
         "",
         "---",
         "",
+    ]
+
+    if theses:
+        lines.extend([
+            "## Theses",
+            "",
+            "| ID | Title | Status | Conviction |",
+            "| --- | --- | --- | --- |",
+        ])
+        for tid, thesis in sorted(theses.items()):
+            filename = id_to_filename.get(tid, f"{tid}-{thesis.title.lower().replace(' ', '-')}.md")
+            link = f"theses/{filename}"
+            lines.append(f"| [{tid}]({link}) | {thesis.title} | {thesis.status.value} | {thesis.conviction} |")
+        lines.extend(["", "---", ""])
+
+    if master_plans:
+        lines.extend([
+            "## Master Plans",
+            "",
+            "| ID | Title | Status | Priority |",
+            "| --- | --- | --- | --- |",
+        ])
+        for mid, mp in sorted(master_plans.items()):
+            filename = id_to_filename.get(mid, f"{mid}-{mp.title.lower().replace(' ', '-')}.md")
+            link = f"master_plans/{filename}"
+            lines.append(f"| [{mid}]({link}) | {mp.title} | {mp.status.value} | {mp.priority.value} |")
+        lines.extend(["", "---", ""])
+
+    lines.extend([
         "## Projects",
         "",
         "| ID | Title | Status | Priority | Key Open Work |",
         "| --- | --- | --- | --- | --- |",
-    ]
+    ])
 
     for pid, project in sorted(projects.items()):
         first_task = "TBD"
@@ -113,7 +148,7 @@ def write_index(plan_dir: Path, entities: Dict[str, PlanEntity], repo_name: str 
     """
     # Build mapping of entity ID to actual filename by enumerating directories
     id_to_filename = {}
-    for category in ["projects", "designs", "actions"]:
+    for category in ["theses", "master_plans", "projects", "designs", "actions"]:
         category_dir = plan_dir / category
         if not category_dir.exists():
             continue
