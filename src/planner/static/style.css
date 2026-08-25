@@ -171,7 +171,9 @@ body {
 #sidebar-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
   padding: 8px 0;
+  min-width: 0;
 }
 .tree-item.hidden {
   display: none;
@@ -197,8 +199,7 @@ body {
   gap: 4px;
   padding: 2px 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
 }
 .tree-item.active {
   background: #313244;
@@ -374,6 +375,9 @@ body {
   cursor: pointer;
   color: #bac2de;
   user-select: none;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 .tree-toggle {
   display: inline-block;
