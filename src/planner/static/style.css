@@ -199,6 +199,7 @@ body {
   gap: 4px;
   padding: 2px 4px;
   white-space: nowrap;
+  flex-wrap: nowrap;
   min-width: 0;
 }
 .tree-item.active {
@@ -376,8 +377,7 @@ body {
   color: #bac2de;
   user-select: none;
   white-space: nowrap;
-  min-width: 0;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 .tree-toggle {
   display: inline-block;
@@ -390,6 +390,7 @@ body {
   user-select: none;
   transition: transform 0.15s;
   line-height: 1;
+  flex-shrink: 0;
 }
 .tree-item:not(.collapsed) .tree-toggle {
   transform: rotate(90deg);
