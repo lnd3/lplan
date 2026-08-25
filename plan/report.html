@@ -174,19 +174,19 @@ svg {
 <h2>Summary</h2>
 <div class="stat-cards">
 <div class="stat-card">
-<div class="stat-value">3</div>
+<div class="stat-value">8</div>
 <div class="stat-label">Projects</div>
 </div>
 <div class="stat-card">
-<div class="stat-value">2</div>
+<div class="stat-value">3</div>
 <div class="stat-label">Designs</div>
 </div>
 <div class="stat-card">
-<div class="stat-value">1</div>
+<div class="stat-value">5</div>
 <div class="stat-label">Actions</div>
 </div>
 <div class="stat-card">
-<div class="stat-value">100%</div>
+<div class="stat-value">75%</div>
 <div class="stat-label">Done</div>
 </div>
 <div class="stat-card">
@@ -223,19 +223,59 @@ svg {
 <td>DONE</td>
 <td>MEDIUM</td>
 </tr>
+<tr class="status-done">
+<td><strong>P004</strong></td>
+<td>Web Server & UI Refactoring</td>
+<td>DONE</td>
+<td>HIGH</td>
+</tr>
+<tr class="status-done">
+<td><strong>P005</strong></td>
+<td>Master Plans & Strategic Vision Architecture</td>
+<td>DONE</td>
+<td>HIGH</td>
+</tr>
+<tr class="status-done">
+<td><strong>P006</strong></td>
+<td>Thesis Framework Integration</td>
+<td>DONE</td>
+<td>MEDIUM</td>
+</tr>
+<tr class="status-in_progress">
+<td><strong>P007</strong></td>
+<td>Analytics & Reporting Dashboard</td>
+<td>IN_PROGRESS</td>
+<td>MEDIUM</td>
+</tr>
+<tr class="status-planning">
+<td><strong>P008</strong></td>
+<td>Cross-Repo Planning Integration</td>
+<td>PLANNING</td>
+<td>MEDIUM</td>
+</tr>
 </tbody>
 </table>
 <h2>Dependency Graph</h2>
 <div class="graph-container">
-<svg width="660" height="140" xmlns="http://www.w3.org/2000/svg">
+<svg width="1060" height="300" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
 <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
 </marker>
 </defs>
-<line x1="250" y1="50" x2="200" y2="50" class="edge" />
-<line x1="450" y1="50" x2="200" y2="50" class="edge" />
+<line x1="450" y1="50" x2="400" y2="130" class="edge" />
 <line x1="450" y1="50" x2="400" y2="50" class="edge" />
+<line x1="250" y1="50" x2="200" y2="50" class="edge" />
+<line x1="850" y1="50" x2="200" y2="50" class="edge" />
+<line x1="850" y1="50" x2="600" y2="130" class="edge" />
+<line x1="850" y1="50" x2="800" y2="50" class="edge" />
+<line x1="650" y1="50" x2="200" y2="50" class="edge" />
+<line x1="650" y1="50" x2="600" y2="130" class="edge" />
+<line x1="450" y1="130" x2="200" y2="50" class="edge" />
+<line x1="450" y1="130" x2="400" y2="50" class="edge" />
+<line x1="250" y1="130" x2="200" y2="50" class="edge" />
+<line x1="450" y1="210" x2="200" y2="50" class="edge" />
+<line x1="450" y1="210" x2="400" y2="130" class="edge" />
 <rect x="50" y="20" width="150" height="60"
   class="node" fill="#90EE90" rx="4" ry="4" />
 <text x="125" y="40" class="label" font-weight="bold">
@@ -244,20 +284,60 @@ P001
 <text x="125" y="65" class="label" font-size="10">
 Tier 1 - Python Exec...
 </text>
+<rect x="450" y="20" width="150" height="60"
+  class="node" fill="#FFD700" rx="4" ry="4" />
+<text x="525" y="40" class="label" font-weight="bold">
+P007
+</text>
+<text x="525" y="65" class="label" font-size="10">
+Analytics & Reportin...
+</text>
 <rect x="250" y="20" width="150" height="60"
   class="node" fill="#90EE90" rx="4" ry="4" />
 <text x="325" y="40" class="label" font-weight="bold">
-P002
+P004
 </text>
 <text x="325" y="65" class="label" font-size="10">
+Web Server & UI Refa...
+</text>
+<rect x="850" y="20" width="150" height="60"
+  class="node" fill="#87CEEB" rx="4" ry="4" />
+<text x="925" y="40" class="label" font-weight="bold">
+P008
+</text>
+<text x="925" y="65" class="label" font-size="10">
+Cross-Repo Planning ...
+</text>
+<rect x="650" y="20" width="150" height="60"
+  class="node" fill="#90EE90" rx="4" ry="4" />
+<text x="725" y="40" class="label" font-weight="bold">
+P006
+</text>
+<text x="725" y="65" class="label" font-size="10">
+Thesis Framework Int...
+</text>
+<rect x="450" y="100" width="150" height="60"
+  class="node" fill="#90EE90" rx="4" ry="4" />
+<text x="525" y="120" class="label" font-weight="bold">
+P005
+</text>
+<text x="525" y="145" class="label" font-size="10">
+Master Plans & Strat...
+</text>
+<rect x="250" y="100" width="150" height="60"
+  class="node" fill="#90EE90" rx="4" ry="4" />
+<text x="325" y="120" class="label" font-weight="bold">
+P002
+</text>
+<text x="325" y="145" class="label" font-size="10">
 Tier 2 - Analysis & ...
 </text>
-<rect x="450" y="20" width="150" height="60"
+<rect x="450" y="180" width="150" height="60"
   class="node" fill="#90EE90" rx="4" ry="4" />
-<text x="525" y="40" class="label" font-weight="bold">
+<text x="525" y="200" class="label" font-weight="bold">
 P003
 </text>
-<text x="525" y="65" class="label" font-size="10">
+<text x="525" y="225" class="label" font-size="10">
 Tier 3 - Automation ...
 </text>
 </svg>
