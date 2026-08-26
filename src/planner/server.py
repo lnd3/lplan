@@ -89,7 +89,7 @@ def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
             tree.append({"name": name, "path": name, "type": "file"})
 
     # Category directories
-    for category in ["theses", "master_plans", "projects", "designs", "actions"]:
+    for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
         cat_dir = plan_dir / category
         if not cat_dir.exists():
             continue

@@ -82,6 +82,7 @@ class StatusView {
 
     html += `<select id="status-filter" multiple style="padding: 6px 8px; background: #313244;
              border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <optgroup label="General">
       <option value="IDEA" ${StatusView.filters.statuses.includes('IDEA') ? 'selected' : ''}>IDEA</option>
       <option value="PLANNING" ${StatusView.filters.statuses.includes('PLANNING') ? 'selected' : ''}>PLANNING</option>
       <option value="IN_PROGRESS" ${StatusView.filters.statuses.includes('IN_PROGRESS') ? 'selected' : ''}>IN_PROGRESS</option>
@@ -89,6 +90,17 @@ class StatusView {
       <option value="DONE" ${StatusView.filters.statuses.includes('DONE') ? 'selected' : ''}>DONE</option>
       <option value="DEFERRED" ${StatusView.filters.statuses.includes('DEFERRED') ? 'selected' : ''}>DEFERRED</option>
       <option value="CANCELLED" ${StatusView.filters.statuses.includes('CANCELLED') ? 'selected' : ''}>CANCELLED</option>
+      </optgroup>
+      <optgroup label="Thesis">
+      <option value="HELD" ${StatusView.filters.statuses.includes('HELD') ? 'selected' : ''}>HELD</option>
+      <option value="QUESTIONING" ${StatusView.filters.statuses.includes('QUESTIONING') ? 'selected' : ''}>QUESTIONING</option>
+      <option value="ABANDONED" ${StatusView.filters.statuses.includes('ABANDONED') ? 'selected' : ''}>ABANDONED</option>
+      </optgroup>
+      <optgroup label="Concept">
+      <option value="STABLE" ${StatusView.filters.statuses.includes('STABLE') ? 'selected' : ''}>STABLE</option>
+      <option value="DRAFT" ${StatusView.filters.statuses.includes('DRAFT') ? 'selected' : ''}>DRAFT</option>
+      <option value="DEPRECATED" ${StatusView.filters.statuses.includes('DEPRECATED') ? 'selected' : ''}>DEPRECATED</option>
+      </optgroup>
     </select>`;
 
     html += `<select id="priority-filter" multiple style="padding: 6px 8px; background: #313244;
