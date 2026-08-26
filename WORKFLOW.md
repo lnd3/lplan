@@ -10,6 +10,133 @@
 
 The more you change, the more you need to maintain coherence across the plan. Self-direct based on your sense of need, not calendar-based triggers.
 
+---
+
+## External Change Detection (Agent Resumption)
+
+When an agent resumes work (from memory state, stored commit hash, or context), the plan may have changed externally:
+- Another agent made commits
+- Manual changes were pulled from upstream
+- User made direct edits
+- External processes modified the codebase
+
+**Detection mechanism**: Track commit hash in agent memory. On resumption, check if current HEAD differs.
+
+### Resumption Checklist
+
+```
+On agent resume:
+1. Get current commit hash: git rev-parse HEAD
+2. Compare to remembered_commit_hash (from agent memory)
+
+If they match:
+  → Continue with existing context (no external changes)
+
+If they differ:
+  → External change detected. Rebalance perception.
+```
+
+### Rebalancing Steps (when external change detected)
+
+**Step 1: Identify scope of change**
+```bash
+git diff <remembered_commit>..HEAD --name-only
+```
+
+**Step 2: Categorize impact**
+
+| Changed File | Impact | Action |
+|---|---|---|
+| FOCUS.md | High | Re-read. May change what you're supposed to be doing. |
+| CHANGELOG.md | Medium | Re-read recent entries. Understand what decisions were made. |
+| REFLECTION.md | Medium | Skim for new learnings that might affect strategy. |
+| INDEX.md | Low | Snapshot only. Less critical than source files. |
+| Entity files (P/D/A/T/M/C) | High | Check if your work conflicts with changed entities. |
+| Other files (src/, tests/, etc.) | Medium | Depends on your task. Re-read if related to your work. |
+| .git/*, docs/*, config | Low | Usually safe to ignore. |
+
+**Step 3: Decision**
+
+```
+If no critical files (FOCUS.md, entities, relevant code) changed:
+  → Update commit hash in memory
+  → Continue with minimal context refresh
+  → Log: "External changes detected (N commits), non-critical files only"
+
+If FOCUS.md or relevant entities changed:
+  → Re-read FOCUS.md to understand current priorities
+  → Check affected entities for conflicts with your work
+  → Consider pivoting or pausing if directions conflict
+  → Log: "External changes detected, re-synced FOCUS.md and X entities"
+
+If massive change (>20 files, critical paths modified):
+  → Pause work
+  → Do full rebalance: re-read FOCUS.md, INDEX.md, CHANGELOG recent entries
+  → Re-evaluate whether your current task still makes sense
+  → May need to escalate to human decision
+  → Log: "Major external changes detected (N commits, M files). Rebalancing..."
+```
+
+### Example: Agent Resumption Scenario
+
+**Scenario**: Agent stored `commit_hash = abc123` when it logged off. It resumes and checks.
+
+```
+Current HEAD: def456
+Commits changed: abc123..def456 (3 commits)
+
+Changed files:
+  - FOCUS.md (modified)
+  - plan/projects/P007.md (status changed)
+  - src/planner/static/status.js (refactored)
+  - WORKFLOW.md (documentation)
+
+Decision:
+  → FOCUS.md changed: Re-read to see if priorities shifted
+  → P007 changed: Check if it affects current work
+  → status.js changed: Relevant if agent was working on UI
+  → WORKFLOW.md changed: Documentation only, low priority
+
+Action:
+  → Re-read FOCUS.md and P007
+  → Check git show to see what changed in P007
+  → If P007 status now BLOCKED and agent was about to work on it: pivot
+  → If unrelated: acknowledge external change, continue work
+  → Update memory: commit_hash = def456
+  → Log: "Synced external changes: FOCUS and P007 updated, continuing with [current task]"
+```
+
+### Memory Storage Pattern
+
+For agents using memory, store:
+
+```json
+{
+  "last_commit_hash": "def456",
+  "last_sync_time": "2026-08-26T15:30:00Z",
+  "current_task": "Implement C005 YAML validation",
+  "context": "..."
+}
+```
+
+On resume:
+```python
+# At start of agent session
+import subprocess
+current_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+remembered_hash = memory.get("last_commit_hash")
+
+if current_hash != remembered_hash:
+    print(f"External change detected: {remembered_hash[:8]}..{current_hash[:8]}")
+    # Trigger rebalance
+    external_change_detected = True
+else:
+    external_change_detected = False
+    print(f"No external changes (still at {current_hash[:8]})")
+```
+
+---
+
 ## Change Magnitude Levels
 
 ### Level 1: Small Change (Single Entity Update)
