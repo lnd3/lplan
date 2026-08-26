@@ -41,7 +41,7 @@ Example theses created:
 - Template for scaffolding new theses
 - Hierarchy support showing theses → master_plans → projects
 - Index template updated with Theses section
-- Status view includes thesis filter
+- Items view includes thesis filter
 
 ## Linked
 
@@ -60,7 +60,7 @@ Example theses created:
 
 ### Phase 2: UI Integration
 - [x] Add theses to Tree view hierarchy
-- [x] Add theses to Status view with conviction filtering
+- [x] Add theses to Items view with conviction filtering
 - [x] Update INDEX template with Theses section
 
 ### Phase 3: Examples & Documentation

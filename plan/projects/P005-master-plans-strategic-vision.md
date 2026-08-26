@@ -29,7 +29,7 @@ Organizations need a way to declare strategic visions and goals that multiple re
 - **Parent linkage**: Projects declare which master plans they serve via parent_master_plan field
 - **Cross-repo pattern**: Upstream repos define master plans; downstream repos implement them
 - **Separation of concerns**: Strategy (upstream) vs execution (downstream) clearly separated
-- **Full UI integration**: Master plans visible in Files view, Tree view, Status view, INDEX
+- **Full UI integration**: Master plans visible in Files view, Tree view, Items view, INDEX
 
 Example master plans created:
 - M001: Developer Experience Excellence (Engineering Leadership)
@@ -42,7 +42,7 @@ Example master plans created:
 - Template for scaffolding new master plans
 - Project model enhancements: parent_master_plan field
 - API endpoints support master plans in status view
-- UI support across Files, Tree, Status views
+- UI support across Files, Tree, Items views
 - INDEX.md template and examples updated
 
 ## Linked
@@ -65,7 +65,7 @@ Example master plans created:
 - [x] Update /api/status endpoint for master plans
 - [x] Add master_plans to /api/tree endpoint
 - [x] Add master_plans to /api/hierarchy endpoint
-- [x] Update Status view UI to show master plans
+- [x] Update Items view UI to show master plans
 
 ### Phase 3: UI & Navigation
 - [x] Add master plans to Files view (FileBrowser)

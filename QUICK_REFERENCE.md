@@ -291,7 +291,7 @@ updated: 2026-08-20
 
 ## Title Conventions
 
-In the Status view and throughout the UI, entity titles display as: **ID badge** + **Title text** + **Parent ID badges** (if applicable).
+In the Items view and throughout the UI, entity titles display as: **ID badge** + **Title text** + **Parent ID badges** (if applicable).
 
 ### Title field content (YAML):
 The `title` field in your entity file should contain **only the main descriptive name**, nothing else.

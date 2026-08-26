@@ -341,7 +341,7 @@ class StatusView {
 
 ## Success Criteria
 
-- ✅ Status view loads all entities in table format
+- ✅ Items view loads all entities in table format
 - ✅ Filtering works on at least 3 columns (status, priority, search)
 - ✅ Sorting works on all columns
 - ✅ Performance acceptable (< 500ms load, < 100ms filter)
