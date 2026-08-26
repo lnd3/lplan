@@ -4,9 +4,13 @@ Quick navigation for all Planner Framework documentation.
 
 ## Start Here
 
+**Single entry point:** [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) covers all entity types
+(Concept, Thesis, MasterPlan, Project, Design, Action), all CLI commands, all status/enum
+values, the file structure, and when-to-use guidance for each entity. Open it first.
+
 ### 🚀 New Users
-1. **[README.md](README.md)** — Overview of the framework
-2. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** — Essential commands (bookmark this!)
+1. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** — Everything in one place (bookmark this!)
+2. **[README.md](README.md)** — Narrative overview of the framework philosophy
 3. **[QUICK_START](#quick-start-tldr)** — 5-minute setup (below)
 
 ### 📚 Migrating from Shell Scripts

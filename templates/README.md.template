@@ -20,6 +20,9 @@ For framework documentation and commands, see:
 - **VALIDATION.md** — Validation requirement and pre-commit workflow
 
 ### Directories
+- **concepts/** — Stable named abstractions: modes, terms, constraints, rules (C001, etc.)
+- **theses/** — Falsifiable beliefs about the world (T001, etc.)
+- **master_plans/** — Constrained possibilities seeded by theses (M001, etc.)
 - **projects/** — High-level goals and work scope (P001, P002, etc.)
 - **designs/** — Architectural specifications and decisions (D001, D002, etc.)
 - **actions/** — Concrete implementation task lists (A001, A002, etc.)

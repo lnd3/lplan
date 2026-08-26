@@ -100,6 +100,7 @@ class StatusView {
 
     html += `<select id="type-filter" multiple style="padding: 6px 8px; background: #313244;
              border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 12px; min-height: 24px;">
+      <option value="concept" ${StatusView.filters.types.includes('concept') ? 'selected' : ''}>Concept</option>
       <option value="thesis" ${StatusView.filters.types.includes('thesis') ? 'selected' : ''}>Thesis</option>
       <option value="master_plan" ${StatusView.filters.types.includes('master_plan') ? 'selected' : ''}>Master Plan</option>
       <option value="project" ${StatusView.filters.types.includes('project') ? 'selected' : ''}>Project</option>
@@ -154,7 +155,12 @@ class StatusView {
 
       // Parent badges + conviction
       let extraBadges = '';
-      if (entity.type === 'thesis' && entity.conviction) {
+      if (entity.type === 'concept') {
+        extraBadges = StatusView.badge(entity.concept_type || '?', '#94e2d5');
+        if (entity.related && entity.related.length > 0) {
+          extraBadges += entity.related.slice(0, 3).map(r => StatusView.badge(r, '#6c7086', true)).join('');
+        }
+      } else if (entity.type === 'thesis' && entity.conviction) {
         extraBadges = StatusView.badge(entity.conviction, '#cba6f7', true);
       } else if (entity.type === 'master_plan') {
         extraBadges = StatusView.parentBadges(entity.parent_thesis, '#cba6f7');
@@ -365,6 +371,7 @@ class StatusView {
 
   // type → color (used for IDs and badges throughout)
   static TYPE_COLORS = {
+    concept:     '#94e2d5',  // teal
     thesis:      '#cba6f7',  // pink
     master_plan: '#f9e2af',  // deep yellow
     project:     '#89b4fa',  // blue
@@ -399,13 +406,16 @@ class StatusView {
       'CANCELLED': '#6c7086',
       'HELD': '#cba6f7',
       'QUESTIONING': '#fab387',
-      'ABANDONED': '#6c7086'
+      'ABANDONED': '#6c7086',
+      'STABLE': '#94e2d5',
+      'DRAFT': '#f9e2af',
+      'DEPRECATED': '#6c7086'
     };
     return colors[status] || '#a6adc8';
   }
 
   static getTypeIcon(type) {
-    const icons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+    const icons = { concept: '📖', thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
     return `<span style="color:${StatusView.getTypeColor(type)}">${icons[type] || '•'}</span>`;
   }
 

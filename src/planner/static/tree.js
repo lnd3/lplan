@@ -2,7 +2,7 @@ class TreeView {
   static treeHierarchy = null;
   static selectedTreeItem = null;
 
-  static TYPE_COLORS = { thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
+  static TYPE_COLORS = { concept: '#94e2d5', thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
 
   static parentBadge(id, color) {
     return `<span style="font-size:10px;color:${color};background:${color}1a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;">${id}</span>`;
@@ -108,10 +108,39 @@ class TreeView {
       const hierarchy = await res.json();
 
       TreeView.treeHierarchy = hierarchy.projects || [];
+      const concepts = hierarchy.concepts || [];
       const theses = hierarchy.theses || [];
       const masterPlans = hierarchy.master_plans || [];
 
       let html = '';
+
+      // Concepts (flat list grouped by concept_type)
+      if (concepts.length > 0) {
+        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 4px;">';
+        html += '<div style="font-weight: bold; color: #94e2d5; padding: 5px 10px; font-size: 12px;">CONCEPTS</div>';
+        const typeOrder = ['mode', 'constraint', 'pattern', 'rule', 'finding', 'term'];
+        const byType = {};
+        for (const c of concepts) {
+          const t = c.concept_type || 'term';
+          if (!byType[t]) byType[t] = [];
+          byType[t].push(c);
+        }
+        for (const ctype of [...typeOrder, ...Object.keys(byType).filter(t => !typeOrder.includes(t))]) {
+          if (!byType[ctype]) continue;
+          html += `<div style="padding: 2px 10px 2px 16px; font-size: 10px; color: #6c7086; text-transform: uppercase; letter-spacing: 0.05em;">${ctype}</div>`;
+          for (const c of byType[ctype]) {
+            html += `<div class="tree-item" id="tree-${c.id}">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span class="tree-toggle" data-has-children="false">•</span>
+                ${TreeView.parentBadge(c.id, TreeView.TYPE_COLORS.concept)}
+                <div class="tree-node tree-node-project" style="color:#94e2d5; font-size:12px;"
+                  onclick='TreeView.showTreeRoot("${c.id}", "${c.title.replace(/'/g, "\\'")}", "concept", "${c.path}")' data-id="${c.id}">${c.title}</div>
+              </div>
+            </div>`;
+          }
+        }
+        html += '</div>';
+      }
 
       // Theses → Master Plans (many-to-many)
       if (theses.length > 0) {
@@ -229,13 +258,13 @@ class TreeView {
       const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
       let hierarchyHTML = '';
-      if (type !== 'master_plan' && type !== 'thesis') {
+      if (type !== 'master_plan' && type !== 'thesis' && type !== 'concept') {
         const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
         if (!currentNode) throw new Error('Node not found');
         hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
       }
 
-      const typeLabel = { master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
+      const typeLabel = { concept: 'Concept', master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
       const typeIcons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
       const typeIcon = typeIcons[type] || '•';
       const TYPE_COLORS = { thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };

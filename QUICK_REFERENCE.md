@@ -198,6 +198,36 @@ if validator.validate_relationships(entities):
 
 ## YAML Frontmatter Format
 
+### Concept
+```yaml
+---
+id: C001
+title: Concept Name
+type: mode           # mode | term | pattern | constraint | rule | finding
+status: STABLE       # STABLE | DRAFT | DEPRECATED
+created: 2026-08-20
+updated: 2026-08-20
+related:             # optional: plan IDs, schema files, result files
+  - D001
+  - test-schema.json
+---
+```
+
+**When to add a concept** — use a Concept (not a Thesis or Design) when:
+- The abstraction is already validated and stable, not a hypothesis you're testing
+- You want a precise, lookup-able definition that future sessions can reference
+- It captures a hard constraint, an operating mode, or a structural rule that affects
+  multiple designs/projects and isn't documented anywhere else
+- A Thesis captures *what you believe*; a Concept captures *what you have confirmed*
+
+**Concept types:**
+- `mode` — an operating configuration with defined inputs, outputs, and trade-offs
+- `term` — a domain-specific term with a precise, non-obvious definition
+- `pattern` — a recurring structural or behavioral pattern worth naming
+- `constraint` — a hard rule that limits design space (often cross-cutting)
+- `rule` — a validated heuristic or decision rule
+- `finding` — a validated empirical result too stable/important to leave in a journal entry
+
 ### Project
 ```yaml
 ---
@@ -262,7 +292,9 @@ updated: 2026-08-20
 ## Enums
 
 ### Status
-`IDEA` | `PLANNING` | `IN_PROGRESS` | `BLOCKED` | `DONE` | `DEFERRED` | `CANCELLED`
+General: `IDEA` | `PLANNING` | `IN_PROGRESS` | `BLOCKED` | `DONE` | `DEFERRED` | `CANCELLED`  
+Thesis-specific: `HELD` | `QUESTIONING` | `ABANDONED`  
+Concept-specific: `STABLE` | `DRAFT` | `DEPRECATED`
 
 ### Priority
 `HIGH` | `MEDIUM` | `LOW`
@@ -296,12 +328,17 @@ plan/
   REFLECTION.md     ← append-only learnings, gotchas, patterns
   VALIDATION.md     ← validation workflow reference
   README.md         ← framework overview
-  projects/
+  concepts/         ← stable named abstractions (modes, terms, constraints, rules)
+    C001-name.md
+  theses/           ← falsifiable beliefs about the world
+    T001-name.md
+  master_plans/     ← constrained possibilities seeded by theses
+    M001-name.md
+  projects/         ← high-level goals
     P001-name.md
-    P002-name.md
-  designs/
+  designs/          ← architectural specs and decisions
     D001-name.md
-  actions/
+  actions/          ← concrete implementation task lists
     A001-name.md
 ```
 

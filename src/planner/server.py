@@ -167,8 +167,24 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     if entity.id in mp_thesis_map:
                         mp_thesis_map[entity.id].append(t_id)
 
-        # Build hierarchy: theses → master plans → projects → designs → actions
-        hierarchy = {"theses": [], "master_plans": [], "projects": []}
+        # Build hierarchy: concepts (flat) + theses → master plans → projects → designs → actions
+        hierarchy = {"concepts": [], "theses": [], "master_plans": [], "projects": []}
+
+        concepts_flat = {}
+        for path_key, file_data in files.items():
+            if isinstance(file_data, dict) and "error" in file_data:
+                continue
+            entity = file_data.entity if hasattr(file_data, 'entity') else file_data
+            if entity.__class__.__name__.lower() == "concept":
+                concepts_flat[entity.id] = {
+                    "id": entity.id,
+                    "title": entity.title,
+                    "path": path_key,
+                    "concept_type": entity.concept_type.value,
+                    "status": entity.status.value if hasattr(entity.status, 'value') else str(entity.status),
+                }
+        for c_id, c in sorted(concepts_flat.items()):
+            hierarchy["concepts"].append(c)
 
         for t_id, t in sorted(theses.items()):
             # Embed linked master plans so the UI can render the many-to-many relationship
@@ -293,7 +309,7 @@ ${_LIBRARIES_HEAD}
   <button data-action="show-browser">📁 Files</button>
   <button data-action="show-tree">🌳 Tree</button>
   <button data-action="show-analytics">📊 Analytics</button>
-  <button data-action="show-status">📊 Status</button>
+  <button data-action="show-status">📋 Items</button>
 </div>
 
 <div id="main">
@@ -620,9 +636,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         """Get status view data: all entities with metadata for table display."""
         try:
             from datetime import datetime
-            from planner.models import Design, Action, MasterPlan, Thesis
+            from planner.models import Design, Action, MasterPlan, Thesis, Concept
 
             parsed = PlanParser.parse_directory(plan_dir)
+            concepts = {}
             theses = {}
             master_plans = {}
             projects = {}
@@ -634,7 +651,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                 if isinstance(result, dict) and "error" in result:
                     continue
                 entity = result.entity
-                if isinstance(entity, Thesis):
+                if isinstance(entity, Concept):
+                    concepts[entity.id] = entity
+                    path_map[f"concept_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
+                elif isinstance(entity, Thesis):
                     theses[entity.id] = entity
                     path_map[f"thesis_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
                 elif isinstance(entity, MasterPlan):
@@ -652,6 +672,21 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
 
             graph = DependencyGraph(projects)
             entities = []
+
+            for c in sorted(concepts.values(), key=lambda x: x.id):
+                entities.append({
+                    "id": c.id,
+                    "title": c.title,
+                    "type": "concept",
+                    "concept_type": c.concept_type.value,
+                    "status": c.status,
+                    "priority": "MEDIUM",
+                    "created": c.created.isoformat() if c.created else None,
+                    "updated": c.updated.isoformat() if c.updated else None,
+                    "description": c.description[:100] + "..." if c.description and len(c.description) > 100 else c.description,
+                    "path": path_map.get(f"concept_{c.id}", f"concepts/{c.id}.md"),
+                    "related": c.related,
+                })
 
             for t in sorted(theses.values(), key=lambda x: x.id):
                 entities.append({
