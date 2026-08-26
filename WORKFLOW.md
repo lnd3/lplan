@@ -435,6 +435,169 @@ A project is BLOCKED but FOCUS.md doesn't mention it. Only discoverable by readi
 
 ---
 
+---
+
+## Framework Updates (lplan Evolution)
+
+When lplan itself changes (new entity types, new fields, workflow updates, validation rules), existing users need to understand what changed and whether they need to migrate.
+
+### Communicating Framework Changes
+
+**In the lplan repository**:
+- Update CHANGELOG.md to document breaking vs non-breaking changes
+- Update MIGRATION.md (if exists) or add migration guide for major changes
+- Update templates and schema documentation
+- Update WORKFLOW.md if procedures change
+
+**Announcement checklist for lplan maintainers**:
+
+1. **Tag the change type**:
+   - ✅ **Non-breaking**: New optional fields, new entity types (can be adopted gradually)
+   - ⚠️ **Breaking**: Required new fields, status enum changes, validation rule changes (may invalidate existing plans)
+
+2. **Document the change**:
+   ```markdown
+   # lplan v2.1 (2026-08-26)
+
+   ## New: Concept Entity Type
+   - Can be used for validated abstractions (modes, terms, patterns, constraints, rules, findings)
+   - Optional field: `type` with values mode|term|pattern|constraint|rule|finding
+   - Status: STABLE | DRAFT | DEPRECATED
+   - Non-breaking: existing plans work unchanged
+
+   ## New: Thesis Status Enum
+   - Theses now accept: HELD | QUESTIONING | ABANDONED
+   - Previously: general statuses only
+   - Breaking for theses; non-breaking for other entities
+
+   ## Updated: WORKFLOW.md
+   - Added scale-based workflow (change magnitude → workflow rigor)
+   - Added external change detection for agent resumption
+   - See MIGRATION.md for how this affects existing workflows
+   ```
+
+3. **Provide migration guide** (if breaking):
+   ```markdown
+   # Migrating to lplan v2.1
+
+   ## If you have Thesis entities:
+   - Status values changed. Update theses to use: HELD | QUESTIONING | ABANDONED
+   - Run: `plan validate ./plan` to find outdated status values
+   - Migration effort: ~5 minutes per thesis
+
+   ## If you have Project entities:
+   - New optional field: `parent_master_plan`
+   - Existing projects unaffected (field is optional)
+   - Adopt gradually as you link projects to master plans
+
+   ## If you use FOCUS.md:
+   - Workflow changed: see WORKFLOW.md for scale-based procedures
+   - Update FOCUS.md structure? Optional, old format still works
+   - Recommended migration: adopt new scale-based workflow on next major change
+   ```
+
+### User-Side: Detecting lplan Updates
+
+When users pull lplan updates:
+
+**Checklist**:
+```
+1. Check git log for lplan repo
+   git log --oneline deps/lplan | head -20
+
+2. Read what changed
+   cat deps/lplan/CHANGELOG.md | head -50
+
+3. Assess impact
+   - New optional features? (✅ adopt when ready)
+   - Breaking changes? (⚠️ may need plan updates)
+   - Workflow changes? (⚠️ update procedures)
+
+4. If breaking changes, migrate
+   - Run plan validate to find issues
+   - Update entities as needed
+   - Commit migration: "Migrate to lplan vX.Y: [what changed]"
+
+5. If non-breaking, decide
+   - Adopt new features immediately? (Concept type, new fields)
+   - Adopt gradually? (When relevant to your work)
+   - Defer? (Still works with old approach)
+```
+
+### Example: Adding Concept Type (Non-Breaking)
+
+**Announcement**:
+```
+New in lplan: Concept entity type
+- Use for validated abstractions that affect multiple projects
+- Non-breaking: existing plans work unchanged
+- Optional adoption: start using when you identify patterns worth formalizing
+```
+
+**User migration**:
+- No action required to stay current
+- Adopt when useful: extract patterns into concepts as they emerge
+- Example: when you discover "event delegation is a pattern we'll use everywhere"
+  - Create C001-event-delegation.md
+  - Reference from related project/design entities
+  - Update REFLECTION.md on why this pattern matters
+
+---
+
+### Example: Adding Required Field (Breaking)
+
+**Announcement**:
+```
+Breaking in lplan v2.1: Projects now require parent_master_plan field
+
+- This field links projects to strategic master plans
+- Existing projects missing this field will fail validation
+- Migration required: either add parent_master_plan or leave empty (if independent)
+```
+
+**User migration**:
+1. Pull lplan changes
+2. Run `plan validate ./plan` → errors on projects without field
+3. For each project, decide:
+   - Does it serve a master plan? Add to parent_master_plan field
+   - Is it independent? Add `parent_master_plan: []` to frontmatter
+4. Re-run validate: should pass
+5. Commit: `plan validate pass after lplan v2.1 migration`
+
+---
+
+### Versioning Strategy
+
+lplan versions follow semver:
+- **MAJOR** (1.0 → 2.0): Breaking changes to schema or workflow
+- **MINOR** (1.5 → 1.6): Non-breaking additions (new fields, new entity types)
+- **PATCH** (1.5.1 → 1.5.2): Documentation, non-functional changes
+
+**Breaking changes**: New required fields, status enum changes, validation rule changes  
+**Non-breaking**: New optional fields, new entity types, new procedures (old ones still work)
+
+---
+
+### Workflow for lplan Maintainers: Announcing Changes
+
+When you change lplan (add entity type, change validation, update procedures):
+
+1. **Update the code/templates/docs** in lplan repo
+2. **Classify the change**: breaking or non-breaking?
+3. **Update CHANGELOG.md** (in lplan repo):
+   ```markdown
+   ## vX.Y (date)
+   - [BREAKING/NEW] Description of change
+   - Migration impact: [who needs to do what]
+   - Migration effort: [quick/moderate/significant]
+   ```
+4. **Update MIGRATION.md** (if breaking)
+5. **Bump version** in appropriate location (MAJOR/MINOR/PATCH)
+6. **Update this WORKFLOW.md** if procedures changed
+7. **Notify users** (via README, announcement, etc.)
+
+---
+
 ## Summary
 
 **The rhythm is not about time, it's about change.**
