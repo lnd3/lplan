@@ -98,6 +98,23 @@ updated: YYYY-MM-DD
 
 ---
 
+## Workflow
+
+The [WORKFLOW.md](WORKFLOW.md) in this repo describes **universal procedures** for all repos using lplan:
+- Scale-based change rigor (Small/Medium/Large/Massive)
+- Coherence rules (state consistency, decision traceability)
+- External change detection (agent resumption patterns)
+- Framework updates (how changes cascade)
+
+**For your repo:** Copy [templates/WORKFLOW.md.template](templates/WORKFLOW.md.template) to your `plan/WORKFLOW.md` and fill in repo-specific details:
+- Who updates FOCUS.md and when?
+- How do you integrate with CI/CD?
+- What's your escalation path for major decisions?
+
+Your repo's WORKFLOW.md can then reference `deps/lplan/WORKFLOW.md` for universal procedures while defining local customizations.
+
+---
+
 ## Status
 
 Standard: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
