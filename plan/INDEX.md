@@ -1,8 +1,20 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-26 12:45:12 UTC*
+*Last updated: 2026-08-26 13:50:57 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
+
+---
+
+## Concepts
+
+| ID | Title | Type | Status |
+| --- | --- | --- | --- |
+| [C001](concepts/C001-hierarchical-entity-model.md) | Hierarchical Entity Model | pattern | STABLE |
+| [C002](concepts/C002-modular-architecture.md) | Modular Architecture | pattern | STABLE |
+| [C003](concepts/C003-event-delegation.md) | Event Delegation Pattern | pattern | STABLE |
+| [C004](concepts/C004-dependency-graph-analysis.md) | Dependency Graph Analysis | pattern | STABLE |
+| [C005](concepts/C005-yaml-frontmatter-format.md) | YAML Frontmatter Format | rule | STABLE |
 
 ---
 
