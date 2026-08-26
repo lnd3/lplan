@@ -157,9 +157,6 @@ class StatusView {
       let extraBadges = '';
       if (entity.type === 'concept') {
         extraBadges = StatusView.badge(entity.concept_type || '?', '#94e2d5');
-        if (entity.related && entity.related.length > 0) {
-          extraBadges += entity.related.slice(0, 3).map(r => StatusView.badge(r, '#6c7086', true)).join('');
-        }
       } else if (entity.type === 'thesis' && entity.conviction) {
         extraBadges = StatusView.badge(entity.conviction, '#cba6f7', true);
       } else if (entity.type === 'master_plan') {

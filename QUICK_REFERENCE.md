@@ -289,6 +289,34 @@ updated: 2026-08-20
 ---
 ```
 
+## Title Conventions
+
+Titles should be **concise, human-readable names** for the entity itself. Avoid including metadata, lists, or file references in the title.
+
+### What goes in the title:
+- Main descriptive name or label
+- Short phrase (2-5 words typical)
+- What distinguishes this entity from similar ones
+
+### What does NOT go in the title:
+- Related file names or schema references (use `related` field instead)
+- Parent/dependency IDs (shown as badges in UI)
+- Status or priority (shown separately in tables)
+- Concept type (shown as badge for concepts)
+- Stakeholder or driver list (separate fields)
+
+### Examples:
+
+| Entity Type | Good Title | ❌ Bad Title |
+|---|---|---|
+| Concept | `Event-Driven Mode` | `Event-Driven Mode (event-schema.json, pub-sub-rules.json)` |
+| Thesis | `Async Improves UX` | `Async Improves UX (supported by D001, D002, A003)` |
+| Project | `Build Auth Service` | `Build Auth Service (depends P001, enables P003, D001)` |
+| Design | `JWT Token Strategy` | `JWT Token Strategy (ref: P001, rfc-jwt.md, auth-spec.json)` |
+| Action | `Implement Token Validation` | `Implement Token Validation (for D001, blocks A002)` |
+
+In the UI, related files and parent/sibling IDs appear as separate badges — titles should stay clean and scannable.
+
 ## Enums
 
 ### Status
