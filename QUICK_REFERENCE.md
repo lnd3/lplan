@@ -291,31 +291,34 @@ updated: 2026-08-20
 
 ## Title Conventions
 
-Titles should be **concise, human-readable names** for the entity itself. Avoid including metadata, lists, or file references in the title.
+In the Status view and throughout the UI, entity titles display as: **ID badge** + **Title text** + **Parent ID badges** (if applicable).
 
-### What goes in the title:
-- Main descriptive name or label
-- Short phrase (2-5 words typical)
-- What distinguishes this entity from similar ones
+### Title field content (YAML):
+The `title` field in your entity file should contain **only the main descriptive name**, nothing else.
 
-### What does NOT go in the title:
-- Related file names or schema references (use `related` field instead)
-- Parent/dependency IDs (shown as badges in UI)
-- Status or priority (shown separately in tables)
-- Concept type (shown as badge for concepts)
-- Stakeholder or driver list (separate fields)
+### What appears in the title display:
+- **Entity ID** (P001, D001, T001, C001, etc.) — shown as a color-coded badge
+- **Title text** — your concise human-readable name
+- **Parent entity IDs** (if applicable) — shown as badges (e.g., P001 parent for designs, D001 for actions)
 
-### Examples:
+### What does NOT go in the title field:
+- Related file names or schema references → use `related` field instead
+- Concept type (mode, term, pattern, etc.) → shown separately as badge
+- Status, priority, or stakeholder → shown in separate columns/badges
+- Dependency or enables list → shown via other fields
+- Any metadata that belongs in structured YAML fields
+
+### Examples (title field content only):
 
 | Entity Type | Good Title | ❌ Bad Title |
 |---|---|---|
 | Concept | `Event-Driven Mode` | `Event-Driven Mode (event-schema.json, pub-sub-rules.json)` |
-| Thesis | `Async Improves UX` | `Async Improves UX (supported by D001, D002, A003)` |
-| Project | `Build Auth Service` | `Build Auth Service (depends P001, enables P003, D001)` |
-| Design | `JWT Token Strategy` | `JWT Token Strategy (ref: P001, rfc-jwt.md, auth-spec.json)` |
-| Action | `Implement Token Validation` | `Implement Token Validation (for D001, blocks A002)` |
+| Thesis | `Async Improves UX` | `Async Improves UX (conviction: 8/10, HELD)` |
+| Project | `Build Auth Service` | `Build Auth Service [P001→P003, HIGH, strategic_edge]` |
+| Design | `JWT Token Strategy` | `JWT Token Strategy (for P001, auth-spec.json)` |
+| Action | `Implement Token Validation` | `Implement Token Validation (D001→A002, HIGH)` |
 
-In the UI, related files and parent/sibling IDs appear as separate badges — titles should stay clean and scannable.
+**Golden rule:** Your title field should be readable in a plain text editor without any special characters or metadata cruft. The UI layers on ID badges and parent links — your title just needs to name the thing.
 
 ## Enums
 
