@@ -228,6 +228,30 @@ related:             # optional: plan IDs, schema files, result files
 - `rule` — a validated heuristic or decision rule
 - `finding` — a validated empirical result too stable/important to leave in a journal entry
 
+### Thesis
+```yaml
+---
+id: T001
+title: Falsifiable belief about how the world works
+status: HELD         # HELD | QUESTIONING | ABANDONED
+conviction: 7       # 1-10 integer: how confident are you?
+created: 2026-08-20
+updated: 2026-08-20
+parent_thesis: []   # optional: related/predecessor theses
+---
+```
+
+**When to add a thesis** — use a Thesis when:
+- You have a falsifiable belief about markets, technology, or human behavior
+- This belief informs which master plans and projects get pursued
+- You can articulate what evidence would change your mind
+- A Thesis captures *what you believe*; a Concept captures *what you have confirmed*
+
+**Conviction scale:**
+- 8-10 — strong evidence, low uncertainty
+- 5-7 — moderate evidence, willing to bet on it
+- 1-4 — early hypothesis, needs validation
+
 ### Project
 ```yaml
 ---
