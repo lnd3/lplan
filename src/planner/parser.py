@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import yaml
 from .models import (
-    Project, Design, Action, MasterPlan, Thesis, PlanEntity, PlanFile, Status, Priority,
+    Project, Design, Action, MasterPlan, Thesis, Concept, ConceptType, PlanEntity, PlanFile, Status, Priority,
     ExternalDependency
 )
 
@@ -83,6 +83,8 @@ class PlanParser:
             entity = PlanParser._parse_design(frontmatter)
         elif entity_type == "A":
             entity = PlanParser._parse_action(frontmatter)
+        elif entity_type == "C":
+            entity = PlanParser._parse_concept(frontmatter)
         else:
             raise ValueError(f"Unknown entity type from ID: {entity_id}")
 
@@ -106,7 +108,7 @@ class PlanParser:
         """
         results: Dict[str, PlanFile] = {}
 
-        for subdirs in ["theses", "master_plans", "projects", "designs", "actions"]:
+        for subdirs in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
             subdir = plan_dir / subdirs
             if not subdir.exists():
                 continue
@@ -219,6 +221,26 @@ class PlanParser:
             design=data.get("design"),
             project=data.get("project"),
             priority=priority,
+        )
+
+    @staticmethod
+    def _parse_concept(data: Dict[str, Any]) -> Concept:
+        """Parse concept frontmatter into Concept model."""
+        created = data.get("created")
+        updated = data.get("updated")
+        if isinstance(created, str):
+            created = date.fromisoformat(created)
+        if isinstance(updated, str):
+            updated = date.fromisoformat(updated)
+        return Concept(
+            id=data["id"],
+            title=data["title"],
+            status=Status(data["status"]),
+            created=created,
+            updated=updated,
+            description=data.get("description"),
+            concept_type=ConceptType(data.get("type", "term")),
+            related=data.get("related", []),
         )
 
     @staticmethod

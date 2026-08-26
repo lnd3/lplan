@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Any, Set, Optional
 from difflib import get_close_matches
-from .models import Project, Design, Action, Thesis, MasterPlan, PlanEntity, Status, Priority
+from .models import Project, Design, Action, Thesis, MasterPlan, Concept, PlanEntity, Status, Priority
 
 
 class ValidationError:
@@ -61,8 +61,8 @@ class SchemaValidator:
             self._validate_design(entity)
         elif isinstance(entity, Action):
             self._validate_action(entity)
-        elif isinstance(entity, (Thesis, MasterPlan)):
-            pass  # Thesis and MasterPlan have no additional structural constraints beyond frontmatter
+        elif isinstance(entity, (Thesis, MasterPlan, Concept)):
+            pass  # No additional structural constraints beyond frontmatter
         else:
             self.errors.append(
                 ValidationError(entity.id, "type", f"Unknown entity type: {type(entity)}")

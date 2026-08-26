@@ -1,0 +1,39 @@
+---
+id: CXXX
+title: Concept Name
+type: mode
+status: STABLE
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+related: []
+---
+
+## Definition
+
+One precise paragraph. Write it so it can be looked up cold: no assumed context,
+no pronouns pointing at things outside this file. State what the concept IS, not
+what motivated it or when it was discovered (that goes in the Log).
+
+## Properties
+
+| Property | Value |
+|----------|-------|
+| Key param | value |
+
+## Constraints
+
+Hard limits — what this concept cannot be combined with, or conditions that break it.
+Be specific: "breaks X when Y" beats "incompatible with Z".
+
+## When to Use
+
+Concrete decision rule: "use this when A, prefer [[CXXX]] when B".
+
+## Related
+
+- [[CXXX]] — one-line relationship description
+- [[DXXX]] or [[TXXX]] — plan item that motivated or uses this concept
+
+## Log
+
+YYYY-MM-DD — Created.

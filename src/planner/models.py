@@ -18,6 +18,9 @@ class Status(str, Enum):
     HELD = "HELD"             # Thesis: currently believed and acted on
     QUESTIONING = "QUESTIONING"  # Thesis: evidence is mixed, re-evaluating
     ABANDONED = "ABANDONED"   # Thesis: evidence contradicts; no longer held
+    STABLE = "STABLE"         # Concept: well-understood, not expected to change
+    DRAFT = "DRAFT"           # Concept: provisional definition, may be refined
+    DEPRECATED = "DEPRECATED" # Concept: superseded by a better concept
 
 
 class Priority(str, Enum):
@@ -67,6 +70,27 @@ class PlanEntity(BaseModel):
         if "created" in info.data and updated < info.data["created"]:
             raise ValueError("updated date must be >= created date")
         return updated
+
+
+class ConceptType(str, Enum):
+    """Discriminator for Concept entries."""
+    MODE = "mode"           # An operating configuration with defined properties
+    TERM = "term"           # A technical term with a precise definition
+    PATTERN = "pattern"     # A recurring design or behavioral pattern
+    CONSTRAINT = "constraint"  # A hard rule that limits design space
+    RULE = "rule"           # A validated behavioral rule or heuristic
+    FINDING = "finding"     # A validated empirical result worth preserving
+
+
+class Concept(PlanEntity):
+    """Concept entity — stable named abstraction: mode, term, pattern, constraint, rule, finding."""
+    concept_type: ConceptType
+    related: List[str] = Field(default_factory=list)  # Plan IDs, schema files, result files
+
+    @field_validator("status")
+    @classmethod
+    def validate_concept_status(cls, v: Status) -> Status:
+        return v
 
 
 class Thesis(PlanEntity):

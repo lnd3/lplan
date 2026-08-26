@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List
-from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan
+from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan, Concept
 
 
 def generate_index(
@@ -25,6 +25,7 @@ def generate_index(
         id_to_filename = {}
 
     # Separate entities by type
+    concepts: Dict[str, Concept] = {}
     theses: Dict[str, Thesis] = {}
     master_plans: Dict[str, MasterPlan] = {}
     projects: Dict[str, Project] = {}
@@ -32,7 +33,9 @@ def generate_index(
     actions: Dict[str, Action] = {}
 
     for entity_id, entity in entities.items():
-        if isinstance(entity, Thesis):
+        if isinstance(entity, Concept):
+            concepts[entity.id] = entity
+        elif isinstance(entity, Thesis):
             theses[entity.id] = entity
         elif isinstance(entity, MasterPlan):
             master_plans[entity.id] = entity
@@ -56,6 +59,19 @@ def generate_index(
         "---",
         "",
     ]
+
+    if concepts:
+        lines.extend([
+            "## Concepts",
+            "",
+            "| ID | Title | Type | Status |",
+            "| --- | --- | --- | --- |",
+        ])
+        for cid, concept in sorted(concepts.items()):
+            filename = id_to_filename.get(cid, f"{cid}-{concept.title.lower().replace(' ', '-')}.md")
+            link = f"concepts/{filename}"
+            lines.append(f"| [{cid}]({link}) | {concept.title} | {concept.concept_type.value} | {concept.status.value} |")
+        lines.extend(["", "---", ""])
 
     if theses:
         lines.extend([
@@ -148,7 +164,7 @@ def write_index(plan_dir: Path, entities: Dict[str, PlanEntity], repo_name: str 
     """
     # Build mapping of entity ID to actual filename by enumerating directories
     id_to_filename = {}
-    for category in ["theses", "master_plans", "projects", "designs", "actions"]:
+    for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
         category_dir = plan_dir / category
         if not category_dir.exists():
             continue
