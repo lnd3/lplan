@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-26 13:59:23 UTC*
+*Last updated: 2026-08-27 14:37:03 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -49,6 +49,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [P006](projects/P006-thesis-framework-integration.md) | Thesis Framework Integration | DONE | MEDIUM | TBD |
 | [P007](projects/P007-analytics-reporting-dashboard.md) | Analytics & Reporting Dashboard | IN_PROGRESS | MEDIUM | TBD |
 | [P008](projects/P008-cross-repo-planning-integration.md) | Cross-Repo Planning Integration | PLANNING | MEDIUM | TBD |
+| [P009](projects/P009-external-maintenance.md) | External Maintenance | IN_PROGRESS | LOW | TBD |
 
 ---
 

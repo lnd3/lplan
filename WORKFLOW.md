@@ -598,6 +598,55 @@ When you change lplan (add entity type, change validation, update procedures):
 
 ---
 
+## External Contribution Workflow (Drive-By Fixes)
+
+### Why this exists
+
+lplan is dogfooded on its own `plan/` **and** consumed as a dependency by other repos. An agent (or human) working in one of those other repos sometimes needs to fix a bug or adjust layout inside lplan itself — but their active context is the *other* repo's plan, not this one's. The magnitude-based rules above assume you're already tracking lplan's FOCUS.md; a drive-by contributor usually isn't, and requiring full onboarding just to land a bug fix means the fix either doesn't happen or happens with no trail (see REFLECTION.md, 2026-08-27 entry, for what that looks like after a few days). This section is the reduced-friction path for that case — apply it *instead of* the magnitude levels above, not in addition.
+
+### Trigger
+
+Applies whenever a commit touches lplan's own tracked source (`src/`, `templates/`, `schema/`, or docs) **and** the driving task was not "advance an item already in lplan's `plan/`." If a `CLAUDE.md`/`AGENTS.md` pointed you here, this is you.
+
+### Rule: every drive-by change gets ONE line, minimum
+
+No drive-by commit lands without at least a one-line `CHANGELOG.md` entry. That's the non-negotiable floor — everything below is about how much more you owe, scaled by size.
+
+### Scaled response
+
+**Trivial** (typo, off-by-one, single CSS value, obviously-safe one-liner)
+- Just commit. No entity, no CHANGELOG entry — same as Level 1 above.
+
+**Bug fix / layout fix** — what most drive-by work actually is: a real defect or UX problem fixed in isolation, not a change to how a feature behaves
+- Log it as a new Action under the catch-all **P009 – External Maintenance** project (create `P009-external-maintenance.md` from `templates/project.md.template` if it doesn't exist yet).
+- Action status: `DONE` at creation (it's already fixed by the time you're logging it). One `Log` line: what broke, what fixed it.
+- Add one `CHANGELOG.md` line: `date | A0xx | NEW → DONE | one-sentence description`.
+- Do **not** edit `FOCUS.md`. Drive-by agents shouldn't be expected to reconcile lplan's strategic picture — guessing at it risks making FOCUS.md worse, not better.
+- Do **not** invent a new Project/Design for a bug fix, and don't spend time deciding which of P001–P008 it "really" belongs to. Default to P009; re-filing is a normal-upkeep-pass job (see below), not a drive-by one.
+
+**New capability, entity type, or behavior change** (adds a field, an entity kind, a view — not just fixes one)
+- Out of scope for drive-by. Either flag it to a maintainer before merging, or do the full Level 3 treatment yourself (entity + CHANGELOG + FOCUS.md + REFLECTION.md) if you're equipped to own it.
+- Landing a new capability with only a drive-by CHANGELOG line is exactly the failure mode this section exists to prevent — the Concept entity type (C001–C005) shipped this way and needed a retroactive catch-up pass.
+- **Tell the user.** The person driving your session from the external repo is often not aware lplan has its own plan/workflow at all. Don't silently absorb a "quick fix" that's actually a new capability — say plainly that this piece needs to be planned and done in lplan itself (a real project/design here, not a patch made in passing), so the user can decide whether to redirect you, split the work, or loop in a maintainer.
+
+### The P009 catch-all
+
+`P009-external-maintenance.md` exists so drive-by fixes have somewhere to attach without requiring up-front triage into P001–P008. It's expected to accumulate many small `DONE` actions over time. A normal upkeep pass may periodically re-file P009's actions into more specific projects, or just leave them — P009 never needs a FOCUS.md mention regardless of how many actions sit under it, since by construction none of them represent open/active work.
+
+### Mechanical hook
+
+Commits touching lplan's own source should carry a trailer so this is greppable later:
+```
+Lplan-Entity: A0xx
+```
+or, for trivial fixes:
+```
+Lplan-Entity: none (trivial)
+```
+`git log --grep "Lplan-Entity: none" -- src/ templates/ schema/` surfaces fixes that were judged trivial — useful for spot-checking whether that judgment call is being made honestly.
+
+---
+
 ## Summary
 
 **The rhythm is not about time, it's about change.**
