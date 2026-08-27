@@ -149,6 +149,8 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     actions[entity.id] = entity_info
                     if hasattr(entity, 'design'):
                         entity_info["parent"] = entity.design
+                    if hasattr(entity, 'project'):
+                        entity_info["parent_project"] = entity.project
 
         # Build many-to-many thesis ↔ master_plan links from parent_thesis fields
         # thesis_mp_map: thesis_id → [mp_id, ...]
@@ -216,6 +218,12 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
             if hasattr(entity, 'parent_master_plan') and entity.parent_master_plan and entity.id in projects:
                 projects[entity.id]["parent_master_plan"] = entity.parent_master_plan
 
+        # Actions attach to a design when they name one; otherwise straight to their
+        # project, if they name one; anything left over (no design, no project, or a
+        # project reference that doesn't resolve) is a genuine orphan, not just
+        # unbadged — track it explicitly rather than letting it silently vanish.
+        attached_action_ids = set()
+
         for proj_id, proj in sorted(projects.items()):
             proj_node = {"id": proj_id, "title": proj["title"], "path": proj["path"],
                          "parent_master_plan": proj.get("parent_master_plan", []), "children": []}
@@ -230,10 +238,26 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                         if action.get("parent") == design_id:
                             action_node = {"id": action_id, "title": action["title"], "path": action["path"]}
                             design_node["children"].append(action_node)
+                            attached_action_ids.add(action_id)
 
                     proj_node["children"].append(design_node)
 
+            # Add actions that name this project directly but no design
+            for action_id, action in sorted(actions.items()):
+                if action_id in attached_action_ids:
+                    continue
+                if not action.get("parent") and action.get("parent_project") == proj_id:
+                    action_node = {"id": action_id, "title": action["title"], "path": action["path"]}
+                    proj_node["children"].append(action_node)
+                    attached_action_ids.add(action_id)
+
             hierarchy["projects"].append(proj_node)
+
+        hierarchy["orphan_actions"] = [
+            {"id": action_id, "title": action["title"], "path": action["path"]}
+            for action_id, action in sorted(actions.items())
+            if action_id not in attached_action_ids
+        ]
 
         return hierarchy
     except Exception as e:
@@ -297,7 +321,7 @@ _HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plan</title>
+<title>REPO_NAME · Plan</title>
 
 ${_LIBRARIES_HEAD}
 
@@ -306,6 +330,7 @@ ${_LIBRARIES_HEAD}
 <body>
 
 <div id="toolbar">
+  <span id="repo-name-heading">REPO_NAME</span>
   <button data-action="show-browser">📁 Files</button>
   <button data-action="show-tree">🌳 Tree</button>
   <button data-action="show-analytics">📊 Analytics</button>
@@ -425,8 +450,10 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
 
     @app.route("/")
     def index():
+        from planner.index_gen import detect_repo_name
         html = _HTML.replace("${_LIBRARIES_HEAD}", _LIBRARIES_HEAD)
         html = html.replace("EDIT_ENABLED", "true" if edit else "false")
+        html = html.replace("REPO_NAME", detect_repo_name(plan_dir))
         return Response(html, mimetype="text/html")
 
     @app.route("/static/<path:filename>")

@@ -6,6 +6,40 @@ from typing import Dict, List
 from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan, Concept
 
 
+def detect_repo_name(plan_dir: Path) -> str:
+    """Best-effort repo name for a plan directory: explicit config, else parent dir name.
+
+    Used to label a plan wherever it's shown outside its own files (INDEX.md heading,
+    the web UI's page title/tab) — plan_dir's own name is always literally "plan", so
+    it's the containing repo's directory name that actually identifies which plan this is.
+    """
+    plan_path = Path(plan_dir)
+    repo_name = ""
+
+    config_path = plan_path / ".plan-config"
+    if config_path.exists():
+        try:
+            for line in config_path.read_text().splitlines():
+                if line.startswith("repo_name="):
+                    repo_name = line.split("=", 1)[1].strip()
+                    break
+        except Exception:
+            pass
+
+    if not repo_name:
+        abs_plan_path = plan_path.resolve()
+        parent_name = abs_plan_path.parent.name
+        if parent_name.lower() == "plan":
+            repo_name = abs_plan_path.parent.parent.name
+        else:
+            repo_name = parent_name
+
+        if "-" in repo_name or "_" in repo_name:
+            repo_name = repo_name.replace("-", " ").replace("_", " ").title()
+
+    return repo_name or "Plan"
+
+
 def generate_index(
     entities: Dict[str, PlanEntity],
     repo_name: str,

@@ -16,7 +16,7 @@ from .graph import DependencyGraph
 from .models import Project, Status
 from .stats import compute_stats, compute_timeline, compute_estimates, compute_velocity
 from .writer import update_entity_frontmatter, append_log_entry
-from .index_gen import generate_index, write_index, append_changelog
+from .index_gen import generate_index, write_index, append_changelog, detect_repo_name
 from .init import init_plan
 from .refs import check_references
 from .git_ops import governed_commit
@@ -587,34 +587,7 @@ def generate_index(plan_dir: str, repo_name: str) -> None:
 
     # Auto-detect repo name if not provided
     if not repo_name:
-        # Try to read from config file
-        config_path = plan_path / ".plan-config"
-        if config_path.exists():
-            try:
-                for line in config_path.read_text().splitlines():
-                    if line.startswith("repo_name="):
-                        repo_name = line.split("=", 1)[1].strip()
-                        break
-            except Exception:
-                pass
-
-        # Fall back to parent directory name
-        if not repo_name:
-            # Resolve to absolute path to get proper directory names
-            abs_plan_path = plan_path.resolve()
-            parent_name = abs_plan_path.parent.name
-
-            # If parent is "plan", use grandparent; otherwise use parent
-            if parent_name.lower() == "plan":
-                repo_name = abs_plan_path.parent.parent.name
-            else:
-                repo_name = parent_name
-
-            # Convert snake_case/kebab-case to title case, but preserve camelCase/PascalCase
-            if "-" in repo_name or "_" in repo_name:
-                # Has explicit separators: convert to Title Case
-                repo_name = repo_name.replace("-", " ").replace("_", " ").title()
-            # else: keep as-is (camelCase/PascalCase/UPPERCASE)
+        repo_name = detect_repo_name(plan_path)
 
     try:
         files = PlanParser.parse_directory(plan_path)

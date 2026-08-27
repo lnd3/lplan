@@ -35,8 +35,10 @@ class TreeView {
     for (const project of projects) {
       const hasChildren = project.children && project.children.length > 0;
       const paddingLeft = indent * 20;
-      const mpBadges = (project.parent_master_plan || [])
-        .map(m => TreeView.parentBadge(m, TreeView.TYPE_COLORS.master_plan)).join('');
+      const parentMPs = project.parent_master_plan || [];
+      const mpBadges = parentMPs.length > 0
+        ? parentMPs.map(m => TreeView.parentBadge(m, TreeView.TYPE_COLORS.master_plan)).join('')
+        : TreeView.rootBadge();
 
       html += `<div class="tree-item" style="padding-left: ${paddingLeft}px;" id="tree-${project.id}">
         <div style="display: flex; align-items: center; flex-wrap: wrap;">
@@ -133,6 +135,7 @@ class TreeView {
       const concepts = hierarchy.concepts || [];
       const theses = hierarchy.theses || [];
       const masterPlans = hierarchy.master_plans || [];
+      const orphanActions = hierarchy.orphan_actions || [];
 
       let html = '';
 
@@ -227,6 +230,25 @@ class TreeView {
       html += TreeView.buildTreeHTML(TreeView.treeHierarchy);
       html += '</div>';
 
+      // Orphan actions — no design, and either no project or a project
+      // reference that doesn't resolve. Would otherwise silently vanish
+      // from the tree entirely (never attached under any project/design).
+      if (orphanActions.length > 0) {
+        html += '<div style="padding: 10px 0;">';
+        html += '<div style="font-weight: bold; color: #9399b2; padding: 5px 10px; font-size: 12px;">ACTIONS <span style="font-weight:normal;color:#6c7086;text-transform:none;">(no project/design)</span></div>';
+        for (const a of orphanActions) {
+          html += `<div class="tree-item" id="tree-${a.id}">
+            <div style="display: flex; align-items: center; flex-wrap: wrap;">
+              <span class="tree-toggle" data-has-children="false">•</span>
+              ${TreeView.parentBadge(a.id, TreeView.TYPE_COLORS.action)}
+              <div class="tree-node tree-node-project" style="color:#9399b2;" onclick='TreeView.showTreeRoot("${a.id}", "${TreeView.escapeAttr(a.title)}", "action", "${TreeView.escapeAttr(a.path)}")' data-id="${a.id}">${a.title}</div>
+              ${TreeView.rootBadge()}
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
       sidebarContent.innerHTML = html;
 
       const preview = document.getElementById('preview');
@@ -283,10 +305,19 @@ class TreeView {
       const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
       let hierarchyHTML = '';
+      let childrenLabel = type === 'project' ? 'Designs' : 'Actions';
       if (type !== 'master_plan' && type !== 'thesis' && type !== 'concept') {
+        // An orphan action (no project/design) has no place in treeHierarchy's
+        // nested structure by construction — that's not an error, it just has
+        // nothing further to render below it (same as any leaf action).
         const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
-        if (!currentNode) throw new Error('Node not found');
-        hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
+        if (currentNode) {
+          hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
+          if (type === 'project' && currentNode.children && currentNode.children.length > 0) {
+            const kinds = new Set(currentNode.children.map(c => c.id.charAt(0) === 'D' ? 'design' : 'action'));
+            childrenLabel = kinds.size > 1 ? 'Designs & Actions' : (kinds.has('design') ? 'Designs' : 'Actions');
+          }
+        }
       }
 
       const typeLabel = { concept: 'Concept', master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
@@ -318,7 +349,7 @@ class TreeView {
           ${hierarchyHTML ? `<div style="margin-top: 8px;">
             <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '+' : '-';">
               <span class="children-toggle" style="flex-shrink: 0; width: 12px; font-size: 14px; transition: transform 0.15s;">-</span>
-              <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${type === 'project' ? 'Designs' : 'Actions'}</span>
+              <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${childrenLabel}</span>
             </div>
             <div style="padding-top: 8px;">
               ${hierarchyHTML}
@@ -350,14 +381,18 @@ class TreeView {
   static async renderHierarchyView(node, type, depth = 0) {
     if (!node.children || node.children.length === 0) return '';
 
-    const childType = type === 'project' ? 'design' : 'action';
-    const typeIcon = childType === 'design' ? '🎨' : '✓';
-    const bgColor = childType === 'design' ? 'rgba(166, 172, 200, 0.1)' : 'rgba(147, 153, 178, 0.1)';
-    const borderColor = childType === 'design' ? 'rgba(166, 172, 200, 0.2)' : 'rgba(147, 153, 178, 0.2)';
-
     let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px;">`;
 
     for (const child of node.children) {
+      // A project's children can now be a mix of designs and actions attached
+      // directly (an action naming a project but no design) — determine each
+      // child's actual type by its id prefix rather than assuming the parent's
+      // type applies uniformly to every child, which only held while every
+      // project-level child was a design.
+      const childType = child.id.charAt(0) === 'D' ? 'design' : 'action';
+      const typeIcon = childType === 'design' ? '🎨' : '✓';
+      const bgColor = childType === 'design' ? 'rgba(166, 172, 200, 0.1)' : 'rgba(147, 153, 178, 0.1)';
+      const borderColor = childType === 'design' ? 'rgba(166, 172, 200, 0.2)' : 'rgba(147, 153, 178, 0.2)';
       const hasGrandchildren = child.children && child.children.length > 0;
       const toggleId = `hierarchy-${child.id}`;
       const contentId = `hierarchy-content-${child.id}`;

@@ -61,6 +61,16 @@ class FileBrowser {
     window.currentRaw  = await res.text();
     window.currentPath = path;
 
+    // Callers other than the Files browser (e.g. Tree view's "Full Doc" button)
+    // leave #file-toolbar hidden — without this, there's no Edit button to reach,
+    // so Save is never reachable either even though the editor itself works fine.
+    document.getElementById('file-toolbar').style.display = 'flex';
+    document.getElementById('preview').style.display = '';
+    document.getElementById('editor-wrap').style.display = 'none';
+    document.getElementById('tree-view').style.display = 'none';
+    document.getElementById('analytics-dashboard').style.display = 'none';
+    document.getElementById('status-view').style.display = 'none';
+
     document.querySelectorAll('.tree-item').forEach(el => {
       el.classList.toggle('active', el.dataset.path === path);
     });

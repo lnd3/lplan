@@ -32,6 +32,15 @@ body {
   color: #a6adc8;
   transition: all 0.2s;
 }
+#repo-name-heading {
+  padding: 0 16px 0 20px;
+  font-weight: 700;
+  font-size: 15px;
+  color: #cdd6f4;
+  border-right: 1px solid #313244;
+  margin-right: 4px;
+  white-space: nowrap;
+}
 #toolbar button:hover {
   color: #cdd6f4;
   background: rgba(200, 214, 244, 0.05);
