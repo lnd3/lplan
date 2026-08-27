@@ -8,6 +8,22 @@ class TreeView {
     return `<span style="font-size:10px;color:${color};background:${color}1a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;">${id}</span>`;
   }
 
+  // Values interpolated into a single-quoted onclick='...' HTML attribute must not
+  // contain a literal ' — HTML attribute parsing has no backslash-escape mechanism,
+  // so a raw apostrophe in a title (e.g. "TradeFlow's") silently truncates the
+  // attribute and breaks the click handler for that node (and anything after it).
+  // Entity-encoding survives HTML parsing and is decoded back to plain characters
+  // before the string reaches the onclick JS, so this is safe both as an attribute
+  // value and inside the double-quoted JS string literals showTreeRoot() is called with.
+  static escapeAttr(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/'/g, '&#39;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   static buildTreeHTML(projects, indent = 0) {
     let html = '';
     for (const project of projects) {
@@ -20,7 +36,7 @@ class TreeView {
         <div style="display: flex; align-items: center; flex-wrap: wrap;">
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${project.id}" data-has-children="${hasChildren}">${hasChildren ? '+' : '•'}</span>
           ${TreeView.parentBadge(project.id, TreeView.TYPE_COLORS.project)}
-          <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${project.id}", "${project.title}", "project", "${project.path}")' data-id="${project.id}">${project.title}</div>
+          <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${project.id}", "${TreeView.escapeAttr(project.title)}", "project", "${TreeView.escapeAttr(project.path)}")' data-id="${project.id}">${project.title}</div>
           ${mpBadges}
         </div>
         ${TreeView.buildChildrenHTML(project, indent + 1)}
@@ -47,7 +63,7 @@ class TreeView {
         <div style="display: flex; align-items: center; flex-wrap: wrap;">
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${child.id}" data-has-children="${hasGrandchildren}">${hasGrandchildren ? '+' : '•'}</span>
           ${TreeView.parentBadge(child.id, childColor)}
-          <div class="tree-node tree-node-design" style="color:${childColor};" onclick='TreeView.showTreeRoot("${child.id}", "${child.title}", "${childType}", "${child.path}")' data-id="${child.id}">${child.title}</div>
+          <div class="tree-node tree-node-design" style="color:${childColor};" onclick='TreeView.showTreeRoot("${child.id}", "${TreeView.escapeAttr(child.title)}", "${childType}", "${TreeView.escapeAttr(child.path)}")' data-id="${child.id}">${child.title}</div>
           ${parentBadge}
         </div>
         ${TreeView.buildChildrenHTML(child, indent + 1)}
@@ -134,7 +150,7 @@ class TreeView {
                 <span class="tree-toggle" data-has-children="false">•</span>
                 ${TreeView.parentBadge(c.id, TreeView.TYPE_COLORS.concept)}
                 <div class="tree-node tree-node-project" style="color:#94e2d5; font-size:12px;"
-                  onclick='TreeView.showTreeRoot("${c.id}", "${c.title.replace(/'/g, "\\'")}", "concept", "${c.path}")' data-id="${c.id}">${c.title}</div>
+                  onclick='TreeView.showTreeRoot("${c.id}", "${TreeView.escapeAttr(c.title)}", "concept", "${TreeView.escapeAttr(c.path)}")' data-id="${c.id}">${c.title}</div>
               </div>
             </div>`;
           }
@@ -157,16 +173,16 @@ class TreeView {
                 onclick="const item=document.getElementById('tree-${t.id}'); const c=document.getElementById('${childrenId}'); const closing=!item.classList.contains('collapsed'); c.style.display=closing?'none':''; item.classList.toggle('collapsed', closing);">${hasMPs ? '+' : '•'}</span>
               ${TreeView.parentBadge(t.id, TreeView.TYPE_COLORS.thesis)}
               <div class="tree-node tree-node-project" style="color:#cba6f7;"
-                onclick='TreeView.showTreeRoot("${t.id}", "${t.title}", "thesis", "${t.path}")' data-id="${t.id}">${t.title}</div>
+                onclick='TreeView.showTreeRoot("${t.id}", "${TreeView.escapeAttr(t.title)}", "thesis", "${TreeView.escapeAttr(t.path)}")' data-id="${t.id}">${t.title}</div>
             </div>
             <div id="${childrenId}" style="padding-left: 18px; display:${hasMPs ? '' : 'none'};">
               ${hasMPs ? t.master_plans.map(mp => `
-              <div class="tree-item" id="tree-${t.id}-${mp.id}">
+              <div class="tree-item" id="tree-${mp.id}">
                 <div style="display: flex; align-items: center; flex-wrap: wrap;">
                   <span class="tree-toggle" style="cursor:default;" data-has-children="false">•</span>
                   ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
                   <div class="tree-node tree-node-project" style="color:#f9e2af; font-size:12px;"
-                    onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
+                    onclick='TreeView.showTreeRoot("${mp.id}", "${TreeView.escapeAttr(mp.title)}", "master_plan", "${TreeView.escapeAttr(mp.path)}")' data-id="${mp.id}">${mp.title}</div>
                 </div>
               </div>`).join('') : ''}
             </div>
@@ -175,20 +191,22 @@ class TreeView {
         html += '</div>';
       }
 
-      // Master Plans (flat list for plans not linked to any thesis)
+      // Master Plans (flat list for plans not linked to any thesis — plans linked to a
+      // thesis are already rendered nested under it, above; listing them again here would
+      // duplicate the "tree-${mp.id}" DOM id and break both copies' click/highlight state)
       const linkedMPIds = new Set(theses.flatMap(t => (t.master_plans || []).map(mp => mp.id)));
       const unlinkedMPs = masterPlans.filter(mp => !linkedMPIds.has(mp.id));
-      if (masterPlans.length > 0) {
+      if (unlinkedMPs.length > 0) {
         html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
         html += '<div style="font-weight: bold; color: #f9e2af; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
-        for (const mp of masterPlans) {
+        for (const mp of unlinkedMPs) {
           const thesisBadges = (mp.theses || [])
             .map(t => TreeView.parentBadge(t, TreeView.TYPE_COLORS.thesis)).join('');
-          html += `<div class="tree-item" id="tree-mp-${mp.id}">
+          html += `<div class="tree-item" id="tree-${mp.id}">
             <div style="display: flex; align-items: center; flex-wrap: wrap;">
               <span class="tree-toggle" data-has-children="false">•</span>
               ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
-              <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${mp.title}", "master_plan", "${mp.path}")' data-id="${mp.id}">${mp.title}</div>
+              <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${TreeView.escapeAttr(mp.title)}", "master_plan", "${TreeView.escapeAttr(mp.path)}")' data-id="${mp.id}">${mp.title}</div>
               ${thesisBadges}
             </div>
           </div>`;
