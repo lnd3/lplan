@@ -86,7 +86,11 @@ class TreeView {
     event.stopPropagation();
 
     const childrenDiv = document.getElementById(`children-${id}`);
-    const toggle = event.currentTarget;
+    // The click listener is delegated (attached to `document`), so
+    // event.currentTarget is always `document` here, never the toggle span
+    // that was actually clicked — use event.target instead, which the
+    // delegated listener already verified is the .tree-toggle element.
+    const toggle = event.target;
     const treeItem = document.getElementById(`tree-${id}`);
 
     if (childrenDiv) {
@@ -94,7 +98,11 @@ class TreeView {
       childrenDiv.style.display = isHidden ? '' : 'none';
       toggle.textContent = isHidden ? '-' : '+';
       if (treeItem) {
-        treeItem.classList.toggle('collapsed');
+        // Explicit target state (was `.toggle('collapsed')`, a bare flip that
+        // assumed the item started uncollapsed — but children start hidden
+        // with no 'collapsed' class present, so the flip was inverted from
+        // the first click onward).
+        treeItem.classList.toggle('collapsed', !isHidden);
       }
     }
   }
