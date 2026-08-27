@@ -1,7 +1,7 @@
 ---
 id: D004
 title: Plan Health Dashboard Architecture
-status: IDEA
+status: DONE
 project: P010
 created: 2026-08-27
 updated: 2026-08-27
@@ -73,4 +73,5 @@ The rollup and staleness functions should be pure (plan data in, rollup dict out
 
 ## Log
 
+2026-08-27 — Implemented as designed: `status_overview.py` holds the pure rollup/staleness/dangling-ref functions, `/api/status-overview` in server.py is the thin Flask wrapper, `overview.js` is the frontend consumer. No deviations from the plan below.
 2026-08-27 — Design created alongside P010, scoped to reuse existing parsing/graph/check-refs code rather than reimplement.

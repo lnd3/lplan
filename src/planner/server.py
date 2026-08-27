@@ -335,6 +335,7 @@ ${_LIBRARIES_HEAD}
   <button data-action="show-tree">🌳 Tree</button>
   <button data-action="show-analytics">📊 Analytics</button>
   <button data-action="show-status">📋 Items</button>
+  <button data-action="show-overview">🩺 Status</button>
 </div>
 
 <div id="main">
@@ -361,6 +362,7 @@ ${_LIBRARIES_HEAD}
     <div id="tree-view" style="display: none;"></div>
     <div id="analytics-dashboard" style="display: none;"></div>
     <div id="status-view" style="display: none;"></div>
+    <div id="overview-view" style="display: none;"></div>
   </div>
 </div>
 
@@ -408,6 +410,7 @@ document.addEventListener('mouseup', () => {
 <script src="/static/analytics.js"></script>
 <script src="/static/viewer.js"></script>
 <script src="/static/status.js"></script>
+<script src="/static/overview.js"></script>
 <script src="/static/dispatcher.js"></script>
 
 <script>
@@ -802,6 +805,49 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     }
                 }
             })
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    @app.route("/api/status-overview")
+    def get_status_overview():
+        """Hierarchy-wide rollups + needs-attention signals (Plan Health Dashboard)."""
+        try:
+            from planner.models import Action, Concept, Design, MasterPlan, Thesis
+            from planner.status_overview import DEFAULT_STALE_DAYS, compute_status_overview
+
+            stale_days = request.args.get("stale_days", DEFAULT_STALE_DAYS, type=int)
+
+            parsed = PlanParser.parse_directory(plan_dir)
+            concepts, theses, master_plans = {}, {}, {}
+            projects, designs, actions = {}, {}, {}
+            plan_files_by_id = {}
+            path_by_id = {}
+
+            for filename, result in parsed.items():
+                if isinstance(result, dict) and "error" in result:
+                    continue
+                entity = result.entity
+                plan_files_by_id[entity.id] = result
+                path_by_id[entity.id] = filename.replace(str(plan_dir) + "/", "")
+                if isinstance(entity, Concept):
+                    concepts[entity.id] = entity
+                elif isinstance(entity, Thesis):
+                    theses[entity.id] = entity
+                elif isinstance(entity, MasterPlan):
+                    master_plans[entity.id] = entity
+                elif isinstance(entity, Project):
+                    projects[entity.id] = entity
+                elif isinstance(entity, Design):
+                    designs[entity.id] = entity
+                elif isinstance(entity, Action):
+                    actions[entity.id] = entity
+
+            graph = DependencyGraph(projects)
+            data = compute_status_overview(
+                concepts, theses, master_plans, projects, designs, actions,
+                plan_files_by_id, graph, plan_dir, path_by_id, stale_days=stale_days,
+            )
+            return jsonify({"ok": True, "data": data})
         except Exception as e:
             return jsonify({"ok": False, "error": str(e)}), 500
 

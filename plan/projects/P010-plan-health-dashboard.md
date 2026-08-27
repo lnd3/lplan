@@ -1,7 +1,7 @@
 ---
 id: P010
 title: Plan Health Dashboard
-status: PLANNING
+status: IN_PROGRESS
 priority: HIGH
 priority_drivers:
   - team_engagement
@@ -53,21 +53,23 @@ This is not a rewrite of Items view or Analytics — both stay as-is and remain 
 ## Tasks
 
 ### Phase 1: Design
-- [ ] Write D004 covering rollup algorithm, staleness threshold, API shape, and UI layout
+- [x] Write D004 covering rollup algorithm, staleness threshold, API shape, and UI layout
 
 ### Phase 2: Backend
-- [ ] New rollup-aware endpoint (extends or sits alongside `/api/status`)
-- [ ] Staleness detection (IN_PROGRESS + Log-age heuristic)
-- [ ] Reuse `check-refs` logic for dangling-reference surfacing
+- [x] New rollup-aware endpoint (`/api/status-overview`, sits alongside `/api/status`)
+- [x] Staleness detection (IN_PROGRESS + Log-age heuristic)
+- [x] Reuse `check-refs` logic for dangling-reference surfacing
 
 ### Phase 3: Frontend
-- [ ] New `overview.js` module + nav tab
-- [ ] Hierarchy rollup rendering (progress bars per Master Plan / Project)
-- [ ] "Needs attention" panel
+- [x] New `overview.js` module + nav tab ("🩺 Status")
+- [x] Hierarchy rollup rendering (progress bars per Master Plan / Project)
+- [x] "Needs attention" panel
 
 ### Phase 4: Dogfood
-- [ ] Validate against lplan's own `plan/` — confirm A015 shows as stale, P009 shows as the perpetual-catch-all edge case it is, and the A008/A011/A015 orphan refs surface correctly
+- [x] Data-level validation against lplan's own `plan/` — confirmed A015 (plus P007, M001) show as stale, P009's 100%-rollup-but-perpetually-IN_PROGRESS shape renders sensibly, and the A008/A011/A015 orphan + P009 unused refs match `plan check-refs` byte-for-byte
+- [ ] Visual/click-through confirmation in a real browser (see A023 — no headless browser available in the implementing environment)
 
 ## Log
 
+2026-08-27 — Implemented per D004: `status_overview.py`, `/api/status-overview`, `overview.js`, new toolbar tab, existing view show()/hide() methods updated to include the new container. 100/100 existing tests still pass; new logic validated directly against lplan's own plan/ (see A020/A023 Logs). Left IN_PROGRESS rather than DONE: the implementing sandbox had no headless browser, so the UI was verified via API responses, HTML/script wiring, and JS syntax checks — not by actually looking at the rendered page. Closing this out just needs someone to run `plan serve` and click through it once.
 2026-08-27 — Project created at user request: planned, not started. Scoped after reviewing existing Items view (flat table, no rollups) and Analytics dashboard (rollups, but Project-only) to confirm this is a real gap and not a duplicate of either.

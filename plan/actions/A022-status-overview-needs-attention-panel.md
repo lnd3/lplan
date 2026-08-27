@@ -1,7 +1,7 @@
 ---
 id: A022
 title: Needs-attention panel (stale, blocked, dangling refs)
-status: IDEA
+status: DONE
 design: D004
 project: P010
 created: 2026-08-27
@@ -14,11 +14,12 @@ The surfacing half of D004 — turning A020's staleness/blocked/dangling-ref sig
 
 ## Tasks
 
-- [ ] Panel listing stale IN_PROGRESS entities with days-since-activity
-- [ ] Panel section for BLOCKED entities with their blocker(s)
-- [ ] Panel section for dangling references (orphaned/unused entities per `check-refs`)
-- [ ] Empty-state handling: panel collapses/hides sections with nothing to report, doesn't show three "all clear" messages by default
+- [x] Panel listing stale IN_PROGRESS entities with days-since-activity
+- [x] Panel section for BLOCKED entities with their blocker(s)
+- [x] Panel section for dangling references (orphaned/unused entities per `check-refs`)
+- [x] Empty-state handling: each sub-section only renders if it has content; if all three are empty, one "✓ nothing needs attention" message shows instead of an empty panel
 
 ## Log
 
+2026-08-27 — Built as part of `overview.js` (`renderNeedsAttention`). Confirmed via the live API (not the rendered DOM — see A021's caveat) that stale/blocked/dangling-ref data is correctly assembled and would populate each section as designed.
 2026-08-27 — Action created, not started.

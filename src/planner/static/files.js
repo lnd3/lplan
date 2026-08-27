@@ -70,6 +70,7 @@ class FileBrowser {
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
     document.getElementById('status-view').style.display = 'none';
+    document.getElementById('overview-view').style.display = 'none';
 
     document.querySelectorAll('.tree-item').forEach(el => {
       el.classList.toggle('active', el.dataset.path === path);
@@ -91,6 +92,7 @@ class FileBrowser {
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
     document.getElementById('status-view').style.display = 'none';
+    document.getElementById('overview-view').style.display = 'none';
     document.getElementById('sidebar').style.display = '';
 
     await FileBrowser.loadTree();

@@ -22,6 +22,9 @@ class EventDispatcher {
         case 'show-status':
           StatusView.show();
           break;
+        case 'show-overview':
+          OverviewView.show();
+          break;
         case 'edit-file':
           FileEditor.enterEdit();
           break;

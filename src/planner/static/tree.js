@@ -146,6 +146,7 @@ class TreeView {
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
     document.getElementById('status-view').style.display = 'none';
+    document.getElementById('overview-view').style.display = 'none';
 
     document.getElementById('sidebar').style.display = '';
     const sidebarContent = document.getElementById('sidebar-content');

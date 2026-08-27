@@ -23,6 +23,7 @@ class StatusView {
     document.getElementById('sidebar').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
     document.getElementById('editor-wrap').style.display = 'none';
+    document.getElementById('overview-view').style.display = 'none';
 
     const statusContainer = document.getElementById('status-view');
     statusContainer.style.display = 'block';
