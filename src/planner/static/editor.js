@@ -11,9 +11,13 @@ class FileEditor {
     preview.style.display = 'none';
     wrap.style.display    = 'flex';
 
+    // #btn-save/#btn-cancel have `display: none` baked into their base CSS
+    // rule (style.css), so clearing the inline override (style.display = '')
+    // doesn't reveal them — it just falls back to that stylesheet rule and
+    // they stay hidden. Must set an explicit visible value instead.
     document.getElementById('btn-edit').style.display   = 'none';
-    document.getElementById('btn-save').style.display   = '';
-    document.getElementById('btn-cancel').style.display = '';
+    document.getElementById('btn-save').style.display   = 'inline-block';
+    document.getElementById('btn-cancel').style.display = 'inline-block';
 
     if (!FileEditor.editor) {
       const textarea = document.createElement('textarea');
