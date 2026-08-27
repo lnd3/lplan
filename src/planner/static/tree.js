@@ -8,6 +8,12 @@ class TreeView {
     return `<span style="font-size:10px;color:${color};background:${color}1a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;">${id}</span>`;
   }
 
+  // Marks a master plan that has no parent thesis on purpose — not every master
+  // plan needs to be seeded by a formalized thesis, so this isn't an error state.
+  static rootBadge() {
+    return `<span style="font-size:9px;color:#6c7086;background:#6c70861a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.03em;" title="No parent thesis">root</span>`;
+  }
+
   // Values interpolated into a single-quoted onclick='...' HTML attribute must not
   // contain a literal ' — HTML attribute parsing has no backslash-escape mechanism,
   // so a raw apostrophe in a title (e.g. "TradeFlow's") silently truncates the
@@ -198,16 +204,17 @@ class TreeView {
       const unlinkedMPs = masterPlans.filter(mp => !linkedMPIds.has(mp.id));
       if (unlinkedMPs.length > 0) {
         html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
-        html += '<div style="font-weight: bold; color: #f9e2af; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
+        html += '<div style="font-weight: bold; color: #f9e2af; padding: 5px 10px; font-size: 12px;">MASTER PLANS <span style="font-weight:normal;color:#6c7086;text-transform:none;">(no thesis)</span></div>';
         for (const mp of unlinkedMPs) {
-          const thesisBadges = (mp.theses || [])
-            .map(t => TreeView.parentBadge(t, TreeView.TYPE_COLORS.thesis)).join('');
+          // Every plan here is thesis-less by construction (that's what makes it
+          // "unlinked") — badge it as intentionally rootless rather than showing
+          // an empty/absent thesis badge that could read as a missing link.
           html += `<div class="tree-item" id="tree-${mp.id}">
             <div style="display: flex; align-items: center; flex-wrap: wrap;">
               <span class="tree-toggle" data-has-children="false">•</span>
               ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
               <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${TreeView.escapeAttr(mp.title)}", "master_plan", "${TreeView.escapeAttr(mp.path)}")' data-id="${mp.id}">${mp.title}</div>
-              ${thesisBadges}
+              ${TreeView.rootBadge()}
             </div>
           </div>`;
         }
