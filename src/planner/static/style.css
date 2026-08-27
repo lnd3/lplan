@@ -395,9 +395,14 @@ body {
   transition: transform 0.15s;
   line-height: 1;
 }
-.tree-item:not(.collapsed) .tree-toggle {
-  transform: rotate(90deg);
-}
+/* Removed: a `transform: rotate(90deg)` rule used to live here, meant to
+   turn a static "+" into a "-"-looking glyph via rotation. It was a no-op
+   on "+" (symmetric under 90deg) so nobody noticed it doing anything. Now
+   that toggleTreeItem() and the thesis inline toggle both correctly flip
+   the glyph's actual text content between "+" and "-", this rule would
+   instead rotate a real "-" into a vertical bar — two conflicting
+   mechanisms for the same state. The text flip alone is correct; this
+   rule is gone rather than made conditional on top of it. */
 .tree-node-project, .tree-node-design, .tree-node-action {
   /* Plain text styling - no colors, sizes, or margins */
 }

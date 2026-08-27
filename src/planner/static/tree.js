@@ -4,6 +4,21 @@ class TreeView {
 
   static TYPE_COLORS = { concept: '#94e2d5', thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
 
+  // Card styling for content-pane child lists, keyed by id prefix — covers
+  // project->{design,action} (D/A) and the thesis<->master_plan link (T/M),
+  // rather than the old design-or-else-action assumption that only held
+  // while a project's children were always designs.
+  static TYPE_META = {
+    D: { type: 'design',      icon: '🎨', bg: 'rgba(166, 172, 200, 0.1)', border: 'rgba(166, 172, 200, 0.2)' },
+    A: { type: 'action',      icon: '✓',  bg: 'rgba(147, 153, 178, 0.1)', border: 'rgba(147, 153, 178, 0.2)' },
+    M: { type: 'master_plan', icon: '🎯', bg: 'rgba(249, 226, 175, 0.1)', border: 'rgba(249, 226, 175, 0.2)' },
+    T: { type: 'thesis',      icon: '💡', bg: 'rgba(203, 166, 247, 0.1)', border: 'rgba(203, 166, 247, 0.2)' },
+  };
+
+  static typeFromId(id) {
+    return (TreeView.TYPE_META[id.charAt(0)] || TreeView.TYPE_META.A).type;
+  }
+
   static parentBadge(id, color) {
     return `<span style="font-size:10px;color:${color};background:${color}1a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;">${id}</span>`;
   }
@@ -60,7 +75,7 @@ class TreeView {
     for (const child of parent.children) {
       const hasGrandchildren = child.children && child.children.length > 0;
       const paddingLeft = indent * 20;
-      const childType = child.id.charAt(0) === 'D' ? 'design' : 'action';
+      const childType = TreeView.typeFromId(child.id);
       const childColor = TreeView.TYPE_COLORS[childType] || '#a6adc8';
       // Parent badge: designs show project ID (blue), actions show design ID (gray)
       const parentId = childType === 'design' ? parent.id : (child.parent_design || '');
@@ -145,6 +160,15 @@ class TreeView {
       const masterPlans = hierarchy.master_plans || [];
       const orphanActions = hierarchy.orphan_actions || [];
 
+      // Indexed by id so showTreeRoot() can look up a thesis's linked master
+      // plans (and vice versa) when rendering the content pane — the
+      // project/design/action tree alone (treeHierarchy) doesn't cover this
+      // many-to-many thesis<->master_plan relationship.
+      TreeView.thesesById = {};
+      for (const t of theses) TreeView.thesesById[t.id] = t;
+      TreeView.masterPlansById = {};
+      for (const mp of masterPlans) TreeView.masterPlansById[mp.id] = mp;
+
       let html = '';
 
       // Concepts (flat list grouped by concept_type)
@@ -182,12 +206,14 @@ class TreeView {
         for (const t of theses) {
           const hasMPs = t.master_plans && t.master_plans.length > 0;
           const childrenId = `thesis-children-${t.id}`;
-          // Start open (no .collapsed class) so CSS rotates the + to show expanded state
+          // Starts open (children div visible, no .collapsed class) — glyph
+          // must start as '-' to match, not '+' (this toggle never updated its
+          // own text content at all before, so this mismatch went unnoticed).
           html += `<div class="tree-item" id="tree-${t.id}">
             <div style="display: flex; align-items: center; flex-wrap: wrap;">
               <span class="tree-toggle" style="transition: transform 0.15s; cursor:pointer; user-select:none;"
                 data-has-children="${hasMPs}"
-                onclick="const item=document.getElementById('tree-${t.id}'); const c=document.getElementById('${childrenId}'); const closing=!item.classList.contains('collapsed'); c.style.display=closing?'none':''; item.classList.toggle('collapsed', closing);">${hasMPs ? '+' : '•'}</span>
+                onclick="const item=document.getElementById('tree-${t.id}'); const c=document.getElementById('${childrenId}'); const closing=!item.classList.contains('collapsed'); c.style.display=closing?'none':''; item.classList.toggle('collapsed', closing); this.textContent=closing?'+':'-';">${hasMPs ? '-' : '•'}</span>
               ${TreeView.parentBadge(t.id, TreeView.TYPE_COLORS.thesis)}
               <div class="tree-node tree-node-project" style="color:#cba6f7;"
                 onclick='TreeView.showTreeRoot("${t.id}", "${TreeView.escapeAttr(t.title)}", "thesis", "${TreeView.escapeAttr(t.path)}")' data-id="${t.id}">${t.title}</div>
@@ -313,8 +339,9 @@ class TreeView {
       const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
       let hierarchyHTML = '';
-      let childrenLabel = type === 'project' ? 'Designs' : 'Actions';
-      if (type !== 'master_plan' && type !== 'thesis' && type !== 'concept') {
+      let childrenLabel = 'Actions';
+      if (type === 'project' || type === 'design' || type === 'action') {
+        childrenLabel = 'Designs';
         // An orphan action (no project/design) has no place in treeHierarchy's
         // nested structure by construction — that's not an error, it just has
         // nothing further to render below it (same as any leaf action).
@@ -322,10 +349,23 @@ class TreeView {
         if (currentNode) {
           hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
           if (type === 'project' && currentNode.children && currentNode.children.length > 0) {
-            const kinds = new Set(currentNode.children.map(c => c.id.charAt(0) === 'D' ? 'design' : 'action'));
+            const kinds = new Set(currentNode.children.map(c => TreeView.typeFromId(c.id)));
             childrenLabel = kinds.size > 1 ? 'Designs & Actions' : (kinds.has('design') ? 'Designs' : 'Actions');
           }
         }
+      } else if (type === 'thesis') {
+        // A thesis's linked master plans render nested in the sidebar
+        // already, but the content pane never showed them at all — this is
+        // the many-to-many thesis<->master_plan link, not a project/design/
+        // action tree, so it needs its own lookup via thesesById.
+        childrenLabel = 'Master Plans';
+        const mps = (TreeView.thesesById[id] || {}).master_plans || [];
+        if (mps.length > 0) hierarchyHTML = await TreeView.renderHierarchyView({ children: mps }, type, 1);
+      } else if (type === 'master_plan') {
+        childrenLabel = 'Theses';
+        const thesisIds = (TreeView.masterPlansById[id] || {}).theses || [];
+        const thesisItems = thesisIds.map(tid => TreeView.thesesById[tid]).filter(Boolean);
+        if (thesisItems.length > 0) hierarchyHTML = await TreeView.renderHierarchyView({ children: thesisItems }, type, 1);
       }
 
       const typeLabel = { concept: 'Concept', master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
@@ -392,15 +432,16 @@ class TreeView {
     let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px;">`;
 
     for (const child of node.children) {
-      // A project's children can now be a mix of designs and actions attached
-      // directly (an action naming a project but no design) — determine each
-      // child's actual type by its id prefix rather than assuming the parent's
-      // type applies uniformly to every child, which only held while every
-      // project-level child was a design.
-      const childType = child.id.charAt(0) === 'D' ? 'design' : 'action';
-      const typeIcon = childType === 'design' ? '🎨' : '✓';
-      const bgColor = childType === 'design' ? 'rgba(166, 172, 200, 0.1)' : 'rgba(147, 153, 178, 0.1)';
-      const borderColor = childType === 'design' ? 'rgba(166, 172, 200, 0.2)' : 'rgba(147, 153, 178, 0.2)';
+      // A project's children can be a mix of designs and actions attached
+      // directly, and this same renderer is now reused for a thesis's linked
+      // master plans (and a master plan's linked theses) — determine each
+      // child's actual type by its id prefix rather than assuming the
+      // parent's type applies uniformly to every child.
+      const meta = TreeView.TYPE_META[child.id.charAt(0)] || TreeView.TYPE_META.A;
+      const childType = meta.type;
+      const typeIcon = meta.icon;
+      const bgColor = meta.bg;
+      const borderColor = meta.border;
       const hasGrandchildren = child.children && child.children.length > 0;
       const toggleId = `hierarchy-${child.id}`;
       const contentId = `hierarchy-content-${child.id}`;
