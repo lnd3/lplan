@@ -365,7 +365,7 @@ class TreeView {
           </div>` : ''}
 
           <div style="margin-top: 8px; padding-top: 8px;">
-            <button onclick="FileBrowser.loadFile('${path}')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: transform 0.15s;">📄 Full Doc</button>
+            <button onclick="FileBrowser.loadFile('${TreeView.escapeAttr(path)}')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: transform 0.15s;">📄 Full Doc</button>
           </div>
         </div>
       `;
