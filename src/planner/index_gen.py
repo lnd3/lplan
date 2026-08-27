@@ -7,11 +7,14 @@ from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan, Con
 
 
 def detect_repo_name(plan_dir: Path) -> str:
-    """Best-effort repo name for a plan directory: explicit config, else parent dir name.
+    """Best-effort repo name for a plan directory.
 
-    Used to label a plan wherever it's shown outside its own files (INDEX.md heading,
-    the web UI's page title/tab) — plan_dir's own name is always literally "plan", so
-    it's the containing repo's directory name that actually identifies which plan this is.
+    Precedence: explicit .plan-config override, then README.md's first `#`
+    heading (the stable, human-maintained ground truth for a repo's name —
+    the same fact INDEX.md's heading and the web UI's title/tab need), then
+    a guess from the containing directory's name as a last resort. plan_dir's
+    own name is always literally "plan", so it's the *containing* repo
+    directory that actually identifies which plan this is.
     """
     plan_path = Path(plan_dir)
     repo_name = ""
@@ -26,14 +29,24 @@ def detect_repo_name(plan_dir: Path) -> str:
         except Exception:
             pass
 
-    if not repo_name:
-        abs_plan_path = plan_path.resolve()
-        parent_name = abs_plan_path.parent.name
-        if parent_name.lower() == "plan":
-            repo_name = abs_plan_path.parent.parent.name
-        else:
-            repo_name = parent_name
+    abs_plan_path = plan_path.resolve()
+    parent_name = abs_plan_path.parent.name
+    repo_root = abs_plan_path.parent.parent if parent_name.lower() == "plan" else abs_plan_path.parent
 
+    if not repo_name:
+        readme = repo_root / "README.md"
+        if readme.exists():
+            try:
+                for line in readme.read_text(encoding="utf-8").splitlines():
+                    stripped = line.strip()
+                    if stripped.startswith("# "):
+                        repo_name = stripped[2:].strip()
+                        break
+            except Exception:
+                pass
+
+    if not repo_name:
+        repo_name = repo_root.name
         if "-" in repo_name or "_" in repo_name:
             repo_name = repo_name.replace("-", " ").replace("_", " ").title()
 

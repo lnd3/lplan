@@ -92,6 +92,8 @@ class FilePreview {
       else if (type === 'actions') icon = '✓';
 
       pathEl.innerHTML = `<span style="opacity: 0.6;">${parent}</span> <span style="opacity: 0.8;">/</span> <span style="font-weight: 500;">${icon} ${path.split('/').pop()}</span>`;
+    } else if (FileEditor.isGenerated(path)) {
+      pathEl.innerHTML = `${path} <span style="opacity: 0.6; font-style: italic;">(generated — regenerated on every view, not editable)</span>`;
     } else {
       pathEl.textContent = path;
     }

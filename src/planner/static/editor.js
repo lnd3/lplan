@@ -1,9 +1,17 @@
 class FileEditor {
   static editor = null;
 
+  // INDEX.md is a generated composition, not a source file — the server
+  // rebuilds it unconditionally on every view (_auto_regenerate_index), so
+  // any hand edit looks "successful" for a moment and then silently
+  // vanishes the next time the file is viewed. Don't offer Edit on it at all.
+  static isGenerated(path) {
+    return path === 'INDEX.md';
+  }
+
   static enterEdit() {
     const editEnabled = window.editEnabled;
-    if (!editEnabled || !window.currentRaw) return;
+    if (!editEnabled || !window.currentRaw || FileEditor.isGenerated(window.currentPath)) return;
 
     const preview = document.getElementById('preview');
     const wrap    = document.getElementById('editor-wrap');
@@ -38,7 +46,8 @@ class FileEditor {
   static cancelEdit() {
     document.getElementById('editor-wrap').style.display  = 'none';
     document.getElementById('preview').style.display      = '';
-    document.getElementById('btn-edit').style.display     = window.editEnabled ? '' : 'none';
+    const canEdit = window.editEnabled && !FileEditor.isGenerated(window.currentPath);
+    document.getElementById('btn-edit').style.display     = canEdit ? 'inline-block' : 'none';
     document.getElementById('btn-save').style.display     = 'none';
     document.getElementById('btn-cancel').style.display   = 'none';
     UI.hideBanner();
