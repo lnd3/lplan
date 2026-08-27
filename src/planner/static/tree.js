@@ -9,6 +9,7 @@ class TreeView {
   // rather than the old design-or-else-action assumption that only held
   // while a project's children were always designs.
   static TYPE_META = {
+    P: { type: 'project',     icon: '📋', bg: 'rgba(137, 180, 250, 0.1)', border: 'rgba(137, 180, 250, 0.2)' },
     D: { type: 'design',      icon: '🎨', bg: 'rgba(166, 172, 200, 0.1)', border: 'rgba(166, 172, 200, 0.2)' },
     A: { type: 'action',      icon: '✓',  bg: 'rgba(147, 153, 178, 0.1)', border: 'rgba(147, 153, 178, 0.2)' },
     M: { type: 'master_plan', icon: '🎯', bg: 'rgba(249, 226, 175, 0.1)', border: 'rgba(249, 226, 175, 0.2)' },
@@ -199,59 +200,42 @@ class TreeView {
         html += '</div>';
       }
 
-      // Theses → Master Plans (many-to-many)
+      // Theses (flat — a thesis's linked master plans show in its own content
+      // pane, below, rather than nested here; nesting them in both places
+      // would duplicate the "tree-${mp.id}" DOM id and break click/highlight
+      // for one of the two copies)
       if (theses.length > 0) {
         html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 4px;">';
         html += '<div style="font-weight: bold; color: #cba6f7; padding: 5px 10px; font-size: 12px;">THESES</div>';
         for (const t of theses) {
-          const hasMPs = t.master_plans && t.master_plans.length > 0;
-          const childrenId = `thesis-children-${t.id}`;
-          // Starts open (children div visible, no .collapsed class) — glyph
-          // must start as '-' to match, not '+' (this toggle never updated its
-          // own text content at all before, so this mismatch went unnoticed).
           html += `<div class="tree-item" id="tree-${t.id}">
             <div style="display: flex; align-items: center; flex-wrap: wrap;">
-              <span class="tree-toggle" style="transition: transform 0.15s; cursor:pointer; user-select:none;"
-                data-has-children="${hasMPs}"
-                onclick="const item=document.getElementById('tree-${t.id}'); const c=document.getElementById('${childrenId}'); const closing=!item.classList.contains('collapsed'); c.style.display=closing?'none':''; item.classList.toggle('collapsed', closing); this.textContent=closing?'+':'-';">${hasMPs ? '-' : '•'}</span>
+              <span class="tree-toggle" data-has-children="false">•</span>
               ${TreeView.parentBadge(t.id, TreeView.TYPE_COLORS.thesis)}
               <div class="tree-node tree-node-project" style="color:#cba6f7;"
                 onclick='TreeView.showTreeRoot("${t.id}", "${TreeView.escapeAttr(t.title)}", "thesis", "${TreeView.escapeAttr(t.path)}")' data-id="${t.id}">${t.title}</div>
-            </div>
-            <div id="${childrenId}" style="padding-left: 18px; display:${hasMPs ? '' : 'none'};">
-              ${hasMPs ? t.master_plans.map(mp => `
-              <div class="tree-item" id="tree-${mp.id}">
-                <div style="display: flex; align-items: center; flex-wrap: wrap;">
-                  <span class="tree-toggle" style="cursor:default;" data-has-children="false">•</span>
-                  ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
-                  <div class="tree-node tree-node-project" style="color:#f9e2af; font-size:12px;"
-                    onclick='TreeView.showTreeRoot("${mp.id}", "${TreeView.escapeAttr(mp.title)}", "master_plan", "${TreeView.escapeAttr(mp.path)}")' data-id="${mp.id}">${mp.title}</div>
-                </div>
-              </div>`).join('') : ''}
             </div>
           </div>`;
         }
         html += '</div>';
       }
 
-      // Master Plans (flat list for plans not linked to any thesis — plans linked to a
-      // thesis are already rendered nested under it, above; listing them again here would
-      // duplicate the "tree-${mp.id}" DOM id and break both copies' click/highlight state)
-      const linkedMPIds = new Set(theses.flatMap(t => (t.master_plans || []).map(mp => mp.id)));
-      const unlinkedMPs = masterPlans.filter(mp => !linkedMPIds.has(mp.id));
-      if (unlinkedMPs.length > 0) {
+      // Master Plans — every one, not just thesis-less ones (a linked plan's
+      // own content pane already shows its thesis; this list is the single
+      // comprehensive place to browse all of them from the sidebar).
+      if (masterPlans.length > 0) {
         html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 10px;">';
-        html += '<div style="font-weight: bold; color: #f9e2af; padding: 5px 10px; font-size: 12px;">MASTER PLANS <span style="font-weight:normal;color:#6c7086;text-transform:none;">(no thesis)</span></div>';
-        for (const mp of unlinkedMPs) {
-          // Every plan here is thesis-less by construction (that's what makes it
-          // "unlinked") — badge it as intentionally rootless rather than showing
-          // an empty/absent thesis badge that could read as a missing link.
+        html += '<div style="font-weight: bold; color: #f9e2af; padding: 5px 10px; font-size: 12px;">MASTER PLANS</div>';
+        for (const mp of masterPlans) {
+          const thesisBadges = (mp.theses || []).length > 0
+            ? mp.theses.map(t => TreeView.parentBadge(t, TreeView.TYPE_COLORS.thesis)).join('')
+            : TreeView.rootBadge();
           html += `<div class="tree-item" id="tree-${mp.id}">
             <div style="display: flex; align-items: center; flex-wrap: wrap;">
               <span class="tree-toggle" data-has-children="false">•</span>
               ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
               <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${TreeView.escapeAttr(mp.title)}", "master_plan", "${TreeView.escapeAttr(mp.path)}")' data-id="${mp.id}">${mp.title}</div>
-              ${TreeView.rootBadge()}
+              ${thesisBadges}
             </div>
           </div>`;
         }
@@ -338,34 +322,49 @@ class TreeView {
 
       const preview_text = meta.ingress || (body.length > 100000 ? body.substring(0, 100000) + '\n... (truncated)' : body);
 
-      let hierarchyHTML = '';
-      let childrenLabel = 'Actions';
+      // Rule of thumb across Tree view: always show an item's immediate
+      // children in its content pane (recursively, same as the sidebar) —
+      // concepts and actions are leaves and have none, everything else does.
+      // Each entry is one collapsible block; an item can have more than one
+      // (e.g. a master plan shows both the projects it seeds and, in a
+      // separate block, the theses that seeded it).
+      const sections = [];
       if (type === 'project' || type === 'design' || type === 'action') {
-        childrenLabel = 'Designs';
         // An orphan action (no project/design) has no place in treeHierarchy's
         // nested structure by construction — that's not an error, it just has
         // nothing further to render below it (same as any leaf action).
         const currentNode = TreeView.findNodeInHierarchy(id, TreeView.treeHierarchy);
-        if (currentNode) {
-          hierarchyHTML = await TreeView.renderHierarchyView(currentNode, type, 1);
-          if (type === 'project' && currentNode.children && currentNode.children.length > 0) {
+        if (currentNode && currentNode.children && currentNode.children.length > 0) {
+          const html = await TreeView.renderHierarchyView(currentNode, 1);
+          let label = 'Designs';
+          if (type === 'project') {
             const kinds = new Set(currentNode.children.map(c => TreeView.typeFromId(c.id)));
-            childrenLabel = kinds.size > 1 ? 'Designs & Actions' : (kinds.has('design') ? 'Designs' : 'Actions');
+            label = kinds.size > 1 ? 'Designs & Actions' : (kinds.has('design') ? 'Designs' : 'Actions');
+          } else if (type === 'design') {
+            label = 'Actions';
           }
+          sections.push({ label, html });
         }
       } else if (type === 'thesis') {
-        // A thesis's linked master plans render nested in the sidebar
-        // already, but the content pane never showed them at all — this is
-        // the many-to-many thesis<->master_plan link, not a project/design/
-        // action tree, so it needs its own lookup via thesesById.
-        childrenLabel = 'Master Plans';
+        // Many-to-many thesis<->master_plan link, not a project/design/action
+        // tree, so it needs its own lookup via thesesById rather than
+        // treeHierarchy/findNodeInHierarchy.
         const mps = (TreeView.thesesById[id] || {}).master_plans || [];
-        if (mps.length > 0) hierarchyHTML = await TreeView.renderHierarchyView({ children: mps }, type, 1);
+        if (mps.length > 0) {
+          sections.push({ label: 'Master Plans', html: await TreeView.renderHierarchyView({ children: mps }, 1) });
+        }
       } else if (type === 'master_plan') {
-        childrenLabel = 'Theses';
+        // Children (projects this master plan seeds) first, matching the
+        // "immediate children" rule; parent theses as a second block.
+        const childProjects = TreeView.treeHierarchy.filter(p => (p.parent_master_plan || []).includes(id));
+        if (childProjects.length > 0) {
+          sections.push({ label: 'Projects', html: await TreeView.renderHierarchyView({ children: childProjects }, 1) });
+        }
         const thesisIds = (TreeView.masterPlansById[id] || {}).theses || [];
         const thesisItems = thesisIds.map(tid => TreeView.thesesById[tid]).filter(Boolean);
-        if (thesisItems.length > 0) hierarchyHTML = await TreeView.renderHierarchyView({ children: thesisItems }, type, 1);
+        if (thesisItems.length > 0) {
+          sections.push({ label: 'Theses', html: await TreeView.renderHierarchyView({ children: thesisItems }, 1) });
+        }
       }
 
       const typeLabel = { concept: 'Concept', master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
@@ -394,15 +393,15 @@ class TreeView {
             <div class="content-expanded" style="display: none; padding: 4px 8px; border-top: 1px solid rgba(88, 166, 255, 0.2); color: #a6adc8; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; resize: vertical; overflow: auto; max-height: 200px; min-height: 100px;">${preview_text}</div>
           </div>` : ''}
 
-          ${hierarchyHTML ? `<div style="margin-top: 8px;">
+          ${sections.map(section => `<div style="margin-top: 8px;">
             <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; margin-bottom: 4px;" onclick="const section = this.nextElementSibling; const toggle = this.querySelector('.children-toggle'); section.style.display = section.style.display === 'none' ? '' : 'none'; toggle.textContent = section.style.display === 'none' ? '+' : '-';">
               <span class="children-toggle" style="flex-shrink: 0; width: 12px; font-size: 14px; transition: transform 0.15s;">-</span>
-              <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${childrenLabel}</span>
+              <span style="font-size: 11px; font-weight: 600; color: #6c7086; text-transform: uppercase;">${section.label}</span>
             </div>
             <div style="padding-top: 8px;">
-              ${hierarchyHTML}
+              ${section.html}
             </div>
-          </div>` : ''}
+          </div>`).join('')}
 
           <div style="margin-top: 8px; padding-top: 8px;">
             <button onclick="FileBrowser.loadFile('${TreeView.escapeAttr(path)}')" style="padding: 4px 8px; background: transparent; color: #89b4fa; border: 1px solid #45475a; border-radius: 2px; cursor: pointer; font-size: 11px; transition: transform 0.15s;">📄 Full Doc</button>
@@ -426,7 +425,7 @@ class TreeView {
     return null;
   }
 
-  static async renderHierarchyView(node, type, depth = 0) {
+  static async renderHierarchyView(node, depth = 0) {
     if (!node.children || node.children.length === 0) return '';
 
     let html = `<div style="margin-left: ${depth * 32}px; margin-top: 8px; padding-top: 8px;">`;
@@ -494,7 +493,7 @@ class TreeView {
             <span style="font-size: 10px; color: #6c7086; font-weight: 600;">${childType === 'design' ? 'Actions' : 'Items'}</span>
           </div>
           <div id="${toggleId}-children" style="display: none; padding-top: 8px; margin-top: 8px;">
-            ${await TreeView.renderHierarchyView(child, childType, depth + 1)}
+            ${await TreeView.renderHierarchyView(child, depth + 1)}
           </div>
         ` : ''}
       </div>`;
