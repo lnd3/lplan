@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-27 15:35:41 UTC*
+*Last updated: 2026-08-27 17:38:43 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -50,6 +50,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [P007](projects/P007-analytics-reporting-dashboard.md) | Analytics & Reporting Dashboard | IN_PROGRESS | MEDIUM | TBD |
 | [P008](projects/P008-cross-repo-planning-integration.md) | Cross-Repo Planning Integration | PLANNING | MEDIUM | TBD |
 | [P009](projects/P009-external-maintenance.md) | External Maintenance | IN_PROGRESS | LOW | TBD |
+| [P010](projects/P010-plan-health-dashboard.md) | Plan Health Dashboard | PLANNING | HIGH | TBD |
 
 ---
 
@@ -60,6 +61,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [D001](designs/D001-priority-engine.md) | Priority Scoring Engine Design | DONE | P001 | (link if applicable) |
 | [D002](designs/D002-dependency-graph.md) | Dependency Graph Analysis Design | DONE | P001 | (link if applicable) |
 | [D003](designs/D003-javascript-module-architecture.md) | JavaScript Module Architecture | DONE | P004 | (link if applicable) |
+| [D004](designs/D004-plan-health-dashboard-architecture.md) | Plan Health Dashboard Architecture | IDEA | P010 | (link if applicable) |
 
 ---
 
@@ -76,3 +78,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A017](actions/A017-root-badges-and-page-identity.md) | Root badges for all parentless items, page title/heading, reachable Save from Tree view | DONE | — | TBD |
 | [A018](actions/A018-editor-and-generated-file-bugs.md) | Save/Cancel never visible in edit mode; sidebar toggle glyph stuck; INDEX.md wrongly editable | DONE | — | TBD |
 | [A019](actions/A019-thesis-master-plan-content-pane-and-toggle-glyphs.md) | Thesis<->master_plan content-pane display; toggle-glyph rotation cleanup; master plans get full sidebar + children view | DONE | — | TBD |
+| [A020](actions/A020-status-overview-rollup-api.md) | Backend rollup API (/api/status-overview) | IDEA | D004 | TBD |
+| [A021](actions/A021-status-overview-frontend.md) | Frontend overview.js module + nav tab | IDEA | D004 | TBD |
+| [A022](actions/A022-status-overview-needs-attention-panel.md) | Needs-attention panel (stale, blocked, dangling refs) | IDEA | D004 | TBD |
+| [A023](actions/A023-status-overview-dogfood.md) | Dogfood against lplan's own plan/ | IDEA | D004 | TBD |

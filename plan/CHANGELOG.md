@@ -37,3 +37,5 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 2026-08-27 | A018 | NEW → DONE | Save/Cancel buttons never actually became visible in edit mode (CSS display:none reasserting itself); sidebar toggle glyph never updated (event.currentTarget bug); INDEX.md no longer offers Edit (it's regenerated on every view); repo name now prefers README.md's heading. Drive-by fix from superplan's context, backfilled retroactively.
 
 2026-08-27 | A019 | NEW → DONE | Thesis<->master_plan link now shown in the content pane both directions; toggle-glyph rotation CSS rule removed (conflicted with the text-flip fix); master plans sidebar list now comprehensive, and a master plan's content pane shows its child projects recursively. Drive-by fix from superplan's context, backfilled retroactively.
+
+2026-08-27 | P010, D004, A020-A023 | NEW → PLANNING/IDEA | Plan Health Dashboard scoped at user request: a live, hierarchy-wide status/progress view (rollups + stale/blocked/dangling-ref surfacing) to fill the gap between INDEX.md (static snapshot), Items view (flat table, no rollups), and Analytics dashboard (rollups, Project-only). Planning only — no implementation started.
