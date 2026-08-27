@@ -1,5 +1,6 @@
 class OverviewView {
   static data = null;
+  static collapsed = new Set(); // section ids collapsed this session
 
   static TYPE_DIRS = {
     concept: 'concepts',
@@ -48,15 +49,26 @@ class OverviewView {
     const d = OverviewView.data;
     const container = document.getElementById('overview-view');
 
-    let html = '<div style="padding: 20px; overflow-y: auto; height: 100%;">';
-    html += OverviewView.renderTotals(d.totals);
+    let html = OverviewView.renderTotals(d.totals);
     html += OverviewView.renderNeedsAttention(d.needs_attention, d.stale_days_threshold);
-    html += OverviewView.renderRollupSection('Master Plans', d.master_plan_rollups, 'master_plan');
-    html += OverviewView.renderRollupSection('Projects', d.project_rollups, 'project');
-    html += '</div>';
+    html += OverviewView.renderRollupSection('master-plans', 'Master Plans', d.master_plan_rollups, 'master_plan');
+    html += OverviewView.renderRollupSection('projects', 'Projects', d.project_rollups, 'project');
 
     container.innerHTML = html;
     OverviewView.attachEventListeners();
+  }
+
+  // Wraps a section body in a click-to-collapse header. Collapsed state
+  // persists (in memory) across re-renders within the session.
+  static renderCollapsible(sectionId, headingHtml, bodyHtml) {
+    const isCollapsed = OverviewView.collapsed.has(sectionId);
+    return `<div class="overview-section${isCollapsed ? ' collapsed' : ''}" data-section="${sectionId}" style="margin-bottom: 24px;">
+      <div class="overview-section-header" data-section-toggle="${sectionId}">
+        <span class="overview-section-toggle">${isCollapsed ? '▸' : '▾'}</span>
+        ${headingHtml}
+      </div>
+      <div class="overview-section-body">${bodyHtml}</div>
+    </div>`;
   }
 
   static renderTotals(totals) {
@@ -120,19 +132,17 @@ class OverviewView {
       </div>`);
     }
 
+    const heading = `<span style="font-size: 14px; color: #cdd6f4; font-weight: 600;">Needs Attention</span>`;
+
     if (!sections.length) {
-      return `<div style="background: #181825; border: 1px solid #313244; border-radius: 6px; padding: 16px; margin-bottom: 24px; color: #a6e3a1;">
-        ✓ Nothing needs attention — no stale, blocked, or reference issues found.
-      </div>`;
+      return OverviewView.renderCollapsible('needs-attention', heading,
+        `<div style="color: #a6e3a1; padding: 8px 0;">✓ Nothing needs attention — no stale, blocked, or reference issues found.</div>`);
     }
 
-    return `<div style="background: #181825; border: 1px solid #313244; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
-      <div style="font-size: 14px; color: #cdd6f4; font-weight: 600; margin-bottom: 12px;">Needs Attention</div>
-      ${sections.join('')}
-    </div>`;
+    return OverviewView.renderCollapsible('needs-attention', heading, sections.join(''));
   }
 
-  static renderRollupSection(heading, rollups, type) {
+  static renderRollupSection(sectionId, heading, rollups, type) {
     if (!rollups.length) return '';
     let rows = rollups.map(r => {
       const barColor = r.status === 'DONE' ? '#a6e3a1' : '#89b4fa';
@@ -148,15 +158,26 @@ class OverviewView {
       </div>`;
     }).join('');
 
-    return `<div style="margin-bottom: 24px;">
-      <div style="font-size: 14px; color: #cdd6f4; font-weight: 600; margin-bottom: 8px;">${heading}</div>
-      ${rows}
-    </div>`;
+    const headingHtml = `<span style="font-size: 14px; color: #cdd6f4; font-weight: 600;">${heading}</span> <span style="color: #9399b2; font-size: 12px;">(${rollups.length})</span>`;
+    return OverviewView.renderCollapsible(sectionId, headingHtml, rows);
   }
 
   static attachEventListeners() {
     document.querySelectorAll('#overview-view [data-id][data-type]').forEach(el => {
       el.addEventListener('click', () => OverviewView.goTo(el.dataset.id, el.dataset.title, el.dataset.type, el.dataset.path));
+    });
+
+    document.querySelectorAll('#overview-view [data-section-toggle]').forEach(el => {
+      el.addEventListener('click', () => {
+        const sectionId = el.dataset.sectionToggle;
+        const section = document.querySelector(`.overview-section[data-section="${sectionId}"]`);
+        if (!section) return;
+        const nowCollapsed = section.classList.toggle('collapsed');
+        const glyph = section.querySelector('.overview-section-toggle');
+        if (glyph) glyph.textContent = nowCollapsed ? '▸' : '▾';
+        if (nowCollapsed) OverviewView.collapsed.add(sectionId);
+        else OverviewView.collapsed.delete(sectionId);
+      });
     });
   }
 

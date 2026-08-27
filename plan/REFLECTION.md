@@ -34,6 +34,8 @@ None urgent. Codebase is clean, tested, and maintainable.
 
 **Takeaway for future sessions**: treat "does FOCUS.md/CHANGELOG.md still match `git log` + entity frontmatter?" as a cheap check worth running whenever resuming work, not just after self-directed large changes — see WORKFLOW.md's External Change Detection section, which covers exactly this case but is easy to skip if you don't suspect drift.
 
+**Retrospective note added later the same session**: the drift above wasn't a one-off. Implementing P010 itself, plan-entity updates got batched to the end of each work chunk rather than written as things actually happened — decisions, sub-tasks, and the two live bugs the user found were all logged in retrospect, reconstructed rather than captured in the moment. The pattern repeats because the incentive is always "finish the actual work first, plan hygiene after" — and after keeps slipping. This is now addressed directly in WORKFLOW.md § "Bubbling Up: Maintain the Plan During Work, Not Just After," which names the specific moments (task branching, decisions, checkpoints, completion, one-level-up propagation) rather than relying on general mindfulness, since general reminders are exactly what this session shows gets skipped under load.
+
 ## What's Next
 
 Tier 1–3 and the Thesis/MasterPlan/Concept framework are all delivered. Open work:

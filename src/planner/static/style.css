@@ -417,6 +417,26 @@ body {
   padding: 20px;
   overflow-y: auto;
 }
+
+/* Plan Health Dashboard (Status Overview) */
+#overview-view {
+  padding: 20px;
+  overflow-y: auto;
+}
+.overview-section-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.overview-section.collapsed .overview-section-body { display: none; }
+.overview-section-toggle {
+  display: inline-block;
+  width: 12px;
+  font-size: 11px;
+  color: #a6adc8;
+}
 .analytics-header {
   font-size: 1.5em;
   color: #89b4fa;
