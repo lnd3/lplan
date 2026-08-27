@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-27 14:37:03 UTC*
+*Last updated: 2026-08-27 15:35:41 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -72,3 +72,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A008](actions/A008-implement-master-plan-model.md) | Implement MasterPlan Pydantic model with schema validation | DONE | D005 | TBD |
 | [A011](actions/A011-implement-thesis-model.md) | Implement Thesis Pydantic model with conviction levels | DONE | D006 | TBD |
 | [A015](actions/A015-implement-dependency-graph-visualization.md) | Implement SVG dependency graph visualization | IN_PROGRESS | D007 | TBD |
+| [A016](actions/A016-tree-view-click-breaking-bugs.md) | Fix tree-view clicks breaking on apostrophes and duplicate master-plan DOM ids | DONE | — | TBD |
+| [A017](actions/A017-root-badges-and-page-identity.md) | Root badges for all parentless items, page title/heading, reachable Save from Tree view | DONE | — | TBD |
+| [A018](actions/A018-editor-and-generated-file-bugs.md) | Save/Cancel never visible in edit mode; sidebar toggle glyph stuck; INDEX.md wrongly editable | DONE | — | TBD |
+| [A019](actions/A019-thesis-master-plan-content-pane-and-toggle-glyphs.md) | Thesis<->master_plan content-pane display; toggle-glyph rotation cleanup; master plans get full sidebar + children view | DONE | — | TBD |

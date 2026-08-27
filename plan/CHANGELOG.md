@@ -29,3 +29,11 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 2026-08-27 | — | catch-up | CHANGELOG synced to actual entity state per WORKFLOW.md upkeep pass — no new work performed, this closes the audit-trail gap for 2026-08-24 through 2026-08-26.
 
 2026-08-27 | P009 | NEW → IN_PROGRESS | External Maintenance catch-all project created, plus new WORKFLOW.md § "External Contribution Workflow (Drive-By Fixes)". Reason: recent lplan-source fixes were made by agents whose active context was an external repo's own plan, not lplan's — those fixes had no CHANGELOG/entity trail. P009 + the new convention give drive-by contributions a one-line-minimum logging path without requiring full WORKFLOW.md onboarding.
+
+2026-08-27 | A016 | NEW → DONE | Tree-view clicks broke on apostrophes in titles (unescaped onclick attribute); master-plan nodes never highlighted and could render twice with duplicate DOM ids. Drive-by fix from superplan's context, backfilled retroactively.
+
+2026-08-27 | A017 | NEW → DONE | Root badges extended to all parentless items; fixed actions with a project but no design vanishing from the tree entirely; page title/toolbar now show the actual repo name; Tree view's Full Doc button no longer dead-ends before Edit. Drive-by fix from superplan's context, backfilled retroactively.
+
+2026-08-27 | A018 | NEW → DONE | Save/Cancel buttons never actually became visible in edit mode (CSS display:none reasserting itself); sidebar toggle glyph never updated (event.currentTarget bug); INDEX.md no longer offers Edit (it's regenerated on every view); repo name now prefers README.md's heading. Drive-by fix from superplan's context, backfilled retroactively.
+
+2026-08-27 | A019 | NEW → DONE | Thesis<->master_plan link now shown in the content pane both directions; toggle-glyph rotation CSS rule removed (conflicted with the text-flip fix); master plans sidebar list now comprehensive, and a master plan's content pane shows its child projects recursively. Drive-by fix from superplan's context, backfilled retroactively.

@@ -26,7 +26,7 @@ Give drive-by contributions to lplan's own source a place to attach without requ
 
 - **Projects**: none — actions here may later be re-filed into P001–P008 during a normal upkeep pass.
 - **Designs**: none.
-- **Actions**: (accumulates over time; see individual A0xx entries)
+- **Actions**: A016, A017, A018, A019
 
 ## Tasks
 
@@ -35,3 +35,4 @@ N/A — this project has no task list of its own. Its "tasks" are the Actions lo
 ## Log
 
 2026-08-27 — Project created as part of fleshing out the drive-by contribution convention (WORKFLOW.md). No actions filed yet; status stays IN_PROGRESS indefinitely since it's an ongoing catch-all, not a project that reaches DONE.
+2026-08-27 — Backfilled A016–A019: tree-view click/highlight/dedup fixes, root-badge coverage for all parentless items (including actions that previously vanished from the tree entirely), Save/Cancel button visibility, sidebar toggle glyphs, INDEX.md edit-disable, README-based repo name, and full thesis<->master_plan bidirectional display — all landed drive-by from superplan's context before this convention existed, filed retroactively at the user's request.
