@@ -287,25 +287,26 @@ class StatusView {
       });
     }
 
-    document.querySelectorAll('th[data-column]').forEach(th => {
-      if (!th._attached) {
-        th._attached = true;
-        th.addEventListener('click', () => {
-          const column = th.dataset.column;
-          if (StatusView.sortConfig.column === column) {
-            StatusView.sortConfig.direction = StatusView.sortConfig.direction === 'asc' ? 'desc' : 'asc';
-          } else {
-            StatusView.sortConfig.column = column;
-            StatusView.sortConfig.direction = 'asc';
-          }
-          StatusView.applyFilters();
-          StatusView.render();
-        });
-      }
-    });
   }
 
   static attachTableEventListeners() {
+    // Header <th> elements are rebuilt by renderTable() on every render (pagination,
+    // sorting, filtering), so this has to run here — not in attachEventListeners(),
+    // which only runs once, before the table (and its <th>s) exist in the DOM at all.
+    document.querySelectorAll('th[data-column]').forEach(th => {
+      th.addEventListener('click', () => {
+        const column = th.dataset.column;
+        if (StatusView.sortConfig.column === column) {
+          StatusView.sortConfig.direction = StatusView.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          StatusView.sortConfig.column = column;
+          StatusView.sortConfig.direction = 'asc';
+        }
+        StatusView.applyFilters();
+        StatusView.render();
+      });
+    });
+
     document.querySelectorAll('.pagination-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         StatusView.currentPage = parseInt(btn.dataset.page);
