@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-28 11:31:13 UTC*
+*Last updated: 2026-08-30 13:16:13 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -82,3 +82,4 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A021](actions/A021-status-overview-frontend.md) | Frontend overview.js module + nav tab | DONE | D004 | TBD |
 | [A022](actions/A022-status-overview-needs-attention-panel.md) | Needs-attention panel (stale, blocked, dangling refs) | DONE | D004 | TBD |
 | [A023](actions/A023-status-overview-dogfood.md) | Dogfood against lplan's own plan/ | IN_PROGRESS | D004 | TBD |
+| [A024](actions/A024-memory-maintenance-workflow.md) | AI Agent Memory Maintenance — Workflow Documentation | DONE | — | TBD |

@@ -516,4 +516,4 @@ from planner import *
 
 ---
 
-**Need more?** See MIGRATION.md for detailed guide or IMPLEMENTATION.md for architecture.
+**Need more?** See IMPLEMENTATION.md for architecture, TROUBLESHOOTING.md for issues.

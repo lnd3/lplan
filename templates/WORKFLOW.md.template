@@ -1,241 +1,49 @@
 # Workflow Guide for [Repository Name]
 
-This document extends the **universal lplan workflow** (see `deps/lplan/WORKFLOW.md`) with repository-specific procedures and customizations.
+Extends lplan's universal workflow (`deps/lplan/WORKFLOW.md`) — read that first. This file holds only what's specific to *this* repo. Fill in every `[bracket]`.
 
-## Using This Guide
+## Team & Process
 
-1. **Universal procedures** — See `deps/lplan/WORKFLOW.md`:
-   - Scale-based change management (Small/Medium/Large/Massive)
-   - Coherence rules (state consistency, decision traceability)
-   - External change detection (agent resumption patterns)
-   - Framework updates (how lplan changes cascade to repos)
-
-2. **Repository-specific procedures** — In this file below:
-   - Custom workflow rituals for this repo
-   - How lplan procedures map to our processes
-   - Team-specific conventions
-   - Integration with CI/CD or other systems
-
----
-
-## Repository-Specific Workflow
-
-### Team Context
 - **Who uses the plan**: [team members, agents, stakeholders]
-- **Planning cadence**: [how work is organized - sprints, cycles, continuous]
-- **Decision makers**: [who prioritizes, who unblocks]
-- **Deployment process**: [how completed work flows to production]
+- **Decision makers**: [who prioritizes work, who can unblock]
+- **Deployment process**: [how completed work reaches production]
 
-### Custom Procedures
+## Repo-Specific Rules, by lplan's Change Level
 
-#### FOCUS.md Updates
-**When**: [specify your team's rhythm - per sprint, daily, per milestone]
-**Who**: [who updates it - team lead, rotating responsibility, or continuously]
-**Additional sections**: [beyond Active/Blockers/Next, any repo-specific sections?]
-**Example**:
-```markdown
-## Active
-[What this team is working on]
+lplan's magnitude table (`WORKFLOW.md` § Change Magnitude) is the base rule. This is only what your team adds on top of it:
 
-## Blockers
-[What's stuck and why]
-
-## Next
-[What's queued up]
-
-## [Custom Section]
-[Repo-specific tracking]
-```
-
-#### CHANGELOG.md Updates
-**What triggers an entry**: [beyond state transitions - do you log decisions, approvals, etc.?]
-**Format deviation**: [any changes to date|ID|transition|reason format?]
-**Example**:
-```
-2026-08-26 | P001 | IN_PROGRESS → DONE | Deployed to production, monitoring clean
-2026-08-26 | DECISION | P003 priority→HIGH | Urgent customer request, approved by [who]
-```
-
-#### REFLECTION.md Updates
-**Cadence**: [after sprint? weekly? per major change?]
-**Topics to capture**: [learning, constraints, patterns, team process changes]
-**Example**:
-```
-## 2026-08-26 Sprint Retrospective
-- Learned: Estimation was 2x optimistic on backend work. Future projects should budget 1.5x
-- Constraint: Database scaling limits to 500 concurrent. Affects P005 design.
-- Pattern: Design reviews prevent blocker discovery. Adding mandatory review checkpoint.
-```
-
----
+| Level | What this repo adds |
+|---|---|
+| Small | [needs review? notify anyone?] |
+| Medium | [approval needed before merging? who logs deployments?] |
+| Large | [who decides — meeting, RFC? how is it communicated?] |
+| Massive | [escalation path — who approves, roadmap impact?] |
 
 ## AI Agent Memory Maintenance
 
-*If this repo uses a persistent AI agent memory file (e.g. `~/.claude/projects/.../memory/MEMORY.md`), fill in the repo-specific rules here. The universal rules live in `deps/lplan/WORKFLOW.md § AI Agent Memory Maintenance`.*
+*Universal rules: `deps/lplan/WORKFLOW.md` § AI Agent Memory Maintenance. Repo specifics:*
 
-**Memory file location**: [path]
-**Plans section line limit**: [~150 lines recommended]
-**Session-start reads**: `plan/FOCUS.md`, `plan/INDEX.md` (not auto-loaded — must be read explicitly)
-**Plans section update trigger**: whenever a plan entity changes status, priority, or key next step
+- **Memory file path**: [e.g. `~/.claude/projects/.../memory/MEMORY.md`]
+- **Plans section line cap**: [~150 recommended]
+- **Pruning policy**: [when to prune; what moves to topic files vs. stays inline]
 
-**Pruning policy**: [when to prune, what to move to topic files vs keep inline]
+## CI/CD & Code Links
 
-**Automation**: [`plan generate-index` auto-injects Plans section — or: manual until A009 Phase 3 ships]
+- **Commit message convention**: [e.g. `[P001] message`]
+- **PR → plan entity link**: [e.g. "Closes A005"]
+- **Deployment → CHANGELOG**: [who/what logs a deploy as the entity going DONE]
 
----
+## Customizations (if any)
 
-## Integration with lplan Workflow
+- **New entity types beyond P/D/A/T/M/C**: [type, fields, when to use]
+- **Extra fields on existing entities**: [e.g. `deployment_date`, `team_owner`]
+- **Extra validation rules beyond lplan's base**: [e.g. all DONE projects need a CHANGELOG entry]
 
-### Mapping Team Process to Scale-Based Workflow
+## Decision Log
 
-**Small Changes** (lplan: entity update only)
-- Example: status bump from IDEA to PLANNING
-- Your team: [who can do this, does it need review, log it?]
-- Action: [auto, or notify someone?]
-
-**Medium Changes** (lplan: entity + CHANGELOG)
-- Example: design completed, project unblocked
-- Your team: [does this need approval? deployment?]
-- Action: [update CHANGELOG immediately, notify blockers?]
-
-**Large Changes** (lplan: entity + CHANGELOG + FOCUS.md + REFLECTION.md)
-- Example: strategy pivot, major blocker resolution
-- Your team: [who decides? how is it communicated? all-hands meeting?]
-- Action: [FOCUS.md rewrite, team discussion, update REFLECTION.md]
-
-**Massive Changes** (lplan: large + re-eval related entities)
-- Example: architectural rethink, major discovery
-- Your team: [escalation path? who approves? roadmap impact?]
-- Action: [steering committee review? RFC process?]
-
----
-
-## External Change Detection (Multi-Agent/Team Scenario)
-
-### Detecting Changes to the Plan
-If multiple people/agents work on this plan:
-
-```
-On resuming work:
-1. Check if `deps/lplan/` changed: git diff deps/lplan/
-2. Check if `plan/` changed: git log --oneline plan/
-3. Re-read plan/FOCUS.md if it was modified
-4. Review new CHANGELOG entries for context
-```
-
-### Communicating External Changes
-**If another team member changes FOCUS.md**:
-- [How do they notify?] — Slack? Email? Tag in commit?
-- [What do you do?] — Pause and re-sync? Merge directions? Ask first?
-
-**If a deployment happened**:
-- [Who logs it?] — DevOps team? CI/CD? Manual CHANGELOG entry?
-- [How does it affect the plan?] — Does project status change? Reflection update?
-
----
-
-## Integration with CI/CD and Deployments
-
-### Status Synchronization
-**When code is deployed**:
-- Does project status auto-update? (manual vs automated)
-- Does CHANGELOG get an entry? (who records deployments)
-- Does REFLECTION capture deployment learnings? (post-incident review)
-
-**Example**:
-```
-Deployment workflow:
-1. Code merged to main
-2. CI pipeline runs tests
-3. If passing: auto-deploy to staging
-4. Team verifies
-5. Manual deploy to production
-6. CI or team logs to CHANGELOG: "P001 → DONE, deployed to production"
-7. If issues: new blocker, new REFLECTION entry
-```
-
-### Linking Code to Plan
-**How does code commit connect to plan?**
-- Commit message format: `[P001] Implement user authentication`?
-- PR links to design/action: `Closes A005`?
-- Branch naming: `feature/P001-auth`?
-
----
-
-## Customizing lplan for This Repository
-
-### New Entity Types (if applicable)
-Does this repo need custom entity types beyond lplan's base?
-- [New type]? With what fields? When to use?
-
-### Custom Fields on Entities
-Does this repo add fields to Project/Design/Action?
-- `deployment_date`? `team_owner`? `customer_impact_level`?
-
-### Validation Rules
-Does this repo enforce anything beyond lplan's base validation?
-- All projects must have priority_drivers?
-- All blockers must have unblock criteria in FOCUS.md?
-- All DONE projects must have a CHANGELOG entry?
-
----
-
-## Decision Log (This Repo)
-
-**2026-08-26**: Why this repo adopted lplan
-- [What problem were we solving?]
-- [Why lplan over alternatives?]
-- [What customizations do we expect?]
-
-**[Date]**: Major workflow decision
-- [Decision made]
-- [Why]
-- [How it affects the plan]
-
----
-
-## Quick Reference
-
-### Check Current Status
-```bash
-cat plan/FOCUS.md              # What are we doing right now?
-cat plan/INDEX.md              # Current state of all entities
-head -20 plan/CHANGELOG.md     # Recent decisions
-```
-
-### Make a Change
-```bash
-# Small change
-git add plan/projects/P001.md
-git commit -m "Update P001 status"
-
-# Medium change
-# (also update CHANGELOG.md)
-git add plan/projects/P001.md plan/CHANGELOG.md
-git commit -m "P001 status change + CHANGELOG entry"
-
-# Large change
-# (also update FOCUS.md and REFLECTION.md)
-git add plan/ CHANGELOG.md FOCUS.md REFLECTION.md
-git commit -m "Large change: [summary] + workflow updates"
-```
-
-### Before Pulling
-```bash
-# Check if lplan changed
-git diff deps/lplan/ -- WORKFLOW.md
-
-# Read what changed
-cat deps/lplan/WORKFLOW.md | head -50
-```
-
----
+**[Date]** — [Why this repo adopted lplan / a major workflow decision: what, why, effect on the plan.]
 
 ## References
 
-- **Universal workflow**: `deps/lplan/WORKFLOW.md`
-- **lplan documentation**: `deps/lplan/README.md`, `deps/lplan/QUICK_REFERENCE.md`
-- **This repo's plan**: `plan/`
-- **Decision log**: `plan/CHANGELOG.md`
-- **Learnings**: `plan/REFLECTION.md`
-- **Current priorities**: `plan/FOCUS.md`
+- Universal workflow: `deps/lplan/WORKFLOW.md` (day-to-day rules) and `WORKFLOW_DETAILS.md` (mechanism/rationale)
+- This repo's plan: `plan/FOCUS.md`, `plan/CHANGELOG.md`, `plan/REFLECTION.md`, `plan/INDEX.md`

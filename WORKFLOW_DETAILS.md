@@ -131,7 +131,7 @@ external_change_detected = current_hash != remembered_hash
 
 When lplan itself changes (new entity types, fields, workflow updates, validation rules), existing users need to know what changed and whether they need to migrate.
 
-**In the lplan repository**: update CHANGELOG.md (breaking vs non-breaking), update MIGRATION.md for major changes, update templates/schema docs, update WORKFLOW.md if procedures changed.
+**In the lplan repository**: update CHANGELOG.md (breaking vs non-breaking, migration notes inline), update templates/schema docs, update WORKFLOW.md if procedures changed.
 
 **Announcement checklist for lplan maintainers**:
 
@@ -157,7 +157,22 @@ When lplan itself changes (new entity types, fields, workflow updates, validatio
 
 **Versioning** — semver: MAJOR = breaking schema/workflow changes, MINOR = non-breaking additions, PATCH = docs/non-functional.
 
-**Maintainer workflow when changing lplan**: update code/templates/docs → classify breaking/non-breaking → CHANGELOG.md entry (`## vX.Y (date)` + impact + effort) → MIGRATION.md if breaking → bump version → update WORKFLOW.md if procedures changed → notify users.
+**Maintainer workflow when changing lplan**: update code/templates/docs → classify breaking/non-breaking → CHANGELOG.md entry (`## vX.Y (date)` + impact + effort + migration steps if breaking) → bump version → update WORKFLOW.md if procedures changed → notify users.
+
+---
+
+## AI Agent Memory Maintenance
+
+**What the Plans section should contain**: one line per active entity (non-DONE/DEFERRED/CANCELLED) — ID, status/priority, and the single most useful orienting fact. DONE items drop off. Example:
+
+```markdown
+## Plans
+- P003 `PLANNING/HIGH` — Headless bot. Phase 1 next: ECS world + tick loop.
+- D018 `PLANNING` — BotSession control surface (P003). 5-step migration, Step 1 next.
+- A011 `IN_PROGRESS` — Account Registry implementation.
+```
+
+**Automation target**: `plan generate-index` (or a dedicated `plan export-memory` command) should regenerate the Plans section automatically, so it never goes stale. Until that exists, update it by hand when plan status changes.
 
 ---
 
@@ -166,3 +181,5 @@ When lplan itself changes (new entity types, fields, workflow updates, validatio
 **Why "Bubbling Up" exists**: plan upkeep loses to whatever you're actually building almost every time — not because anyone decides to skip it, but because it's invisible work that's easy to defer to "later," and later never comes. One lplan session drifted FOCUS.md/CHANGELOG.md days behind real entity state *twice*, A015 sat IN_PROGRESS with no Log entry for three days, and P010 (the dashboard built specifically to catch this) only exists because a human pointed out the gap. A Log entry written immediately says what happened and why; one reconstructed at session's end says what you remember, filtered through everything that happened after — the parts worth writing down (a rejected approach, why you branched into new work) are exactly the parts that fade first.
 
 **Why "External Contribution Workflow" exists**: lplan is dogfooded on its own `plan/` *and* consumed as a dependency by other repos. An agent working in one of those other repos sometimes needs to fix a bug inside lplan itself, but their active context is the *other* repo's plan. Requiring full WORKFLOW.md onboarding just to land a bug fix means the fix either doesn't happen or happens with no trail — so this gets a reduced-friction path instead of the normal magnitude rules.
+
+**Why policy changes were carved out from the reduced-friction path (2026-08-30)**: a drive-by session added a whole new `WORKFLOW.md` section (AI Agent Memory Maintenance) plus a template change, filed as a routine `DONE` Action under P009 — technically correct paperwork, but the change never actually reached the person maintaining lplan; it just... landed. The bug/layout-fix path was designed for things like "this button doesn't work," where "did this need to happen" isn't really a question. It was never designed for "should every project using lplan now do X" — that's a different kind of claim, one a single contributor's local context can't actually verify (they can see that a rule would've helped *their* repo; they can't see whether it holds for everyone else's). Two failures compound here: silently landing the change (nobody outside that session knew it happened until asked), and never actually testing whether the rule generalizes rather than just reflecting one repo's habits. The fix addresses both — flag policy changes explicitly rather than log-and-move-on, and ask the generalization question before proposing one at all, so a repo-specific preference stays in that repo's own `plan/WORKFLOW.md` instead of becoming universal by default.

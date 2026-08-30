@@ -1,6 +1,6 @@
-# Tier 1 Implementation: Programmatic Planning Engine
+# Architecture: Programmatic Planning Engine
 
-This document describes the Python-based execution engine for the Planner Framework, replacing shell scripts with typed, programmatic analysis of projects, dependencies, and priorities.
+The Python execution engine behind lplan — typed, programmatic analysis of projects, dependencies, and priorities.
 
 ## Architecture
 

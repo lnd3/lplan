@@ -622,8 +622,4 @@ else:
 
 ---
 
-**Still stuck?** Check:
-1. QUICK_REFERENCE.md for common commands
-2. IMPLEMENTATION.md for architecture details
-3. MIGRATION.md for transition guidance
-4. Test files (tests/*.py) for usage examples
+**Still stuck?** Check QUICK_REFERENCE.md (commands), IMPLEMENTATION.md (architecture), or tests/*.py (usage examples).

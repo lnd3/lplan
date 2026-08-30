@@ -73,28 +73,12 @@ Full rationale (why this needed spelling out): [`WORKFLOW_DETAILS.md` § Extende
 
 ## AI Agent Memory Maintenance
 
-When an AI agent maintains a persistent memory file (e.g. `~/.claude/projects/.../memory/MEMORY.md`), that file's **Plans section** is the only plan content guaranteed to be in context at session start without an explicit read. Keep it current and compact.
+If you keep a persistent memory file (e.g. `~/.claude/projects/.../memory/MEMORY.md`), its **Plans section** is the only plan content guaranteed in context at session start — `plan/FOCUS.md`/`INDEX.md` are not auto-loaded, read them explicitly.
 
-### Rules
+- Update the Plans section whenever plan state changes (Level 1 — but skipping it means next session starts stale).
+- Keep it under ~150 lines: one line per active (non-DONE/DEFERRED/CANCELLED) entity — ID, status/priority, one orienting fact. Prune past that; move detail to topic files, not memory.
 
-**At session start** — read `plan/FOCUS.md` and `plan/INDEX.md` before working. These are not auto-loaded; they must be explicitly read.
-
-**When plan state changes** — update MEMORY.md's Plans section to match. This is a Level 1 change (entity only), but failing to do it means the next session starts with stale context.
-
-**When MEMORY.md exceeds ~150 lines** — prune it. Move verbose detail into topic files (already linked from MEMORY.md); keep only the *non-obvious* rule or the *pointer* to where to look. Bug fix details belong in git history, not memory.
-
-**What the Plans section should contain** — one line per active entity (non-DONE, non-DEFERRED, non-CANCELLED): ID, status/priority, and the single most useful orienting fact. DONE items can be removed. Example:
-
-```markdown
-## Plans
-- P003 `PLANNING/HIGH` — Headless bot. Phase 1 next: ECS world + tick loop.
-- D018 `PLANNING` — BotSession control surface (P003). 5-step migration, Step 1 next.
-- A011 `IN_PROGRESS` — Account Registry implementation.
-```
-
-### Automation target
-
-`plan generate-index` (or a dedicated `plan export-memory` command) should regenerate the Plans section automatically, so it never goes stale. Until that is implemented, update it manually when plan status changes.
+Format and rationale: [`WORKFLOW_DETAILS.md` § AI Agent Memory Maintenance](WORKFLOW_DETAILS.md#ai-agent-memory-maintenance).
 
 ---
 
@@ -109,14 +93,19 @@ When an AI agent maintains a persistent memory file (e.g. `~/.claude/projects/..
 
 ## External Contribution Workflow (Drive-By Fixes)
 
-For an agent whose real task is in a *different* repo, but who fixes something in lplan's own `src/`, `templates/`, or `schema/` along the way. (Why this gets its own path instead of the rules above: [details](WORKFLOW_DETAILS.md#extended-rationale).)
+For an agent whose real task is in a *different* repo, but who touches lplan itself along the way. (Why this gets its own path instead of the rules above: [details](WORKFLOW_DETAILS.md#extended-rationale).)
 
-- **Trivial** (typo, one-liner) → just commit.
-- **Bug/layout fix** (most drive-by work) → log one Action under **P009 – External Maintenance**, status `DONE` at creation, one Log line; one `CHANGELOG.md` line (`date | A0xx | NEW → DONE | ...`). Don't touch FOCUS.md, don't triage into P001–P008 — default to P009.
-- **New capability/entity type/behavior change** → out of scope for drive-by. Flag to a maintainer, or do the full Level 3 treatment yourself. **Tell the user** plainly that this needs real planning in lplan itself, not a patch made in passing — they may not know lplan has its own workflow at all.
-- **Mechanical hook**: commits touching lplan's source carry a `Lplan-Entity: A0xx` (or `Lplan-Entity: none (trivial)`) trailer, so this is greppable.
+**First, what kind of change is it:**
 
-`P009-external-maintenance.md` is the catch-all — it accumulates small `DONE` actions and never needs a FOCUS.md mention. Re-filing into specific projects is a normal-upkeep-pass job, not a drive-by one.
+- **Trivial** (typo, one-liner in `src/`/`templates/`/`schema/`) → just commit.
+- **Bug/layout fix** (most drive-by work — a defect fixed in isolation, behavior unchanged) → log one Action under **P009 – External Maintenance**, status `DONE` at creation, one Log line; one `CHANGELOG.md` line (`date | A0xx | NEW → DONE | ...`). Don't touch FOCUS.md, don't triage into P001–P008 — default to P009.
+- **Anything that changes *policy*, not just code** — edits to `WORKFLOW.md`, `WORKFLOW_DETAILS.md`, `templates/*`, `CLAUDE.md`, or `README.md`; a new entity type, field, or status value; any new capability or behavior change → **never a silent drive-by `DONE`, no matter how small it looks.** These files are what every project using lplan inherits — see the generalization test below before even proposing one. **Flag it to the user explicitly, in your own words, before or immediately after landing it** — not just a CHANGELOG line they'd have to go looking for. Say what changed, why, and that it affects every lplan-based repo, not just the one you were working in. If you're not equipped to have that conversation, don't land it — do the full Level 3 treatment and let a maintainer decide instead.
+
+**Before proposing a policy change, ask: does this generalize?** A rule worth adding to lplan should have real potential to improve outcomes for projects using lplan *in general* — not just codify how your originating repo happens to work. If it's genuinely repo-specific (a local convention, a project's own quirks), it belongs in *that* repo's own `plan/WORKFLOW.md`, not lplan's. When in doubt, err toward local and mention the idea to the user rather than upstreaming it uninvited.
+
+**Mechanical hook**: commits touching lplan's source carry a `Lplan-Entity: A0xx` (or `Lplan-Entity: none (trivial)`) trailer, so this is greppable.
+
+`P009-external-maintenance.md` is the catch-all for the Bug/layout fix case — it accumulates small `DONE` actions and never needs a FOCUS.md mention. Re-filing into specific projects is a normal-upkeep-pass job, not a drive-by one. Policy changes never go through P009 silently, regardless of how the commit is otherwise structured.
 
 ---
 
