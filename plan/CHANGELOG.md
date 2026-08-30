@@ -73,3 +73,4 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 2026-08-30 | P001 | DONE → IN_PROGRESS | Reopened for A027 (validator parent-child consistency check). Filed from TradeFlow context: P005 DONE+children IN_PROGRESS/BLOCKED went undetected 9 days.
 2026-08-30 | A027 | NEW → IN_PROGRESS | Validator: DONE parent with non-terminal children emits warning in validate_relationships(). Check 1 implemented; check 2 (stale-BLOCKED) deferred.
 2026-08-30 | D008 | NEW → PLANNING | Project phase→Action/Design linking. phase frontmatter field on children; generate-index reconstructs phase table; checkbox extraction for in-file completion visibility.
+2026-08-30 | D008 | PLANNING (revised) | Loose coupling model: phase text is human-authored, free-form; Design is the minimum anchor per phase; Actions optional. Validator warns on unanchored phases. Project file stays authoritative, not generated.

@@ -1,6 +1,6 @@
 ---
 id: D008
-title: Project Phase → Action/Design Linking
+title: Project Phase → Design/Action Linking (Loose Coupling)
 status: PLANNING
 priority: MEDIUM
 project: P001
@@ -10,84 +10,137 @@ updated: 2026-08-30
 
 ## What
 
-A mechanism to declare which phase of a parent Project an Action or Design belongs to.
-This enables `generate-index` (or a new `plan check-phases` command) to automatically
-reconstruct the phase breakdown in a project file from its child entities, rather than
-maintaining it by hand.
+A loose coupling between project phases and child Designs/Actions. Each phase in
+a project file is a human-authored planning section — free-form text, checkboxes,
+notes — that may reference one or more Designs as structural anchors. Actions are
+optional and may be missing, incomplete, or not yet created. Checkboxes within a
+phase do not need to map to files.
+
+**Single structural rule**: every phase must have at least one Design. The Design
+documents the *what* and *why* of the phase. Everything else (tasks, Actions,
+notes, open questions) is free-form.
 
 ## Why
 
-Project files currently contain detailed task checklists organised into phases (e.g.
-`### Phase 1 — Strategy Pipeline`). Those checklists are maintained manually and drift
-from reality:
+The original D008 draft proposed tight coupling: every task maps to an Action,
+and the project file's `## Phases` section becomes a generated artifact. This is
+too rigid in practice:
 
-- Completed tasks remain unchecked (invisible to the rollup) when an Action is closed
-  without updating the parent project file.
-- New tasks are added to the project file instead of creating an Action, making them
-  invisible to the child-entity status rollup.
-- The status view shows "X/Y children done" based only on entity relationships, not on
-  the in-file checkbox state, producing a false "complete" signal.
+- Phases hold high-level context that predates any Action being written.
+- A phase may have gaps — missing designs, incomplete actions, future work not
+  yet decomposed.
+- Not every checkbox corresponds to a discrete Action; some are notes, steps, or
+  research items that don't warrant a file.
+- The project file is a planning document, not a derived artifact. It should remain
+  authoritative for phase intent even when the implementation is incomplete.
 
-Root case: TradeFlow P001 showed "all children DONE" (A001, A003, A012 all DONE) while
-the project file still had 8 unchecked tasks across three phases. A013 was created to
-capture those tasks and make the gap visible — but the gap should be structurally
-impossible to create in the first place.
+The looser model preserves the project file as a planning surface while adding
+enough structure to keep phases grounded and visible in the rollup.
 
 ## How
 
-### Minimal — `phase` frontmatter field on Actions and Designs
+### `phase` field on Designs (required anchor) and Actions (optional)
 
 ```yaml
+# Design — required anchor for the phase
+id: D001
+project: P001
+phase: "Phase 1 — Strategy Pipeline"
+
+# Action — optional; links into the same phase
 id: A013
 project: P001
 phase: "Phase 3 — V3 Tuning, Real Data Validation, Cleanup"
 ```
 
-`generate-index` and the health dashboard use this to build the phase view from
-children rather than from the project file body. Project file's `## Phases` section
-becomes a generated artifact (like `INDEX.md`), not a hand-maintained checklist.
+### Project file — phases remain human-authored
 
-Generated output per project:
+The `## Phases` section in the project file is **not generated**. It is the
+source of truth for phase names and phase-level intent. Checkboxes are free-form;
+they may or may not correspond to Action files.
 
 ```markdown
-## Phases (generated)
+## Phases
 
-| Phase | Owner | Status | Open tasks |
-|---|---|---|---|
-| Phase 1 — Strategy Pipeline | A001, A003 | DONE | 0 |
-| Phase 2 — Backtest Validation | A012 | DONE | 0 |
-| Phase 3 — V3 Tuning | A013 | IN_PROGRESS | 3 |
+### Phase 1 — Strategy Pipeline [D001 DONE, A001 DONE, A003 DONE]
+- [x] VolumeLevels V3, HTFRegimeDetector, MultiTFFilter, PositionSizerV2, DCASignalV3
+- [x] TradingSizerStepped1 + viz
+
+### Phase 3 — V3 Tuning [D001 DONE, A013 IN_PROGRESS]
+- [ ] Sweep minStrength / minSegBars / confirmBars across assets
+- [ ] Real data validation on live XRP/USD
+- [ ] Lock params; save regression baseline
+- (no action for: document tuning methodology) ← gap, fine
 ```
 
-"Open tasks" is the count of `- [ ]` items in the owning Action/Design file —
-making in-file checkbox completion visible alongside the entity status rollup.
+The bracketed `[D001 DONE, A013 IN_PROGRESS]` is the human-maintained
+phase header annotation. The validator checks that at least one of those
+references is a Design.
 
-### Extended — checkbox extraction
+### Validator rule (warn, not error)
 
-`generate-index` already reads frontmatter and body. Parsing `- [x]` / `- [ ]`
-counts per file is straightforward. This exposes in-file completion as a
-supplementary signal without replacing the primary child-entity rollup.
+`validate_relationships()` adds:
+
+```
+For each project:
+  parse ## Phases section, extract phase headers
+  for each phase header:
+    collect bracketed entity refs [D001, A013, ...]
+    warn if none of the refs resolves to a Design entity
+```
+
+This is a soft check — warns only, never blocks. Phases without any Design ref
+are flagged as "unanchored" in the validation report.
+
+### `generate-index` — optional phase summary table
+
+If at least one child has a `phase` field, `generate-index` emits a supplementary
+phase table below the project's `## Linked` section:
+
+```markdown
+## Phase summary (from children)
+
+| Phase | Designs | Actions | Status |
+|---|---|---|---|
+| Phase 1 — Strategy Pipeline | D001 | A001, A003 | DONE |
+| Phase 2 — Backtest Validation | — | A012 | DONE |
+| Phase 3 — V3 Tuning | D001 | A013 | IN_PROGRESS |
+| Phase 4 — Live Deployment | D007 | — | BLOCKED |
+```
+
+Status = worst-case child status for that phase. "—" for missing designs or
+actions is valid and expected.
+
+### Checkbox extraction (optional, later)
+
+`generate-index` can count `- [ ]` / `- [x]` per Action/Design file and include
+completion percentages in the phase table. This makes in-file task completion
+visible without requiring every checkbox to have a file backing it.
 
 ## Constraints
 
-- `phase` is optional — existing Actions/Designs without it remain valid.
-- Phase names are free-form strings matched against the project's declared phase list.
-  Typos → unmatched (validator warns). No enum, no schema migration.
-- Projects that don't use phases are unaffected. The generated `## Phases` section
-  only appears if at least one child has a `phase` field.
-- The project file's hand-written `## Phases` / `## Tasks` section is replaced by
-  the generated one; any manual notes belong in `## Notes` instead.
+- `phase` is optional on all entities. Existing schemas with no `phase` fields
+  are unaffected.
+- Phase names are free-form strings. The validator matches refs in brackets
+  against known entity IDs — it does not parse or validate phase names.
+- A phase may reference a Design that is DONE (completed phases are fine).
+  The validator only checks *presence* of a Design ref, not its status.
+- Phases without a `## Phases` section are valid projects — the feature is opt-in.
+- The project file's phase text, checkboxes, and notes remain
+  human-maintained. Only the bracketed entity refs `[D001, A013]` are
+  machine-readable.
 
-## Phases
+## Implementation Phases
 
-- **Phase 1 (PLANNING)**: Add `phase` field to Action/Design models + validator
-- **Phase 2 (PLANNING)**: `generate-index` reads `phase` field, emits phase table per project
-- **Phase 3 (PLANNING)**: Checkbox extraction — count `[ ]` / `[x]` per file, include in table
-- **Phase 4 (PLANNING)**: Health dashboard phase view (mirrors generate-index output)
+- **Phase 1**: Add `phase` field to Design/Action Pydantic models (optional str)
+- **Phase 2**: Validator warns on unanchored phases (no Design ref in brackets)
+- **Phase 3**: `generate-index` emits phase summary table from child `phase` fields
+- **Phase 4**: Checkbox extraction — open task count per Action/Design in phase table
 
 ## Log
 
-2026-08-30 — Design filed from TradeFlow context. P001 had 8 unchecked tasks invisible
-  to the rollup; A013 created as a workaround. The correct fix is structural: phases
-  declared on children, project file generated from them. Minimal path is a `phase`
-  frontmatter field + generate-index change; checkbox extraction is a natural extension.
+2026-08-30 — Initial draft proposed tight coupling (every task → Action, project
+  phases generated from children). Revised: loose coupling after user feedback.
+  Phase text is human-authored and may have gaps; Design is the minimum anchor per
+  phase; Actions are optional. Validator warns on unanchored phases (no Design ref).
+  Project file remains authoritative for phase intent.
