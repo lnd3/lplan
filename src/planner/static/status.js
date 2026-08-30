@@ -7,7 +7,7 @@ class StatusView {
     priorities: [],
     types: []
   };
-  static sortConfig = { column: 'id', direction: 'asc' };
+  static sortConfig = { column: 'completion', direction: 'asc' };
   static visibleColumns = ['id', 'title', 'type', 'status', 'priority', 'created', 'depends_on_count'];
   static pageSize = 20;
   static currentPage = 1;
@@ -150,9 +150,9 @@ class StatusView {
     let html = '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
 
     html += '<thead><tr style="background: #313244; border-bottom: 2px solid #45475a;">';
-    const columns = ['id', 'title', 'type', 'status', 'priority', 'created', 'updated', 'depends_on_count'];
+    const columns = ['id', 'title', 'type', 'status', 'priority', 'completion', 'created', 'updated', 'depends_on_count'];
     for (const col of columns) {
-      const label = col.replace(/_/g, ' ').toUpperCase();
+      const label = col === 'completion' ? 'PROGRESS' : col.replace(/_/g, ' ').toUpperCase();
       const isSorted = StatusView.sortConfig.column === col;
       const arrow = isSorted ? (StatusView.sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : '';
       html += `<th style="padding: 8px 12px; text-align: left; color: #89b4fa; cursor: pointer; user-select: none;"
@@ -189,6 +189,7 @@ class StatusView {
         <td style="padding: 8px 12px; color: #a6adc8;">${typeIcon}</td>
         <td style="padding: 8px 12px;"><span style="background: ${statusColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: #1e1e2e; font-weight: 600;">${entity.status}</span></td>
         <td style="padding: 8px 12px; color: #a6adc8;">${entity.priority}</td>
+        <td style="padding: 8px 12px; color: #a6adc8;">${StatusView.renderCompletion(entity)}</td>
         <td style="padding: 8px 12px; color: #9399b2; font-size: 12px;">${StatusView.formatDate(entity.created)}</td>
         <td style="padding: 8px 12px; color: #9399b2; font-size: 12px;">${StatusView.formatDate(entity.updated)}</td>
         <td style="padding: 8px 12px; text-align: center; color: #a6adc8;">${entity.depends_on_count || 0}</td>
@@ -366,6 +367,20 @@ class StatusView {
       let aVal = a[col];
       let bVal = b[col];
 
+      // Entities without a completion measure (design/action/concept/thesis
+      // — only project/master_plan carry one) aren't "0% done"; they have no
+      // measure at all. Sort them after everything that does, regardless of
+      // direction, rather than letting the generic null->'' fallback below
+      // make them look like the least-complete items.
+      if (col === 'completion') {
+        const aMissing = aVal == null;
+        const bMissing = bVal == null;
+        if (aMissing && bMissing) return 0;
+        if (aMissing) return 1;
+        if (bMissing) return -1;
+        return dir === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
       if (aVal == null) aVal = '';
       if (bVal == null) bVal = '';
 
@@ -378,6 +393,22 @@ class StatusView {
       if (aVal > bVal) return dir === 'asc' ? 1 : -1;
       return 0;
     });
+  }
+
+  static renderCompletion(entity) {
+    if (entity.completion == null) return '<span style="color:#6c7086;">—</span>';
+    const color = entity.completion >= 100 ? '#a6e3a1' : '#89b4fa';
+    const sourceTitle = entity.completion_source === 'children'
+      ? 'No Tasks checkboxes found — falling back to child Design/Action counts'
+      : entity.completion_source === 'status'
+        ? 'No checkboxes or children — based on status only'
+        : 'From Tasks/Phases checkboxes';
+    return `<div style="display:flex; align-items:center; gap:6px;" title="${sourceTitle}">
+      <div style="background:#313244; border-radius:3px; height:6px; width:50px; overflow:hidden;">
+        <div style="background:${color}; height:100%; width:${entity.completion}%;"></div>
+      </div>
+      <span style="font-size:11px;">${entity.completion}%</span>
+    </div>`;
   }
 
   // type → color (used for IDs and badges throughout)

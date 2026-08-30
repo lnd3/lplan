@@ -291,16 +291,24 @@ def compute_status_overview(
     for group in entities_by_type.values():
         entities_by_id.update(group)
 
+    # Least-complete first, most-complete last — surfaces what needs work
+    # before what's already finished. Sort by (id) as a stable tiebreaker so
+    # equal-progress rows don't reorder from one request to the next.
+    master_plan_rollups = sorted(
+        (master_plan_rollup(mp, projects, path_by_id, plan_files_by_id.get(mp.id))
+         for mp in master_plans.values()),
+        key=lambda r: (r["pct_done"], r["id"]),
+    )
+    project_rollups = sorted(
+        (project_rollup(p, designs, actions, path_by_id, plan_files_by_id.get(p.id))
+         for p in projects.values()),
+        key=lambda r: (r["pct_done"], r["id"]),
+    )
+
     return {
         "totals": overall_totals(concepts, theses, master_plans, projects, designs, actions),
-        "master_plan_rollups": [
-            master_plan_rollup(mp, projects, path_by_id, plan_files_by_id.get(mp.id))
-            for mp in sorted(master_plans.values(), key=lambda x: x.id)
-        ],
-        "project_rollups": [
-            project_rollup(p, designs, actions, path_by_id, plan_files_by_id.get(p.id))
-            for p in sorted(projects.values(), key=lambda x: x.id)
-        ],
+        "master_plan_rollups": master_plan_rollups,
+        "project_rollups": project_rollups,
         "needs_attention": {
             "stale": find_stale(entities_by_type, plan_files_by_id, today, stale_days, path_by_id),
             "blocked": find_blocked(entities_by_type, graph, path_by_id),

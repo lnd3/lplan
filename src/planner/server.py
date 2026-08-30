@@ -107,6 +107,7 @@ def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
 def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
     """Build hierarchy based on actual parent-child relationships."""
     from planner.parser import PlanParser
+    from planner.status_overview import master_plan_rollup, project_rollup
 
     try:
         parser = PlanParser()
@@ -118,6 +119,16 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
         projects = {}
         designs = {}
         actions = {}
+
+        # Full entity objects + PlanFiles (for raw_content), kept alongside the
+        # lightweight `*_info` dicts above so rollup progress (project_rollup/
+        # master_plan_rollup) can be computed the same way P010's dashboard
+        # and the Items view do — one shared measure everywhere it's shown.
+        design_entities: Dict[str, Any] = {}
+        action_entities: Dict[str, Any] = {}
+        project_entities: Dict[str, Any] = {}
+        master_plan_entities: Dict[str, Any] = {}
+        plan_files_by_id: Dict[str, Any] = {}
 
         for path_key, file_data in files.items():
             if isinstance(file_data, dict) and "error" in file_data:
@@ -134,19 +145,24 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     "path": path_key,
                     "children": []
                 }
+                plan_files_by_id[entity.id] = file_data
 
                 if entity_type == "thesis":
                     theses[entity.id] = entity_info
                 elif entity_type == "masterplan":
                     master_plans[entity.id] = entity_info
+                    master_plan_entities[entity.id] = entity
                 elif entity_type == "project":
                     projects[entity.id] = entity_info
+                    project_entities[entity.id] = entity
                 elif entity_type == "design":
                     designs[entity.id] = entity_info
+                    design_entities[entity.id] = entity
                     if hasattr(entity, 'project'):
                         entity_info["parent"] = entity.project
                 elif entity_type == "action":
                     actions[entity.id] = entity_info
+                    action_entities[entity.id] = entity
                     if hasattr(entity, 'design'):
                         entity_info["parent"] = entity.design
                     if hasattr(entity, 'project'):
@@ -203,11 +219,13 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
             })
 
         for mp_id, mp in sorted(master_plans.items()):
+            mp_rollup = master_plan_rollup(master_plan_entities[mp_id], project_entities, plan_file=plan_files_by_id.get(mp_id))
             mp_node = {
                 "id": mp_id,
                 "title": mp["title"],
                 "path": mp["path"],
                 "theses": mp_thesis_map.get(mp_id, []),
+                "completion": mp_rollup["pct_done"],
             }
             hierarchy["master_plans"].append(mp_node)
 
@@ -225,8 +243,10 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
         attached_action_ids = set()
 
         for proj_id, proj in sorted(projects.items()):
+            proj_rollup = project_rollup(project_entities[proj_id], design_entities, action_entities, plan_file=plan_files_by_id.get(proj_id))
             proj_node = {"id": proj_id, "title": proj["title"], "path": proj["path"],
-                         "parent_master_plan": proj.get("parent_master_plan", []), "children": []}
+                         "parent_master_plan": proj.get("parent_master_plan", []), "children": [],
+                         "completion": proj_rollup["pct_done"]}
 
             # Add designs for this project
             for design_id, design in sorted(designs.items()):
@@ -667,6 +687,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         try:
             from datetime import datetime
             from planner.models import Design, Action, MasterPlan, Thesis, Concept
+            from planner.status_overview import project_rollup, master_plan_rollup
 
             parsed = PlanParser.parse_directory(plan_dir)
             concepts = {}
@@ -676,11 +697,13 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
             designs = {}
             actions = {}
             path_map = {}
+            plan_files_by_id = {}
 
             for filename, result in parsed.items():
                 if isinstance(result, dict) and "error" in result:
                     continue
                 entity = result.entity
+                plan_files_by_id[entity.id] = result
                 if isinstance(entity, Concept):
                     concepts[entity.id] = entity
                     path_map[f"concept_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
@@ -733,6 +756,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                 })
 
             for mp in sorted(master_plans.values(), key=lambda x: x.id):
+                rollup = master_plan_rollup(mp, projects, plan_file=plan_files_by_id.get(mp.id))
                 entities.append({
                     "id": mp.id,
                     "title": mp.title,
@@ -745,9 +769,12 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "description": mp.description[:100] + "..." if mp.description and len(mp.description) > 100 else mp.description,
                     "path": path_map.get(f"master_plan_{mp.id}", f"master_plans/{mp.id}.md"),
                     "stakeholder": mp.stakeholder or "N/A",
+                    "completion": rollup["pct_done"],
+                    "completion_source": rollup["pct_source"],
                 })
 
             for proj in sorted(projects.values(), key=lambda x: x.id):
+                rollup = project_rollup(proj, designs, actions, plan_file=plan_files_by_id.get(proj.id))
                 entities.append({
                     "id": proj.id,
                     "title": proj.title,
@@ -760,6 +787,8 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "description": proj.description[:100] + "..." if proj.description and len(proj.description) > 100 else proj.description,
                     "path": path_map.get(f"project_{proj.id}", f"projects/{proj.id}.md"),
                     "depends_on_count": len(graph.get_blocking_deps(proj.id)),
+                    "completion": rollup["pct_done"],
+                    "completion_source": rollup["pct_source"],
                 })
 
             for design in sorted(designs.values(), key=lambda x: x.id):

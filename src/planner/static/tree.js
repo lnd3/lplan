@@ -30,6 +30,15 @@ class TreeView {
     return `<span style="font-size:9px;color:#6c7086;background:#6c70861a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.03em;" title="No parent thesis">root</span>`;
   }
 
+  // Small, muted progress badge for Project/Master Plan titles — same measure
+  // (Tasks/Phases checkboxes, falling back to child counts) the Items and
+  // Status views use, so the number always agrees across all three.
+  static progressBadge(pct) {
+    if (pct == null) return '';
+    const color = pct >= 100 ? '#a6e3a1' : '#9399b2';
+    return `<span style="font-size:9px;color:${color};background:${color}1a;border-radius:3px;padding:1px 4px;margin-left:3px;flex-shrink:0;" title="Progress">${pct}%</span>`;
+  }
+
   // Values interpolated into a single-quoted onclick='...' HTML attribute must not
   // contain a literal ' — HTML attribute parsing has no backslash-escape mechanism,
   // so a raw apostrophe in a title (e.g. "TradeFlow's") silently truncates the
@@ -61,6 +70,7 @@ class TreeView {
           <span class="tree-toggle" style="transition: transform 0.15s;" data-toggle-id="${project.id}" data-has-children="${hasChildren}">${hasChildren ? '+' : '•'}</span>
           ${TreeView.parentBadge(project.id, TreeView.TYPE_COLORS.project)}
           <div class="tree-node tree-node-project" onclick='TreeView.showTreeRoot("${project.id}", "${TreeView.escapeAttr(project.title)}", "project", "${TreeView.escapeAttr(project.path)}")' data-id="${project.id}">${project.title}</div>
+          ${TreeView.progressBadge(project.completion)}
           ${mpBadges}
         </div>
         ${TreeView.buildChildrenHTML(project, indent + 1)}
@@ -236,6 +246,7 @@ class TreeView {
               <span class="tree-toggle" data-has-children="false">•</span>
               ${TreeView.parentBadge(mp.id, TreeView.TYPE_COLORS.master_plan)}
               <div class="tree-node tree-node-project" style="color:#f9e2af;" onclick='TreeView.showTreeRoot("${mp.id}", "${TreeView.escapeAttr(mp.title)}", "master_plan", "${TreeView.escapeAttr(mp.path)}")' data-id="${mp.id}">${mp.title}</div>
+              ${TreeView.progressBadge(mp.completion)}
               ${thesisBadges}
             </div>
           </div>`;

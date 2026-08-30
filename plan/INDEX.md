@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 20:35:58 UTC*
+*Last updated: 2026-08-30 20:55:14 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -91,3 +91,5 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A028](actions/A028-d008-phases-1-3-implementation.md) | D008 Implementation — Phases 1–3 | DONE | D008 | TBD |
 | [A029](actions/A029-status-overview-validator-warnings.md) | Surface Validator Warnings in the Status Dashboard | DONE | D004 | TBD |
 | [A030](actions/A030-checkbox-based-progress.md) | Checkbox-Based Progress for Project/Master Plan Rollups | DONE | D004 | TBD |
+| [A031](actions/A031-items-view-completion-sort.md) | Items View — Completion Column + Default Sort Least-Complete-First | DONE | D004 | TBD |
+| [A032](actions/A032-progress-badges-and-sorted-dashboard.md) | Tree View Progress Badges, Items View Label Rename, Status Dashboard Sort | DONE | D004 | TBD |

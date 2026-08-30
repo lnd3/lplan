@@ -6,9 +6,13 @@ invisible in the live dashboard even though `plan validate` showed them).
 """
 
 from datetime import date
+from pathlib import Path
 
+from planner.graph import DependencyGraph
 from planner.models import Action, Design, MasterPlan, PlanFile, Project, Status, Priority
-from planner.status_overview import collect_validator_warnings, master_plan_rollup, project_rollup
+from planner.status_overview import (
+    collect_validator_warnings, compute_status_overview, master_plan_rollup, project_rollup,
+)
 
 
 def _project(id_, status, phase_body=None):
@@ -148,3 +152,27 @@ class TestCollectValidatorWarnings:
 
         p001_warning = next(w for w in warnings if w["id"] == "P001")
         assert p001_warning["path"] == "projects/P001-title.md"
+
+
+class TestComputeStatusOverviewSortOrder:
+    """The Status dashboard's rollup lists should be least-complete-first."""
+
+    def test_project_rollups_sorted_by_completion_ascending(self):
+        projects = {}
+        plan_files_by_id = {}
+        for pid, checked in [("P001", 0), ("P002", 4), ("P003", 2)]:
+            raw = "## Tasks\n\n" + "\n".join(
+                f"- [{'x' if i < checked else ' '}] task {i}" for i in range(4)
+            )
+            project, plan_file = _project(pid, Status.IN_PROGRESS, phase_body=raw)
+            projects[pid] = project
+            plan_files_by_id[pid] = plan_file
+
+        graph = DependencyGraph(projects)
+        data = compute_status_overview(
+            {}, {}, {}, projects, {}, {}, plan_files_by_id, graph, Path("."),
+        )
+
+        ids_in_order = [r["id"] for r in data["project_rollups"]]
+        # P001 (0%) least complete, P003 (50%), P002 (100%) most complete.
+        assert ids_in_order == ["P001", "P003", "P002"]
