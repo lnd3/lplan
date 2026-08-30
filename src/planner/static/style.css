@@ -419,7 +419,7 @@ body {
 }
 
 /* Plan Health Dashboard (Status Overview) */
-#overview-view {
+#status-view {
   padding: 20px;
   overflow-y: auto;
 }
