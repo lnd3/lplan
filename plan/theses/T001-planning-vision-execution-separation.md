@@ -27,7 +27,7 @@ This separation enables stakeholders at different levels to operate at appropria
 
 ## Linked
 
-- **Master Plans**: M001 (Developer Experience), M002 (Scalability)
+- **Master Plans**: M001 (Developer Experience)
 - **Projects**: P001 (Tier 1 Engine), P004 (Web Refactoring), P005 (Master Plans)
 
 ## Key Evidence

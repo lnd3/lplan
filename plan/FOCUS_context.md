@@ -6,7 +6,7 @@ Overflow detail for `FOCUS.md` — background, breakdowns, and recent-history no
 
 - **Projects**: 6/10 DONE (P001–P006), 3 IN_PROGRESS (P007, P009, P010), 1 PLANNING (P008)
 - **Designs**: D005 (Template File Family Scaling) now DONE — filed under P008 but scope doesn't match, see P008's Log
-- **Master Plans**: 1 IN_PROGRESS (M001), 1 PLANNING (M002)
+- **Master Plans**: 1 IN_PROGRESS (M001). M002 (Scalability Foundation) moved to the accessibility-lplan repo 2026-08-30 — no longer part of lplan's own plan.
 - **Theses**: 3 HELD (T001–T003), none QUESTIONING or ABANDONED
 - **Concepts**: 5 STABLE (C001–C005)
 - **Framework**: stable; primary interface is Web UI (`plan serve`), including the Plan Health Dashboard (P010); companion-file convention (D005) now has real tooling support

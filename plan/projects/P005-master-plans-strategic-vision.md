@@ -17,7 +17,6 @@ enables:
   - P008
 parent_master_plan:
   - M001
-  - M002
 stakeholder: Engineering Leadership
 ---
 
@@ -33,7 +32,7 @@ Organizations need a way to declare strategic visions and goals that multiple re
 
 Example master plans created:
 - M001: Developer Experience Excellence (Engineering Leadership)
-- M002: Scalability Foundation (Infrastructure Team)
+- M002: Scalability Foundation (Infrastructure Team) — moved to the accessibility-lplan repo 2026-08-30; not part of lplan's own plan anymore, see Log
 
 ## Scope
 
@@ -75,12 +74,13 @@ Example master plans created:
 
 ### Phase 4: Examples & Documentation
 - [x] Create M001 (Developer Experience Excellence)
-- [x] Create M002 (Scalability Foundation)
+- [x] Create M002 (Scalability Foundation) — later moved to accessibility-lplan repo, no longer here
 - [x] Create master_plan.md.template
 - [x] Update INDEX.md.template with Master Plans section
 
 ## Log
 
+2026-08-30 — M002 (Scalability Foundation) moved to the accessibility-lplan repo, at user request — it's irrelevant to lplan's own plan. Removed from parent_master_plan here and from P008/T001/T002; deleted plan/master_plans/M002-scalability-foundation.md itself.
 2026-08-24 — All views updated. Master plans fully integrated and navigable.
 2026-08-24 — Core implementation and API support complete.
 2026-08-22 — Project started. Architecture designed with team.

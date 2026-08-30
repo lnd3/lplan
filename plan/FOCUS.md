@@ -28,4 +28,3 @@ None.
 1. P010/A023: browser click-through verification
 2. P007/A015: resume dependency-graph visualization
 3. P008 (Cross-Repo Planning Integration) — actual scope (cross-repo refs, upstream master plan sync) still unstarted; note D005 doesn't count toward it despite being filed there, see P008's own Log
-4. M002 (Scalability Foundation): unblocked, not started

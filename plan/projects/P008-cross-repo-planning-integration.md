@@ -17,7 +17,6 @@ external_dependencies: []
 enables: []
 parent_master_plan:
   - M001
-  - M002
 stakeholder: Engineering Leadership
 ---
 

@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 14:00:26 UTC*
+*Last updated: 2026-08-30 14:38:41 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -33,7 +33,6 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | ID | Title | Status | Priority |
 | --- | --- | --- | --- |
 | [M001](master_plans/M001-developer-experience.md) | Developer Experience Excellence | IN_PROGRESS | HIGH |
-| [M002](master_plans/M002-scalability-foundation.md) | Scalability Foundation | PLANNING | HIGH |
 
 ---
 
