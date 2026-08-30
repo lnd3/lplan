@@ -1,6 +1,7 @@
 # Focus
 
 *Rewritten each session. Not append-only — reflects current state only.*
+*Overflow background and context → `FOCUS_context.md`. Scratch → `FOCUS_tmp.md`.*
 
 ---
 

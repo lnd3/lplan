@@ -6,6 +6,7 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 
 ---
 
+2026-08-30 | D005 | NEW → PLANNING | Template File Family Scaling design — companion file convention for any template-instantiated file (_extension, _tmp, _learnings, _history, _whatever). Non-breaking; opt-in.
 2026-08-30 | A025 | NEW → DONE | Consumer repo structural alignment check added to WORKFLOW_DETAILS.md § Framework Updates + WORKFLOW.md reference (policy change, explicitly flagged — not P009)
 2026-08-30 | A024 | NEW → DONE | AI agent memory maintenance documented in WORKFLOW.md + template + TradeFlow plan/WORKFLOW.md (drive-by from TradeFlow)
 2026-08-22 | P003 | IN_PROGRESS → DONE | Tier 3 Phase 3 complete: Gantt and Burndown chart visualizations built. Analytics dashboard now shows: metrics tables + Gantt timeline + Burndown progress. All visualizations SVG-based, zero external deps.

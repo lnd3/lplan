@@ -33,6 +33,16 @@ None.
 - **Concepts**: 5 STABLE (C001–C005)
 - **Framework**: stable; primary interface is Web UI (`plan serve`), now including a hierarchy-wide status dashboard
 
+## Active (2026-08-30)
+
+**D005 — Template File Family Scaling** (PLANNING)
+Design drafted. Convention: every `something.md.template` implicitly authorises
+`something_extension.md`, `something_tmp.md`, `something_learnings.md`,
+`something_history.md` companions. Root stays template-shaped and lean; depth
+scales horizontally. Non-breaking — opt-in from first companion created.
+Next: implementation (tooling support in `plan validate`, `plan generate-index`,
+`plan check-refs`; companion note added to all remaining templates).
+
 ## Recent drive-by changes (2026-08-30)
 
 - **A024** — AI Agent Memory Maintenance documented in WORKFLOW.md + template (now condensed; detail in WORKFLOW_DETAILS.md). Prompted tightening of the policy-change drive-by rule.

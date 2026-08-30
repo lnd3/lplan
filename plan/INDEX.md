@@ -62,6 +62,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [D002](designs/D002-dependency-graph.md) | Dependency Graph Analysis Design | DONE | P001 | (link if applicable) |
 | [D003](designs/D003-javascript-module-architecture.md) | JavaScript Module Architecture | DONE | P004 | (link if applicable) |
 | [D004](designs/D004-plan-health-dashboard-architecture.md) | Plan Health Dashboard Architecture | DONE | P010 | (link if applicable) |
+| [D005](designs/D005-template-file-family-scaling.md) | Template File Family Scaling | PLANNING | P008 | — |
 
 ---
 
@@ -83,3 +84,4 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A022](actions/A022-status-overview-needs-attention-panel.md) | Needs-attention panel (stale, blocked, dangling refs) | DONE | D004 | TBD |
 | [A023](actions/A023-status-overview-dogfood.md) | Dogfood against lplan's own plan/ | IN_PROGRESS | D004 | TBD |
 | [A024](actions/A024-memory-maintenance-workflow.md) | AI Agent Memory Maintenance — Workflow Documentation | DONE | — | TBD |
+| [A025](actions/A025-consumer-repo-alignment-check.md) | Consumer Repo Structural Alignment Check | DONE | P008 | TBD |

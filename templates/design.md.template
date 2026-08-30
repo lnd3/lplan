@@ -68,3 +68,8 @@ What is not yet decided?
 ## Log
 
 YYYY-MM-DD — Design created.
+
+---
+*Companion files: `{id}_learnings.md` for implementation discoveries,
+`{id}_tmp.md` for scratch during implementation, `{id}_extension.md`
+for content that doesn't fit the template. Delete companions when merged.*
