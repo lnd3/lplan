@@ -17,6 +17,10 @@
 
 ---
 
+**Recent, not otherwise active**: P010's rollup math now prefers Tasks/Phases checkboxes over child-entity counts (A030) — found and fixed a real stale-checkbox gap in P002/P003 (both DONE, 0% checked despite real completed work) while dogfooding it.
+
+---
+
 ## Blocked
 
 None.

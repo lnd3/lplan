@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from .graph import DependencyGraph
 from .models import Action, Concept, Design, MasterPlan, PlanFile, Project, Thesis
+from .parser import count_checkboxes
 from .refs import check_references
 from .validator import SchemaValidator
 
@@ -38,17 +39,51 @@ def _last_activity(entity, plan_file: Optional[PlanFile]) -> date:
     return last
 
 
+def _rollup_pct(
+    entity_status: str, done_children: int, total_children: int, plan_file: Optional[PlanFile],
+) -> Dict[str, Any]:
+    """Shared rollup-percentage logic for Projects and Master Plans.
+
+    Prefer the entity's own Tasks/Phases checkboxes over child-entity counts:
+    the child set grows as work gets discovered mid-flight (mostly upward,
+    rarely downward), so "% of children DONE" drifts in ways that don't
+    reflect actual progress. Checkboxes are the human's deliberate plan of
+    record instead — checked off on purpose, not as a side effect of scope
+    discovery. Child counts remain in the payload as informational context,
+    they just don't drive `pct_done` when a better signal is available.
+    """
+    checkbox_done, checkbox_total = count_checkboxes(plan_file.raw_content) if plan_file else (0, 0)
+
+    if checkbox_total:
+        pct = round(100 * checkbox_done / checkbox_total)
+        source = "checkboxes"
+    elif total_children:
+        pct = round(100 * done_children / total_children)
+        source = "children"
+    else:
+        pct = 100 if entity_status == "DONE" else 0
+        source = "status"
+
+    return {
+        "pct_done": pct,
+        "pct_source": source,
+        "checkbox_done": checkbox_done,
+        "checkbox_total": checkbox_total,
+    }
+
+
 def project_rollup(
     project: Project, designs: Dict[str, Design], actions: Dict[str, Action],
     path_by_id: Optional[Dict[str, str]] = None,
+    plan_file: Optional[PlanFile] = None,
 ) -> Dict[str, Any]:
-    """% of a project's directly-tagged Designs + Actions that are DONE."""
+    """Progress for a project: prefers its own Tasks/Phases checkboxes, falls back
+    to % of directly-tagged Designs + Actions that are DONE. See `_rollup_pct`."""
     children = [d for d in designs.values() if d.project == project.id]
     children += [a for a in actions.values() if a.project == project.id]
 
     total = len(children)
     done = sum(1 for c in children if c.status == "DONE")
-    pct = round(100 * done / total) if total else (100 if project.status == "DONE" else 0)
 
     return {
         "id": project.id,
@@ -57,21 +92,22 @@ def project_rollup(
         "path": (path_by_id or {}).get(project.id),
         "child_count": total,
         "child_done": done,
-        "pct_done": pct,
         "no_children": total == 0,
+        **_rollup_pct(project.status, done, total, plan_file),
     }
 
 
 def master_plan_rollup(
     master_plan: MasterPlan, projects: Dict[str, Project],
     path_by_id: Optional[Dict[str, str]] = None,
+    plan_file: Optional[PlanFile] = None,
 ) -> Dict[str, Any]:
-    """% of a master plan's child Projects (via parent_master_plan) that are DONE."""
+    """Progress for a master plan: prefers its own Tasks/Phases checkboxes, falls
+    back to % of child Projects (via parent_master_plan) that are DONE."""
     children = [p for p in projects.values() if master_plan.id in (p.parent_master_plan or [])]
 
     total = len(children)
     done = sum(1 for c in children if c.status == "DONE")
-    pct = round(100 * done / total) if total else 0
 
     return {
         "id": master_plan.id,
@@ -80,8 +116,8 @@ def master_plan_rollup(
         "path": (path_by_id or {}).get(master_plan.id),
         "child_count": total,
         "child_done": done,
-        "pct_done": pct,
         "no_projects_yet": total == 0,
+        **_rollup_pct(master_plan.status, done, total, plan_file),
     }
 
 
@@ -258,10 +294,12 @@ def compute_status_overview(
     return {
         "totals": overall_totals(concepts, theses, master_plans, projects, designs, actions),
         "master_plan_rollups": [
-            master_plan_rollup(mp, projects, path_by_id) for mp in sorted(master_plans.values(), key=lambda x: x.id)
+            master_plan_rollup(mp, projects, path_by_id, plan_files_by_id.get(mp.id))
+            for mp in sorted(master_plans.values(), key=lambda x: x.id)
         ],
         "project_rollups": [
-            project_rollup(p, designs, actions, path_by_id) for p in sorted(projects.values(), key=lambda x: x.id)
+            project_rollup(p, designs, actions, path_by_id, plan_files_by_id.get(p.id))
+            for p in sorted(projects.values(), key=lambda x: x.id)
         ],
         "needs_attention": {
             "stale": find_stale(entities_by_type, plan_files_by_id, today, stale_days, path_by_id),

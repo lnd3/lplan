@@ -1,5 +1,6 @@
 """Parser for plan files - extracts YAML frontmatter and markdown sections."""
 
+import re
 from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
@@ -368,3 +369,20 @@ class PlanParser:
                 sections[section_name] = content if content else None
 
         return sections
+
+
+_CHECKBOX_RE = re.compile(r"^\s*-\s*\[([ xX])\]", re.MULTILINE)
+
+
+def count_checkboxes(raw_content: str) -> Tuple[int, int]:
+    """Count (done, total) markdown task checkboxes anywhere in a file's body.
+
+    Deliberately not scoped to any one section name (`## Tasks`, `## Phases`,
+    ...) — projects use `## Tasks` today, D008-style projects may use
+    `## Phases` instead, and scanning the whole body works for both without
+    needing to special-case either convention.
+    """
+    marks = _CHECKBOX_RE.findall(raw_content)
+    total = len(marks)
+    done = sum(1 for m in marks if m.lower() == "x")
+    return done, total

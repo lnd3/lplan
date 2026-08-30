@@ -41,17 +41,18 @@ Not included:
 
 ## Tasks
 
-- [ ] Impact analysis API
-- [ ] Dependency matrix generator
-- [ ] Bottleneck detection algorithm
-- [ ] Metrics computation (depth, fan-in/out)
-- [ ] Capacity tracking integration
-- [ ] Timeline/Gantt generation
-- [ ] Tests for analysis tools
-- [ ] Documentation for new features
+- [x] Impact analysis API
+- [x] Dependency matrix generator
+- [x] Bottleneck detection algorithm
+- [x] Metrics computation (depth, fan-in/out)
+- [x] Capacity tracking integration
+- [x] Timeline/Gantt generation
+- [x] Tests for analysis tools
+- [x] Documentation for new features
 
 ## Log
 
+2026-08-30 — Checked off all 8 Tasks checkboxes, found unchecked despite DONE status while dogfooding P010's new checkbox-based rollup math (see CHANGELOG). All 8 confirmed real via the 2026-08-22 Log entries below (impact analysis, bottleneck detection, metrics, capacity, Gantt, tests, docs all explicitly described as shipped) — this was stale bookkeeping, not incomplete work.
 2026-08-22 — Polish cycle: Added FOCUS.md + REFLECTION.md to dogfood lplan's own plan. Auto-regenerate INDEX.md on HTTP access (no manual regen needed). Changelog entries now properly separated by newlines.
 
 2026-08-22 — All Tier 2 Operational/Governance/Visibility features shipped. Web UI (plan serve) and additional scaffolding added beyond scope.

@@ -40,18 +40,19 @@ Not included:
 
 ## Tasks
 
-- [ ] Pre-commit hook implementation
-- [ ] Git integration for auto-updates
-- [ ] Mermaid diagram generation
-- [ ] SVG visualization
-- [ ] Status propagation engine
-- [ ] Notification system
-- [ ] Dashboard prototype
-- [ ] Integration tests
-- [ ] Documentation
+- [x] Pre-commit hook implementation
+- [x] Git integration for auto-updates
+- [ ] Mermaid diagram generation — no evidence in the codebase; leaving unchecked, unlike the rest of this list
+- [x] SVG visualization
+- [ ] Status propagation engine — no evidence of an automated mechanism (status changes propagate manually per WORKFLOW.md's Bubbling Up convention, not code); leaving unchecked
+- [x] Notification system
+- [x] Dashboard prototype
+- [x] Integration tests
+- [x] Documentation
 
 ## Log
 
+2026-08-30 — Checked off 7 of 9 Tasks checkboxes, found unchecked despite DONE status while dogfooding P010's new checkbox-based rollup math (see CHANGELOG). Left "Mermaid diagram generation" and "Status propagation engine" unchecked — no evidence either was actually built (grepped the codebase; status propagation happens manually per WORKFLOW.md's Bubbling Up convention, not code). The other 7 (pre-commit-style validated commits, SVG visualization, notification callbacks in watch.py, dashboard prototype, tests, docs) are real and verified.
 2026-08-22 — Tier 3 Phase 3 complete: Gantt and Burndown chart visualizations built. Analytics dashboard now shows: metrics tables + Gantt timeline + Burndown progress. All visualizations SVG-based, zero external deps.
 
 2026-08-22 — Starting Tier 3 Phase 3: Building visualizations (Gantt, burndown, capacity charts). SVG-based, no external deps.

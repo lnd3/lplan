@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 17:19:39 UTC*
+*Last updated: 2026-08-30 20:35:58 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -90,3 +90,4 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A027](actions/A027-validator-parent-child-consistency.md) | Validator — Parent-Child Status Consistency Check | IN_PROGRESS | — | TBD |
 | [A028](actions/A028-d008-phases-1-3-implementation.md) | D008 Implementation — Phases 1–3 | DONE | D008 | TBD |
 | [A029](actions/A029-status-overview-validator-warnings.md) | Surface Validator Warnings in the Status Dashboard | DONE | D004 | TBD |
+| [A030](actions/A030-checkbox-based-progress.md) | Checkbox-Based Progress for Project/Master Plan Rollups | DONE | D004 | TBD |

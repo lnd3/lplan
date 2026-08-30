@@ -159,10 +159,25 @@ class OverviewView {
     let rows = rollups.map(r => {
       const barColor = r.status === 'DONE' ? '#a6e3a1' : '#89b4fa';
       const emptyNote = (r.no_children || r.no_projects_yet) ? ' <span style="color:#9399b2; font-size:11px;">(no children yet)</span>' : '';
+      // Show whatever fraction actually drove pct_done — showing child counts
+      // next to a checkbox-derived percentage would misleadingly imply they're
+      // the same measure. See D008 follow-up: checkboxes are the deliberate
+      // plan of record; child counts drift as scope gets discovered.
+      let fraction, sourceNote;
+      if (r.pct_source === 'checkboxes') {
+        fraction = `${r.checkbox_done}/${r.checkbox_total} tasks`;
+        sourceNote = '';
+      } else if (r.pct_source === 'children') {
+        fraction = `${r.child_done}/${r.child_count}`;
+        sourceNote = ' <span style="color:#9399b2; font-size:10px;" title="No Tasks checkboxes found — falling back to child Design/Action counts, which drift as scope grows.">(by children)</span>';
+      } else {
+        fraction = '';
+        sourceNote = '';
+      }
       return `<div style="padding: 8px 0; border-bottom: 1px solid #313244; cursor: pointer;" data-id="${r.id}" data-type="${type}" data-path="${r.path || ''}" data-title="${OverviewView.escapeAttr(r.title)}">
         <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
           <span><span style="color: #f9e2af;">${r.id}</span> ${r.title}${emptyNote}</span>
-          <span style="color: #a6adc8;">${r.child_done}/${r.child_count} · ${r.pct_done}%</span>
+          <span style="color: #a6adc8;">${fraction ? fraction + ' · ' : ''}${r.pct_done}%${sourceNote}</span>
         </div>
         <div style="background: #313244; border-radius: 3px; height: 6px; overflow: hidden;">
           <div style="background: ${barColor}; height: 100%; width: ${r.pct_done}%;"></div>

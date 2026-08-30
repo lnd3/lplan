@@ -7,8 +7,8 @@ invisible in the live dashboard even though `plan validate` showed them).
 
 from datetime import date
 
-from planner.models import Action, Design, PlanFile, Project, Status, Priority
-from planner.status_overview import collect_validator_warnings
+from planner.models import Action, Design, MasterPlan, PlanFile, Project, Status, Priority
+from planner.status_overview import collect_validator_warnings, master_plan_rollup, project_rollup
 
 
 def _project(id_, status, phase_body=None):
@@ -18,6 +18,81 @@ def _project(id_, status, phase_body=None):
     )
     plan_file = PlanFile(entity=p, raw_content=phase_body or "")
     return p, plan_file
+
+
+class TestProjectRollup:
+    """project_rollup() should prefer the project's own Tasks/Phases checkboxes
+    over child Design/Action DONE-counts, since the child set grows as work
+    gets discovered mid-flight (mostly upward) and drifts away from actual
+    progress in a way deliberate checkboxes don't."""
+
+    def test_prefers_checkboxes_over_children(self) -> None:
+        # Checkboxes say 75% done; children (if used) would say 100% (1/1 DONE).
+        # These must disagree for the test to prove which one actually wins.
+        raw = "## Tasks\n\n- [x] a\n- [x] b\n- [x] c\n- [ ] d\n"
+        project, plan_file = _project("P001", Status.IN_PROGRESS, phase_body=raw)
+        design = Design(
+            id="D001", title="d", status=Status.DONE, project="P001",
+            created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+
+        result = project_rollup(project, {"D001": design}, {}, plan_file=plan_file)
+
+        assert result["pct_source"] == "checkboxes"
+        assert result["pct_done"] == 75
+        assert result["checkbox_done"] == 3
+        assert result["checkbox_total"] == 4
+        # Child counts still reported as context, just not driving pct_done.
+        assert result["child_count"] == 1
+        assert result["child_done"] == 1
+
+    def test_falls_back_to_children_when_no_checkboxes(self) -> None:
+        project, plan_file = _project("P001", Status.IN_PROGRESS, phase_body="## Goal\n\nNo tasks here.\n")
+        design = Design(
+            id="D001", title="d", status=Status.DONE, project="P001",
+            created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        action = Action(
+            id="A001", title="a", status=Status.IN_PROGRESS, project="P001",
+            created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+
+        result = project_rollup(project, {"D001": design}, {"A001": action}, plan_file=plan_file)
+
+        assert result["pct_source"] == "children"
+        assert result["pct_done"] == 50  # 1/2 children DONE
+
+    def test_falls_back_to_status_when_nothing_available(self) -> None:
+        project, _ = _project("P001", Status.DONE)
+
+        result = project_rollup(project, {}, {}, plan_file=None)
+
+        assert result["pct_source"] == "status"
+        assert result["pct_done"] == 100
+        assert result["no_children"] is True
+
+
+class TestMasterPlanRollup:
+    def test_prefers_checkboxes_over_child_projects(self) -> None:
+        raw = "## Tasks\n\n- [x] a\n- [ ] b\n"  # 50%
+        mp = MasterPlan(
+            id="M001", title="m", status=Status.IN_PROGRESS, stakeholder="eng",
+            created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        plan_file = PlanFile(entity=mp, raw_content=raw)
+        # Child project is DONE (would be 100% under the old child-count math).
+        project = Project(
+            id="P001", title="p", status=Status.DONE, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+            parent_master_plan=["M001"],
+        )
+
+        result = master_plan_rollup(mp, {"P001": project}, plan_file=plan_file)
+
+        assert result["pct_source"] == "checkboxes"
+        assert result["pct_done"] == 50
+        assert result["child_count"] == 1
+        assert result["child_done"] == 1
 
 
 class TestCollectValidatorWarnings:
