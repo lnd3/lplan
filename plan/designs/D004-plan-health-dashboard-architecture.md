@@ -35,7 +35,7 @@ Alternative considered: extend `/api/analytics` to cover all 6 entity types inst
 
 ## Where
 
-**Architectural placement**: New Flask route in `server.py`, e.g. `/api/status-overview`, sitting next to `/api/status` and `/api/analytics` — not replacing either. New frontend module `overview.js` following the existing pattern in `analytics.js`/`status.js` (a class with `init()`/`load()`/`render()`), wired into `dispatcher.js` and `nav.js` the same way Items and Analytics are.
+**Architectural placement**: New Flask route in `server.py`, e.g. `/api/status-overview`, sitting next to `/api/status` and `/api/analytics` — not replacing either. New frontend module (originally `overview.js`/`OverviewView`, renamed 2026-08-30 to `status.js`/`StatusView` to match the "🩺 Status" toolbar button — see Log) following the existing pattern in `analytics.js`/`items.js` (a class with `init()`/`load()`/`render()`), wired into `dispatcher.js` the same way Items and Analytics are.
 
 **Data ownership**: All data is derived, computed fresh on each request from the parsed `plan/` directory — nothing is cached or persisted server-side. Matches the existing `/api/status` and `/api/analytics` pattern (both re-parse on every call); no new state-lifetime concerns introduced.
 
@@ -73,5 +73,6 @@ The rollup and staleness functions should be pure (plan data in, rollup dict out
 
 ## Log
 
+2026-08-30 — Renamed at user request, to clarify internal naming against the toolbar button labels: `overview.js`/`OverviewView` → `status.js`/`StatusView` (its button is literally "🩺 Status"), and the old `status.js`/`StatusView` (whose button is "📋 Items") → `items.js`/`ItemsView`. DOM container ids and `data-action` strings swapped to match. See A033.
 2026-08-27 — Implemented as designed: `status_overview.py` holds the pure rollup/staleness/dangling-ref functions, `/api/status-overview` in server.py is the thin Flask wrapper, `overview.js` is the frontend consumer. No deviations from the plan below.
 2026-08-27 — Design created alongside P010, scoped to reuse existing parsing/graph/check-refs code rather than reimplement.

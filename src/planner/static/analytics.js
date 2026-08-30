@@ -8,8 +8,8 @@ class Analytics {
     document.getElementById('preview').style.display = 'none';
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('items-view').style.display = 'none';
     document.getElementById('status-view').style.display = 'none';
-    document.getElementById('overview-view').style.display = 'none';
 
     const dashboard = document.getElementById('analytics-dashboard');
     dashboard.style.display = '';

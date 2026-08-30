@@ -19,11 +19,11 @@ class EventDispatcher {
         case 'show-analytics':
           Analytics.showAnalytics();
           break;
+        case 'show-items':
+          ItemsView.show();
+          break;
         case 'show-status':
           StatusView.show();
-          break;
-        case 'show-overview':
-          OverviewView.show();
           break;
         case 'edit-file':
           FileEditor.enterEdit();

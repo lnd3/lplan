@@ -71,6 +71,7 @@ This is not a rewrite of Items view or Analytics — both stay as-is and remain 
 
 ## Log
 
+2026-08-30 — A033 added post-DONE: renamed the files/classes/DOM ids/action strings for this dashboard and the Items view so both match their toolbar button labels (`overview.js`/`OverviewView` → `status.js`/`StatusView`; old `status.js`/`StatusView` → `items.js`/`ItemsView`). Prompted by the naming actually causing ambiguity earlier this session.
 2026-08-30 — A032 added post-DONE: Tree view progress badges on Project/Master Plan titles, Items view's "COMPLETION" header renamed to "PROGRESS", and this dashboard's own project/master-plan rollups now sort least-complete-first instead of by ID. All three reuse A030's rollup math.
 2026-08-30 — A031 added post-DONE, at user request: Items view (status.js, a different view from this project's own dashboard) now shows a Completion column and defaults to sorting projects least-complete-first, reusing A030's rollup functions directly so the number always agrees with this dashboard's own.
 2026-08-30 — A030 added post-DONE, at user request: rollup `pct_done` now prefers a project/master-plan's own Tasks/Phases checkboxes over child-entity DONE-counts, since the child set drifts as scope is discovered mid-flight. Immediately found P002/P003 were both DONE with 0% checkbox completion (real work, just never checked off) — fixed. New `pct_source` field so the dashboard shows which signal actually drove the number.

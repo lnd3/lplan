@@ -69,8 +69,8 @@ class FileBrowser {
     document.getElementById('editor-wrap').style.display = 'none';
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
+    document.getElementById('items-view').style.display = 'none';
     document.getElementById('status-view').style.display = 'none';
-    document.getElementById('overview-view').style.display = 'none';
 
     document.querySelectorAll('.tree-item').forEach(el => {
       el.classList.toggle('active', el.dataset.path === path);
@@ -91,8 +91,8 @@ class FileBrowser {
     document.getElementById('preview').style.display = '';
     document.getElementById('tree-view').style.display = 'none';
     document.getElementById('analytics-dashboard').style.display = 'none';
+    document.getElementById('items-view').style.display = 'none';
     document.getElementById('status-view').style.display = 'none';
-    document.getElementById('overview-view').style.display = 'none';
     document.getElementById('sidebar').style.display = '';
 
     await FileBrowser.loadTree();
