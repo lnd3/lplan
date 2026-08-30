@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 16:27:41 UTC*
+*Last updated: 2026-08-30 16:46:34 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -63,6 +63,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [D004](designs/D004-plan-health-dashboard-architecture.md) | Plan Health Dashboard Architecture | DONE | P010 | (link if applicable) |
 | [D005](designs/D005-template-file-family-scaling.md) | Template File Family Scaling 📎 _see also: `D005_learnings.md`_ | DONE | P008 | (link if applicable) |
 | [D007](designs/D007-analytics-architecture.md) | Analytics Architecture | DONE | P007 | (link if applicable) |
+| [D008](designs/D008-project-phase-action-linking.md) | Project Phase → Action/Design Linking | PLANNING | P001 | (link if applicable) |
 
 ---
 
