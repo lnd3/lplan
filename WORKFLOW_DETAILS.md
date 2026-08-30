@@ -159,6 +159,29 @@ When lplan itself changes (new entity types, fields, workflow updates, validatio
 
 **Maintainer workflow when changing lplan**: update code/templates/docs → classify breaking/non-breaking → CHANGELOG.md entry (`## vX.Y (date)` + impact + effort + migration steps if breaking) → bump version → update WORKFLOW.md if procedures changed → notify users.
 
+### Consumer repo structural alignment check
+
+When lplan updates any `templates/*.md.template` file, consuming repos should audit their existing root `plan/*.md` files for format drift. Templates are the canonical format; silent divergence loses tooling compatibility and makes future migrations harder.
+
+**When to run**: after pulling a lplan update that changes any `.md.template` file. Quick check: `git log --oneline deps/lplan` — if any template appears in the diff, run this.
+
+**What to check**:
+
+| File | Format signal | Common drift |
+|---|---|---|
+| `FOCUS.md` | Active / Blocked / Next sections present | Stale content; extra sections not in template |
+| `REFLECTION.md` | All entries: `YYYY-MM-DD \| CATEGORY \| insight` (one-liner) | Section headers (`##`) used instead of pipe entries |
+| `CHANGELOG.md` | All entries: `YYYY-MM-DD \| ID \| old → new \| note` | Freeform paragraphs; missing ID field |
+| `WORKFLOW.md` | Repo-specific only; no restating of universal rules | Copy-pasted universal content that diverges on next lplan update |
+| `AXIOMS.md` | Template structure preserved; domain additions appropriate | Template sections deleted or renamed |
+
+**How to diff your file against the template**:
+```bash
+diff deps/lplan/templates/FOCUS.md.template plan/FOCUS.md
+```
+
+**Entity files** (P/D/A/T/M/C subdirectories): spot-check against their templates when a schema change is breaking (new required frontmatter fields, renamed status values).
+
 ---
 
 ## AI Agent Memory Maintenance

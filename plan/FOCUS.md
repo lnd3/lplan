@@ -33,6 +33,11 @@ None.
 - **Concepts**: 5 STABLE (C001–C005)
 - **Framework**: stable; primary interface is Web UI (`plan serve`), now including a hierarchy-wide status dashboard
 
+## Recent drive-by changes (2026-08-30)
+
+- **A024** — AI Agent Memory Maintenance documented in WORKFLOW.md + template (now condensed; detail in WORKFLOW_DETAILS.md). Prompted tightening of the policy-change drive-by rule.
+- **A025** — Consumer repo structural alignment check added to WORKFLOW_DETAILS.md § Framework Updates. Closes the gap where template updates didn't prompt consuming repos to audit their plan/*.md files.
+
 ## Notes for next session
 
 - P010's remaining work is entirely "look at it in a browser" — no more code is expected to be needed unless that check turns up a real bug.

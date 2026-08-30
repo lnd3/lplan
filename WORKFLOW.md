@@ -111,7 +111,7 @@ For an agent whose real task is in a *different* repo, but who touches lplan its
 
 ## Framework Updates (lplan Evolution)
 
-When lplan itself changes (new entity types, fields, validation rules), document breaking vs. non-breaking in CHANGELOG.md, add a migration guide if breaking, and update WORKFLOW.md if procedures changed. Full checklist, versioning strategy (semver), and templates for announcements/migration guides: [`WORKFLOW_DETAILS.md` § Framework Updates](WORKFLOW_DETAILS.md#framework-updates-lplan-evolution).
+When lplan itself changes (new entity types, fields, validation rules), document breaking vs. non-breaking in CHANGELOG.md, add a migration guide if breaking, and update WORKFLOW.md if procedures changed. Full checklist, versioning strategy (semver), templates for announcements/migration guides, and the **consumer repo structural alignment check** (what to audit in your `plan/*.md` files after a template update): [`WORKFLOW_DETAILS.md` § Framework Updates](WORKFLOW_DETAILS.md#framework-updates-lplan-evolution).
 
 ---
 
