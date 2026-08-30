@@ -121,6 +121,7 @@ class OverviewView {
       ...refs.orphaned_designs.map(id => ({ id, kind: 'orphaned design (parent project missing)' })),
       ...refs.orphaned_actions.map(id => ({ id, kind: 'orphaned action (parent design missing)' })),
       ...refs.unused_projects.map(id => ({ id, kind: 'unused project (no dependents, no depends)' })),
+      ...(refs.dead_companion_links || []).map(d => ({ id: d.from, kind: `dead companion link → ${d.link}` })),
     ];
     if (refIssues.length) {
       let rows = refIssues.map(r => `<div style="padding: 6px 0; border-bottom: 1px solid #313244;">

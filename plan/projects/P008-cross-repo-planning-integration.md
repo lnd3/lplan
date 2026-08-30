@@ -42,11 +42,12 @@ Large organizations run multiple repositories that need coordinated planning. Th
 
 ## Linked
 
-- **Designs**: D008: Cross-Repo Architecture
+- **Designs**:
+  - D008: Cross-Repo Architecture (not yet created — see Log 2026-08-30)
+  - D005: Template File Family Scaling (DONE) — filed here as the nearest home when created; scope is actually local file-organization, not cross-repo. See Log.
 - **Actions**:
-  - A017: Implement repo reference resolution
-  - A018: Build cross-repo validation
-  - A019: Create repo sync mechanism
+  - A017, A018, A019 — these IDs were speculatively planned here on 2026-08-24 but were never created under P008; they were later used for unrelated P009 drive-by fixes (root badges, editor bugs, thesis/master_plan display). This project's Phase 1–3 tasks below remain unimplemented.
+  - A026: D005 Tooling Implementation (DONE)
 
 ## Tasks
 
@@ -67,4 +68,5 @@ Large organizations run multiple repositories that need coordinated planning. Th
 
 ## Log
 
+2026-08-30 — D005 (Template File Family Scaling) landed filed under this project, but its actual scope (a local file-organization convention for template-instantiated files) doesn't match P008's Goal/Scope (cross-repo coordination) at all — likely filed here simply because P008 was the only PLANNING project available at the time. Left as-is rather than moved, since a dedicated project wasn't warranted for one design+action; flagged here for whoever picks up real cross-repo work next, so it's not mistaken for part of this project's actual scope.
 2026-08-24 — Project planning phase. Architecture discussion with team.

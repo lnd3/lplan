@@ -175,6 +175,7 @@ def dangling_references(entities_by_id: Dict[str, Any], plan_dir) -> Dict[str, A
         "orphaned_actions": report["orphaned_actions"],
         "unused_projects": report["unused_projects"],
         "unresolvable_refs": report["unresolvable_refs"],
+        "dead_companion_links": report["dead_companion_links"],
     }
 
 

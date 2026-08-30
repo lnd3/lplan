@@ -37,3 +37,8 @@ Concrete decision rule: "use this when A, prefer [[CXXX]] when B".
 ## Log
 
 YYYY-MM-DD — Created.
+
+---
+*Companion files: `CXXX_learnings.md` for implementation discoveries,
+`CXXX_tmp.md` for scratch, `CXXX_extension.md` for content that does not
+fit the template. Delete companions when merged or no longer needed.*

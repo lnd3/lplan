@@ -54,3 +54,8 @@ in a market report or observe in a P&L.
 ## Log
 
 YYYY-MM-DD — Master plan created.
+
+---
+*Companion files: `MXXX_learnings.md` for implementation discoveries,
+`MXXX_tmp.md` for scratch, `MXXX_extension.md` for content that does not
+fit the template. Delete companions when merged or no longer needed.*

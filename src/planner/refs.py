@@ -1,8 +1,51 @@
 """Reference validation across repos and orphan detection."""
 
+import re
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 from .models import PlanEntity, Project, Design, Action
+
+_MD_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+\.md)\)")
+_CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
+_INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+_ENTITY_SUBDIRS = ("concepts", "theses", "master_plans", "projects", "designs", "actions")
+
+
+def check_companion_links(plan_dir: Path) -> List[Dict[str, str]]:
+    """Find markdown links to D005 companion files that don't resolve.
+
+    A link target counts as "companion-looking" if its stem contains an
+    underscore (e.g. `FOCUS_context.md`, `D005_learnings.md`) — see
+    companions.py. Only local, non-http(s) targets are checked.
+    """
+    dead_links: List[Dict[str, str]] = []
+    candidates = list(plan_dir.glob("*.md"))
+    for subdir_name in _ENTITY_SUBDIRS:
+        subdir = plan_dir / subdir_name
+        if subdir.exists():
+            candidates.extend(subdir.glob("*.md"))
+
+    for filepath in candidates:
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        content = _CODE_FENCE_RE.sub("", content)  # skip illustrative links inside ```code blocks```
+        content = _INLINE_CODE_RE.sub("", content)  # ...and inside `inline code` spans
+        for match in _MD_LINK_RE.finditer(content):
+            target = match.group(1)
+            if target.startswith(("http://", "https://")):
+                continue
+            if "_" not in Path(target).stem:
+                continue
+            if not (filepath.parent / target).exists():
+                try:
+                    from_display = str(filepath.relative_to(plan_dir))
+                except ValueError:
+                    from_display = str(filepath)
+                dead_links.append({"from": from_display, "link": target})
+
+    return dead_links
 
 
 def check_references(
@@ -38,6 +81,7 @@ def check_references(
         "orphaned_designs": [],
         "orphaned_actions": [],
         "unused_projects": [],
+        "dead_companion_links": check_companion_links(plan_dir),
         "errors": [],
         "warnings": [],
     }

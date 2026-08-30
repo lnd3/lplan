@@ -57,6 +57,8 @@ def generate_index(
     entities: Dict[str, PlanEntity],
     repo_name: str,
     id_to_filename: Dict[str, str] = None,
+    companions_by_id: Dict[str, List[str]] = None,
+    include_companions: bool = False,
 ) -> str:
     """Generate INDEX.md markdown.
 
@@ -64,12 +66,24 @@ def generate_index(
         entities: Dict mapping entity IDs to PlanEntity objects
         repo_name: Name of the repository (used in heading)
         id_to_filename: Dict mapping entity ID to actual filename (e.g., "P001" → "P001-price-levels-strategy.md")
+        companions_by_id: Dict mapping entity ID to its D005 companion filenames (see companions.py).
+            Companions never appear as their own table rows — only as a "see also" note on
+            their root entity's row.
+        include_companions: If True, append a trailing "## Companions" inventory section.
 
     Returns:
         Markdown string ready to write to INDEX.md
     """
     if id_to_filename is None:
         id_to_filename = {}
+    if companions_by_id is None:
+        companions_by_id = {}
+
+    def see_also(entity_id: str) -> str:
+        names = companions_by_id.get(entity_id)
+        if not names:
+            return ""
+        return " 📎 _see also: " + ", ".join(f"`{n}`" for n in names) + "_"
 
     # Separate entities by type
     concepts: Dict[str, Concept] = {}
@@ -117,7 +131,7 @@ def generate_index(
         for cid, concept in sorted(concepts.items()):
             filename = id_to_filename.get(cid, f"{cid}-{concept.title.lower().replace(' ', '-')}.md")
             link = f"concepts/{filename}"
-            lines.append(f"| [{cid}]({link}) | {concept.title} | {concept.concept_type.value} | {concept.status.value} |")
+            lines.append(f"| [{cid}]({link}) | {concept.title}{see_also(cid)} | {concept.concept_type.value} | {concept.status.value} |")
         lines.extend(["", "---", ""])
 
     if theses:
@@ -130,7 +144,7 @@ def generate_index(
         for tid, thesis in sorted(theses.items()):
             filename = id_to_filename.get(tid, f"{tid}-{thesis.title.lower().replace(' ', '-')}.md")
             link = f"theses/{filename}"
-            lines.append(f"| [{tid}]({link}) | {thesis.title} | {thesis.status.value} | {thesis.conviction} |")
+            lines.append(f"| [{tid}]({link}) | {thesis.title}{see_also(tid)} | {thesis.status.value} | {thesis.conviction} |")
         lines.extend(["", "---", ""])
 
     if master_plans:
@@ -143,7 +157,7 @@ def generate_index(
         for mid, mp in sorted(master_plans.items()):
             filename = id_to_filename.get(mid, f"{mid}-{mp.title.lower().replace(' ', '-')}.md")
             link = f"master_plans/{filename}"
-            lines.append(f"| [{mid}]({link}) | {mp.title} | {mp.status.value} | {mp.priority.value} |")
+            lines.append(f"| [{mid}]({link}) | {mp.title}{see_also(mid)} | {mp.status.value} | {mp.priority.value} |")
         lines.extend(["", "---", ""])
 
     lines.extend([
@@ -159,7 +173,7 @@ def generate_index(
         filename = id_to_filename.get(pid, f"{pid}-{project.title.lower().replace(' ', '-')}.md")
         link = f"projects/{filename}"
 
-        lines.append(f"| [{pid}]({link}) | {project.title} | {project.status.value} | {project.priority.value} | {first_task} |")
+        lines.append(f"| [{pid}]({link}) | {project.title}{see_also(pid)} | {project.status.value} | {project.priority.value} | {first_task} |")
 
     lines.extend([
         "",
@@ -176,7 +190,7 @@ def generate_index(
         filename = id_to_filename.get(did, f"{did}-{design.title.lower().replace(' ', '-')}.md")
         link = f"designs/{filename}"
         project_ref = design.project if design.project else "—"
-        lines.append(f"| [{did}]({link}) | {design.title} | {design.status.value} | {project_ref} | (link if applicable) |")
+        lines.append(f"| [{did}]({link}) | {design.title}{see_also(did)} | {design.status.value} | {project_ref} | (link if applicable) |")
 
     lines.extend([
         "",
@@ -193,37 +207,60 @@ def generate_index(
         filename = id_to_filename.get(aid, f"{aid}-{action.title.lower().replace(' ', '-')}.md")
         link = f"actions/{filename}"
         design_ref = action.design if action.design else "—"
-        lines.append(f"| [{aid}]({link}) | {action.title} | {action.status.value} | {design_ref} | TBD |")
+        lines.append(f"| [{aid}]({link}) | {action.title}{see_also(aid)} | {action.status.value} | {design_ref} | TBD |")
+
+    if include_companions and companions_by_id:
+        lines.extend(["", "---", "", "## Companions", "", "| Root | Companion files |", "| --- | --- |"])
+        for entity_id in sorted(companions_by_id):
+            names = ", ".join(f"`{n}`" for n in companions_by_id[entity_id])
+            lines.append(f"| {entity_id} | {names} |")
 
     return "\n".join(lines)
 
 
-def write_index(plan_dir: Path, entities: Dict[str, PlanEntity], repo_name: str = "Plan") -> Path:
+def write_index(
+    plan_dir: Path,
+    entities: Dict[str, PlanEntity],
+    repo_name: str = "Plan",
+    include_companions: bool = False,
+) -> Path:
     """Write INDEX.md to plan directory.
 
     Args:
         plan_dir: Path to plan directory
         entities: Dict of entities to include
         repo_name: Name for the index heading
+        include_companions: If True, append a trailing "## Companions" inventory section
 
     Returns:
         Path to written INDEX.md
     """
-    # Build mapping of entity ID to actual filename by enumerating directories
-    id_to_filename = {}
+    from .companions import companion_root_stem, is_companion_file
+
+    # Build mapping of entity ID to actual filename by enumerating directories.
+    # Companion files (D005) are skipped here — they're not entities and don't
+    # get their own row; they're surfaced as a "see also" note on their root instead.
+    id_to_filename: Dict[str, str] = {}
+    companions_by_id: Dict[str, List[str]] = {}
     for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
         category_dir = plan_dir / category
         if not category_dir.exists():
             continue
 
         for filepath in category_dir.glob("*.md"):
+            if is_companion_file(filepath):
+                companions_by_id.setdefault(companion_root_stem(filepath), []).append(filepath.name)
+                continue
             filename = filepath.name
             # Extract ID from filename (e.g., "P001-price-levels-strategy.md" → "P001")
             entity_id = filename.split('-')[0]
             id_to_filename[entity_id] = filename
 
+    for name in list(companions_by_id):
+        companions_by_id[name].sort()
+
     index_path = plan_dir / "INDEX.md"
-    content = generate_index(entities, repo_name, id_to_filename)
+    content = generate_index(entities, repo_name, id_to_filename, companions_by_id, include_companions)
     index_path.write_text(content, encoding="utf-8")
     return index_path
 

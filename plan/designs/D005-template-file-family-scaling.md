@@ -1,7 +1,7 @@
 ---
 id: D005
 title: Template File Family Scaling
-status: PLANNING
+status: DONE
 project: P008
 created: 2026-08-30
 updated: 2026-08-30
@@ -145,6 +145,11 @@ existing content altered.
 
 ## Log
 
+2026-08-30 — Implemented per A026: companions.py, parser/validate/generate-index/
+             check-refs support, template comment blocks on 8 templates, and
+             dogfooded on this repo's own drifted FOCUS.md/REFLECTION.md (the
+             real-world case this design exists to fix) plus a real D005_learnings.md
+             companion. See A026 for the full checklist.
 2026-08-30 — Design created. Motivated by REFLECTION.md format corruption
              and MEMORY.md truncation observed in TradeFlow. Generalises
              the existing MEMORY.md topic-file pattern (already used ad hoc)

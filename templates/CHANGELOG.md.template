@@ -4,6 +4,9 @@ Append-only record of all status and priority changes.
 
 Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 
+*Companion: `CHANGELOG_history.md` for an older segment moved out once this
+file gets unwieldy. This file should still hold the recent, relevant record.*
+
 ---
 
 YYYY-MM-DD | PXXX | IDEA → PLANNING | Initial planning phase begins

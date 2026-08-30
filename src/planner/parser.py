@@ -4,6 +4,7 @@ from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import yaml
+from .companions import is_companion_file
 from .models import (
     Project, Design, Action, MasterPlan, Thesis, Concept, ConceptType, PlanEntity, PlanFile, Status, Priority,
     ExternalDependency
@@ -114,6 +115,8 @@ class PlanParser:
                 continue
 
             for filepath in subdir.glob("*.md"):
+                if is_companion_file(filepath):
+                    continue  # D005: companions (e.g. D005_learnings.md) aren't entities
                 try:
                     plan_file = PlanParser.parse_file(filepath)
                     results[str(filepath)] = plan_file

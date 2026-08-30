@@ -581,7 +581,8 @@ def update(entity_id: str, plan_dir: str, status: Optional[str], priority: Optio
 @main.command()
 @click.argument("plan_dir", type=click.Path(exists=True), default=".")
 @click.option("--repo-name", default=None, help="Repository name (auto-detected from parent dir if not provided)")
-def generate_index(plan_dir: str, repo_name: str) -> None:
+@click.option("--include-companions", is_flag=True, default=False, help="Append a '## Companions' inventory of D005 companion files")
+def generate_index(plan_dir: str, repo_name: str, include_companions: bool) -> None:
     """Generate or update INDEX.md."""
     plan_path = Path(plan_dir)
 
@@ -601,7 +602,7 @@ def generate_index(plan_dir: str, repo_name: str) -> None:
             entities[result.entity.id] = result.entity
 
     try:
-        write_index(plan_path, entities, repo_name)
+        write_index(plan_path, entities, repo_name, include_companions=include_companions)
         click.echo(f"✓ Generated INDEX.md (repo: {repo_name})")
     except Exception as e:
         click.echo(f"Error generating index: {e}", err=True)
@@ -666,6 +667,11 @@ def check_refs(plan_dir: str) -> None:
         click.echo(f"\nUnused Projects ({len(report['unused_projects'])}):")
         for project_id in report['unused_projects']:
             click.echo(f"  ℹ {project_id}")
+
+    if report['dead_companion_links']:
+        click.echo(f"\nDead Companion Links ({len(report['dead_companion_links'])}):")
+        for dead in report['dead_companion_links']:
+            click.echo(f"  ✗ {dead['from']} → {dead['link']}")
 
     if report['errors']:
         click.echo(f"\nErrors ({len(report['errors'])}):")

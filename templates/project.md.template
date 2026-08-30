@@ -43,3 +43,8 @@ Bullet-point list of what's included and excluded:
 ## Log
 
 YYYY-MM-DD — Project created.
+
+---
+*Companion files: `PXXX_learnings.md` for implementation discoveries,
+`PXXX_tmp.md` for scratch, `PXXX_extension.md` for content that does not
+fit the template. Delete companions when merged or no longer needed.*
