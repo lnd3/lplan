@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 14:38:41 UTC*
+*Last updated: 2026-08-30 14:46:49 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -49,7 +49,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [P007](projects/P007-analytics-reporting-dashboard.md) | Analytics & Reporting Dashboard | IN_PROGRESS | MEDIUM | TBD |
 | [P008](projects/P008-cross-repo-planning-integration.md) | Cross-Repo Planning Integration | PLANNING | MEDIUM | TBD |
 | [P009](projects/P009-external-maintenance.md) | External Maintenance | IN_PROGRESS | LOW | TBD |
-| [P010](projects/P010-plan-health-dashboard.md) | Plan Health Dashboard | IN_PROGRESS | HIGH | TBD |
+| [P010](projects/P010-plan-health-dashboard.md) | Plan Health Dashboard | DONE | HIGH | TBD |
 
 ---
 
@@ -81,7 +81,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A020](actions/A020-status-overview-rollup-api.md) | Backend rollup API (/api/status-overview) | DONE | D004 | TBD |
 | [A021](actions/A021-status-overview-frontend.md) | Frontend overview.js module + nav tab | DONE | D004 | TBD |
 | [A022](actions/A022-status-overview-needs-attention-panel.md) | Needs-attention panel (stale, blocked, dangling refs) | DONE | D004 | TBD |
-| [A023](actions/A023-status-overview-dogfood.md) | Dogfood against lplan's own plan/ | IN_PROGRESS | D004 | TBD |
+| [A023](actions/A023-status-overview-dogfood.md) | Dogfood against lplan's own plan/ | DONE | D004 | TBD |
 | [A024](actions/A024-memory-maintenance-workflow.md) | AI Agent Memory Maintenance — Workflow Documentation | DONE | — | TBD |
 | [A025](actions/A025-consumer-repo-alignment-check.md) | Consumer Repo Structural Alignment Check | DONE | — | TBD |
 | [A026](actions/A026-d005-tooling-implementation.md) | D005 Tooling Implementation — Companion File Support | DONE | D005 | TBD |
