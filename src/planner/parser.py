@@ -198,6 +198,7 @@ class PlanParser:
             updated=updated,
             description=data.get("description"),
             external_dependencies=external_deps,
+            phase=data.get("phase"),
         )
 
     @staticmethod
@@ -224,6 +225,7 @@ class PlanParser:
             design=data.get("design"),
             project=data.get("project"),
             priority=priority,
+            phase=data.get("phase"),
         )
 
     @staticmethod

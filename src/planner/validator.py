@@ -1,6 +1,7 @@
 """Schema validator for plan entities."""
 
-from typing import List, Dict, Any, Set, Optional
+import re
+from typing import List, Dict, Any, Set, Optional, Tuple
 from difflib import get_close_matches
 from .models import Project, Design, Action, Thesis, MasterPlan, Concept, PlanEntity, Status, Priority
 
@@ -184,6 +185,84 @@ class SchemaValidator:
                 )
 
         return len(self.errors) == 0
+
+    def validate_phase_anchors(
+        self, raw_content_by_project_id: Dict[str, str], entities: Dict[str, PlanEntity]
+    ) -> bool:
+        """D008: warn on project phase headers with no Design anchor.
+
+        A project file may have a `## Phases` section with headers like:
+            ### Phase 1 — Strategy Pipeline [D001 DONE, A001 DONE]
+        The bracketed IDs are human-maintained annotations. D008's single
+        structural rule: each phase must reference at least one Design entity.
+        This is a soft check (warning only) — phases are free-form, gaps are
+        expected, and a project with no `## Phases` section at all is simply
+        not opted into the convention (nothing to check).
+
+        Args:
+            raw_content_by_project_id: project entity ID -> that project file's
+                markdown body (e.g. PlanFile.raw_content)
+            entities: all parsed entities, to check which bracketed IDs are Designs
+
+        Returns:
+            True if no unanchored phases were found (warnings don't fail validation).
+        """
+        found_unanchored = False
+
+        for project_id, raw_content in raw_content_by_project_id.items():
+            phases_section = self._extract_phases_section(raw_content)
+            if phases_section is None:
+                continue  # no ## Phases section: not opted in, nothing to check
+
+            for phase_name, refs in self._extract_phase_headers(phases_section):
+                design_refs = [r for r in refs if isinstance(entities.get(r), Design)]
+                if not design_refs:
+                    found_unanchored = True
+                    self.warnings.append(
+                        ValidationWarning(
+                            project_id, "phase",
+                            f"Phase '{phase_name}' has no Design anchor "
+                            f"({'refs: ' + ', '.join(refs) if refs else 'no entity refs found'})"
+                        )
+                    )
+
+        return not found_unanchored
+
+    @staticmethod
+    def _extract_phases_section(raw_content: str) -> Optional[str]:
+        """Return the body of a project's `## Phases` section, or None if absent."""
+        lines = raw_content.split("\n")
+        start = None
+        for i, line in enumerate(lines):
+            if line.strip() == "## Phases":
+                start = i + 1
+                break
+        if start is None:
+            return None
+
+        end = len(lines)
+        for i in range(start, len(lines)):
+            if lines[i].startswith("## "):
+                end = i
+                break
+        return "\n".join(lines[start:end])
+
+    @staticmethod
+    def _extract_phase_headers(phases_section: str) -> List[Tuple[str, List[str]]]:
+        """Parse `### <name> [<refs>]` headers into (name, [entity_ids]) pairs."""
+        results: List[Tuple[str, List[str]]] = []
+        header_re = re.compile(r"^###\s+(.+?)\s*(?:\[([^\]]*)\])?\s*$")
+        id_re = re.compile(r"\b([A-Z]\d+)\b")
+
+        for line in phases_section.split("\n"):
+            match = header_re.match(line)
+            if not match:
+                continue
+            name, bracket_content = match.groups()
+            refs = id_re.findall(bracket_content) if bracket_content else []
+            results.append((name.strip(), refs))
+
+        return results
 
     def _validate_project(self, entity: Project) -> None:
         """Validate project-specific rules."""

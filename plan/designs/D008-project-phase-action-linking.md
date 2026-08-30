@@ -1,7 +1,7 @@
 ---
 id: D008
 title: Project Phase → Design/Action Linking (Loose Coupling)
-status: PLANNING
+status: IN_PROGRESS
 priority: MEDIUM
 project: P001
 created: 2026-08-30
@@ -132,13 +132,14 @@ visible without requiring every checkbox to have a file backing it.
 
 ## Implementation Phases
 
-- **Phase 1**: Add `phase` field to Design/Action Pydantic models (optional str)
-- **Phase 2**: Validator warns on unanchored phases (no Design ref in brackets)
-- **Phase 3**: `generate-index` emits phase summary table from child `phase` fields
-- **Phase 4**: Checkbox extraction — open task count per Action/Design in phase table
+- [x] **Phase 1**: Add `phase` field to Design/Action Pydantic models (optional str) — `models.py`, wired through `parser.py`'s `_parse_design`/`_parse_action`
+- [x] **Phase 2**: Validator warns on unanchored phases (no Design ref in brackets) — new `SchemaValidator.validate_phase_anchors()`, parses a project file's `## Phases` section directly (needs raw markdown, so it's a separate method from `validate_relationships()`, not folded into it); wired into `plan validate`
+- [x] **Phase 3**: `generate-index` emits phase summary table from child `phase` fields — new `## Phase Summaries` section, one sub-table per project with any `phase`-tagged children, worst-case status per phase (BLOCKED worst, DONE best); an Action resolves its project via its own `project` field or, if unset, its parent Design's `project`
+- [ ] **Phase 4**: Checkbox extraction — open task count per Action/Design in phase table. Not started; explicitly lower priority per this design's own framing ("optional, later")
 
 ## Log
 
+2026-08-30 — Implementation started at user request; Phases 1–3 done (see A028). Phase 4 (checkbox extraction) left for later, as this design itself already deprioritizes it.
 2026-08-30 — Initial draft proposed tight coupling (every task → Action, project
   phases generated from children). Revised: loose coupling after user feedback.
   Phase text is human-authored and may have gaps; Design is the minimum anchor per

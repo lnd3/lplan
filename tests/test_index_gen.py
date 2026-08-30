@@ -96,6 +96,42 @@ def test_write_index_creates_file(sample_entities):
         assert "# Test Plan Index" in content
 
 
+def test_generate_index_no_phase_summary_when_unused(sample_entities):
+    """D008: no Phase Summaries section when no entity carries a `phase` field."""
+    result = generate_index(sample_entities, "Test")
+    assert "Phase Summaries" not in result
+
+
+def test_generate_index_phase_summary_groups_by_project_and_phase():
+    """D008: Designs/Actions with a `phase` field roll up into a per-project table."""
+    entities = {
+        "P001": Project(
+            id="P001", title="Core Engine", status=Status.IN_PROGRESS, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 1), updated=date(2026, 8, 21),
+        ),
+        "D001": Design(
+            id="D001", title="Strategy Design", status=Status.DONE, project="P001",
+            phase="Phase 1 — Strategy", created=date(2026, 8, 1), updated=date(2026, 8, 21),
+        ),
+        "A001": Action(
+            id="A001", title="Build it", status=Status.DONE, project="P001",
+            phase="Phase 1 — Strategy", created=date(2026, 8, 1), updated=date(2026, 8, 21),
+        ),
+        # No project field — resolved via its parent Design's project instead.
+        "A002": Action(
+            id="A002", title="Tune it", status=Status.IN_PROGRESS, design="D001",
+            phase="Phase 2 — Tuning", created=date(2026, 8, 1), updated=date(2026, 8, 21),
+        ),
+    }
+
+    result = generate_index(entities, "Test")
+    assert "## Phase Summaries" in result
+    assert "### P001 — Core Engine" in result
+    assert "| Phase 1 — Strategy | D001 | A001 | DONE |" in result
+    # A002 has no direct project field; must resolve via D001 -> P001.
+    assert "| Phase 2 — Tuning | — | A002 | IN_PROGRESS |" in result
+
+
 def test_append_changelog_creates_file():
     """Test creating CHANGELOG.md."""
     with tempfile.TemporaryDirectory() as tmpdir:

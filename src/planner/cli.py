@@ -76,6 +76,15 @@ def validate(plan_dir: str) -> None:
         for error in validator.errors:
             click.echo(f"  ✗ {error}", err=True)
 
+    # D008: warn on project phases with no Design anchor
+    raw_content_by_project_id = {
+        result.entity.id: result.raw_content
+        for result in files.values()
+        if not (isinstance(result, dict) and "error" in result)
+        and isinstance(result.entity, Project)
+    }
+    validator.validate_phase_anchors(raw_content_by_project_id, entities)
+
     # Report
     click.echo()
     click.echo("=" * 50)

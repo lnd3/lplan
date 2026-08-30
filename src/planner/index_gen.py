@@ -1,9 +1,59 @@
 """Index and changelog generation for plan visibility."""
 
+from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan, Concept
+
+# D008: severity ordering for a phase's "worst-case child status" (lower = worse)
+_PHASE_STATUS_SEVERITY = {
+    "BLOCKED": 0, "IN_PROGRESS": 1, "PLANNING": 2, "IDEA": 3,
+    "DEFERRED": 4, "CANCELLED": 5, "DONE": 6,
+}
+
+
+def _collect_phase_summaries(entities: Dict[str, PlanEntity]) -> Dict[str, Dict[str, dict]]:
+    """D008: group Designs/Actions carrying a `phase` field by (project, phase name).
+
+    Returns {project_id: {phase_name: {"designs": [ids], "actions": [ids], "status": worst_status}}}
+    """
+
+    def action_project(action: Action) -> Optional[str]:
+        if action.project:
+            return action.project
+        if action.design and action.design in entities:
+            parent = entities[action.design]
+            if isinstance(parent, Design):
+                return parent.project
+        return None
+
+    raw: Dict[str, Dict[str, dict]] = defaultdict(lambda: defaultdict(lambda: {"designs": [], "actions": [], "statuses": []}))
+
+    for entity in entities.values():
+        if isinstance(entity, Design) and entity.phase:
+            bucket = raw[entity.project][entity.phase]
+            bucket["designs"].append(entity.id)
+            bucket["statuses"].append(entity.status.value)
+        elif isinstance(entity, Action) and entity.phase:
+            project_id = action_project(entity)
+            if not project_id:
+                continue
+            bucket = raw[project_id][entity.phase]
+            bucket["actions"].append(entity.id)
+            bucket["statuses"].append(entity.status.value)
+
+    result: Dict[str, Dict[str, dict]] = {}
+    for project_id, phases in raw.items():
+        result[project_id] = {}
+        for phase_name, bucket in phases.items():
+            worst = min(bucket["statuses"], key=lambda s: _PHASE_STATUS_SEVERITY.get(s, 99))
+            result[project_id][phase_name] = {
+                "designs": sorted(bucket["designs"]),
+                "actions": sorted(bucket["actions"]),
+                "status": worst,
+            }
+    return result
 
 
 def detect_repo_name(plan_dir: Path) -> str:
@@ -208,6 +258,19 @@ def generate_index(
         link = f"actions/{filename}"
         design_ref = action.design if action.design else "—"
         lines.append(f"| [{aid}]({link}) | {action.title}{see_also(aid)} | {action.status.value} | {design_ref} | TBD |")
+
+    phase_summaries = _collect_phase_summaries(entities)
+    if phase_summaries:
+        lines.extend(["", "---", "", "## Phase Summaries", "", "*D008: supplementary view built from children's `phase` fields — the project file's own Phases text stays authoritative.*", ""])
+        for project_id in sorted(phase_summaries):
+            project_title = entities[project_id].title if project_id in entities else project_id
+            lines.extend([f"### {project_id} — {project_title}", "", "| Phase | Designs | Actions | Status |", "| --- | --- | --- | --- |"])
+            for phase_name in sorted(phase_summaries[project_id]):
+                info = phase_summaries[project_id][phase_name]
+                designs_cell = ", ".join(info["designs"]) or "—"
+                actions_cell = ", ".join(info["actions"]) or "—"
+                lines.append(f"| {phase_name} | {designs_cell} | {actions_cell} | {info['status']} |")
+            lines.append("")
 
     if include_companions and companions_by_id:
         lines.extend(["", "---", "", "## Companions", "", "| Root | Companion files |", "| --- | --- |"])

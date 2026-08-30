@@ -158,6 +158,7 @@ class Design(PlanEntity):
     """Design entity - detailed specification."""
     project: str  # Parent project ID
     external_dependencies: List[ExternalDependency] = Field(default_factory=list)
+    phase: Optional[str] = None  # D008: which project phase this Design anchors
 
     @field_validator("status")
     @classmethod
@@ -173,6 +174,7 @@ class Action(PlanEntity):
     design: Optional[str] = None  # Parent design
     project: Optional[str] = None  # Associated project
     priority: Optional[Priority] = None  # Actions may have priority if independent
+    phase: Optional[str] = None  # D008: which project phase this Action belongs to (optional)
 
 
 class PlanFile(BaseModel):

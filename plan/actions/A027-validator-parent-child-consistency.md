@@ -54,11 +54,20 @@ Add after the existing project/design/action ref checks.
 - [x] File A027, determine check definition
 - [x] Implement check 1 (DONE parent with non-terminal child) in `validate_relationships()`
 - [ ] Implement check 2 (BLOCKED parent with resolved children) — lower priority
-- [ ] Add test cases to lplan test suite
+- [x] Add test cases to lplan test suite
 - [ ] Update QUICK_REFERENCE.md to document the new warning
 
 ## Log
 
+2026-08-30 — Added 4 test cases in `tests/test_validator.py` at user request: DONE
+  project with a non-terminal child Action warns; DONE design with a BLOCKED child
+  Action warns; DONE parent with only DONE/CANCELLED children stays silent; DONE
+  parent with zero children doesn't crash or false-positive. All 104 tests pass
+  (100 existing + 4 new). Confirmed while writing these that the check already
+  found a real case in lplan's own plan/: D007 (DONE) has non-terminal child A015
+  (IN_PROGRESS) — expected, not a bug (D007's documentation is complete, A015's
+  dashboard-wiring work isn't), left as-is per the check's own "warning, not error"
+  design.
 2026-08-30 — Filed from TradeFlow context: P005 DONE+D007 IN_PROGRESS+A006 BLOCKED,
   and P001 BLOCKED after its blocker resolved, both went undetected for ~9 days.
   Check 1 implemented immediately. Check 2 deferred.

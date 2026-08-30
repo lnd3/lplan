@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 16:46:34 UTC*
+*Last updated: 2026-08-30 17:19:39 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -63,7 +63,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [D004](designs/D004-plan-health-dashboard-architecture.md) | Plan Health Dashboard Architecture | DONE | P010 | (link if applicable) |
 | [D005](designs/D005-template-file-family-scaling.md) | Template File Family Scaling 📎 _see also: `D005_learnings.md`_ | DONE | P008 | (link if applicable) |
 | [D007](designs/D007-analytics-architecture.md) | Analytics Architecture | DONE | P007 | (link if applicable) |
-| [D008](designs/D008-project-phase-action-linking.md) | Project Phase → Action/Design Linking | PLANNING | P001 | (link if applicable) |
+| [D008](designs/D008-project-phase-action-linking.md) | Project Phase → Design/Action Linking (Loose Coupling) | IN_PROGRESS | P001 | (link if applicable) |
 
 ---
 
@@ -88,3 +88,5 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A025](actions/A025-consumer-repo-alignment-check.md) | Consumer Repo Structural Alignment Check | DONE | — | TBD |
 | [A026](actions/A026-d005-tooling-implementation.md) | D005 Tooling Implementation — Companion File Support | DONE | D005 | TBD |
 | [A027](actions/A027-validator-parent-child-consistency.md) | Validator — Parent-Child Status Consistency Check | IN_PROGRESS | — | TBD |
+| [A028](actions/A028-d008-phases-1-3-implementation.md) | D008 Implementation — Phases 1–3 | DONE | D008 | TBD |
+| [A029](actions/A029-status-overview-validator-warnings.md) | Surface Validator Warnings in the Status Dashboard | DONE | D004 | TBD |

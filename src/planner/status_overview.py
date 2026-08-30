@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from .graph import DependencyGraph
 from .models import Action, Concept, Design, MasterPlan, PlanFile, Project, Thesis
 from .refs import check_references
+from .validator import SchemaValidator
 
 DEFAULT_STALE_DAYS = 3
 
@@ -167,6 +168,51 @@ def find_blocked(
     return blocked
 
 
+def collect_validator_warnings(
+    entities_by_id: Dict[str, Any],
+    projects: Dict[str, Project],
+    plan_files_by_id: Dict[str, PlanFile],
+    path_by_id: Optional[Dict[str, str]] = None,
+) -> List[Dict[str, str]]:
+    """Run the full SchemaValidator and surface its warnings in the dashboard.
+
+    Before this, the needs-attention panel only pulled from check_references()
+    (dangling refs) — entity/relationship-level warnings from `plan validate`
+    (e.g. A027's DONE-parent-with-open-children check, D008's unanchored-phase
+    check) were invisible here even though the CLI showed them. This closes
+    that gap by running the same validator the CLI uses.
+    """
+    validator = SchemaValidator()
+    for entity in entities_by_id.values():
+        validator.validate_entity(entity)
+    validator.validate_relationships(entities_by_id)
+
+    raw_content_by_project_id = {
+        pid: plan_files_by_id[pid].raw_content
+        for pid in projects
+        if pid in plan_files_by_id
+    }
+    validator.validate_phase_anchors(raw_content_by_project_id, entities_by_id)
+
+    type_names = {
+        Concept: "concept", Thesis: "thesis", MasterPlan: "master_plan",
+        Project: "project", Design: "design", Action: "action",
+    }
+    path_by_id = path_by_id or {}
+
+    results = []
+    for w in validator.warnings:
+        entity = entities_by_id.get(w.entity_id)
+        results.append({
+            "id": w.entity_id,
+            "type": type_names.get(type(entity), "unknown"),
+            "field": w.field,
+            "message": w.message,
+            "path": path_by_id.get(w.entity_id),
+        })
+    return results
+
+
 def dangling_references(entities_by_id: Dict[str, Any], plan_dir) -> Dict[str, Any]:
     """Wraps refs.check_references — same code path as `plan check-refs`."""
     report = check_references(entities_by_id, plan_dir)
@@ -221,6 +267,7 @@ def compute_status_overview(
             "stale": find_stale(entities_by_type, plan_files_by_id, today, stale_days, path_by_id),
             "blocked": find_blocked(entities_by_type, graph, path_by_id),
             "dangling_references": dangling_references(entities_by_id, plan_dir),
+            "validator_warnings": collect_validator_warnings(entities_by_id, projects, plan_files_by_id, path_by_id),
         },
         "stale_days_threshold": stale_days,
     }

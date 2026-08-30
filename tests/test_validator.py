@@ -139,6 +139,122 @@ class TestSchemaValidator:
         validator.validate_relationships(entities)
         assert len(validator.warnings) > 0
 
+    def test_validate_relationships_done_project_with_open_child_warns(self) -> None:
+        """A027: DONE project with a non-terminal child Action warns."""
+        entities = {
+            "P001": Project(
+                id="P001",
+                title="Test",
+                status=Status.DONE,
+                priority=Priority.HIGH,
+                priority_drivers=["strategic_edge"],
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+            "A001": Action(
+                id="A001",
+                title="Test action",
+                status=Status.IN_PROGRESS,
+                project="P001",
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+        }
+
+        validator = SchemaValidator()
+        validator.validate_relationships(entities)
+        assert any(
+            w.entity_id == "P001" and "A001" in w.message for w in validator.warnings
+        )
+
+    def test_validate_relationships_done_design_with_blocked_child_warns(self) -> None:
+        """A027: DONE design with a BLOCKED child Action warns."""
+        entities = {
+            "P001": Project(
+                id="P001",
+                title="Test",
+                status=Status.IN_PROGRESS,
+                priority=Priority.HIGH,
+                priority_drivers=["strategic_edge"],
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+            "D001": Design(
+                id="D001",
+                title="Test design",
+                status=Status.DONE,
+                project="P001",
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+            "A001": Action(
+                id="A001",
+                title="Test action",
+                status=Status.BLOCKED,
+                design="D001",
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+        }
+
+        validator = SchemaValidator()
+        validator.validate_relationships(entities)
+        assert any(
+            w.entity_id == "D001" and "A001" in w.message for w in validator.warnings
+        )
+
+    def test_validate_relationships_done_parent_terminal_children_no_warning(self) -> None:
+        """A027: DONE project whose children are all DONE/DEFERRED/CANCELLED is silent."""
+        entities = {
+            "P001": Project(
+                id="P001",
+                title="Test",
+                status=Status.DONE,
+                priority=Priority.HIGH,
+                priority_drivers=["strategic_edge"],
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+            "A001": Action(
+                id="A001",
+                title="Test action",
+                status=Status.DONE,
+                project="P001",
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+            "A002": Action(
+                id="A002",
+                title="Abandoned action",
+                status=Status.CANCELLED,
+                project="P001",
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+        }
+
+        validator = SchemaValidator()
+        validator.validate_relationships(entities)
+        assert not any(w.entity_id == "P001" for w in validator.warnings)
+
+    def test_validate_relationships_done_parent_no_children_no_warning(self) -> None:
+        """A027: DONE project with no children at all doesn't crash or warn."""
+        entities = {
+            "P001": Project(
+                id="P001",
+                title="Test",
+                status=Status.DONE,
+                priority=Priority.HIGH,
+                priority_drivers=["strategic_edge"],
+                created=date(2026, 8, 20),
+                updated=date(2026, 8, 20),
+            ),
+        }
+
+        validator = SchemaValidator()
+        validator.validate_relationships(entities)
+        assert not any(w.entity_id == "P001" for w in validator.warnings)
+
     def test_validate_relationships_cross_repo(self) -> None:
         """Test that cross-repo references are allowed."""
         entities = {
@@ -156,6 +272,43 @@ class TestSchemaValidator:
 
         validator = SchemaValidator()
         assert validator.validate_relationships(entities) is True
+
+    def test_validate_phase_anchors_no_phases_section_silent(self) -> None:
+        """D008: a project with no ## Phases section isn't opted in — no warnings."""
+        raw = "## Tasks\n\n### Phase 1: Something\n- [ ] a task\n"
+        validator = SchemaValidator()
+        assert validator.validate_phase_anchors({"P001": raw}, {}) is True
+        assert len(validator.warnings) == 0
+
+    def test_validate_phase_anchors_anchored_phase_silent(self) -> None:
+        """D008: a phase header referencing a real Design is silent."""
+        raw = "## Phases\n\n### Phase 1 — Strategy [D001 DONE]\n- [x] thing\n"
+        design = Design(
+            id="D001", title="t", status=Status.DONE, project="P001",
+            created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        validator = SchemaValidator()
+        assert validator.validate_phase_anchors({"P001": raw}, {"D001": design}) is True
+        assert len(validator.warnings) == 0
+
+    def test_validate_phase_anchors_no_refs_warns(self) -> None:
+        """D008: a phase header with no bracketed refs at all warns."""
+        raw = "## Phases\n\n### Phase 2 — No anchor\n- [ ] thing\n"
+        validator = SchemaValidator()
+        assert validator.validate_phase_anchors({"P001": raw}, {}) is False
+        assert any(w.entity_id == "P001" and "no Design anchor" in w.message for w in validator.warnings)
+
+    def test_validate_phase_anchors_ref_not_a_design_warns(self) -> None:
+        """D008: bracketed refs that don't resolve to any Design still warn."""
+        raw = "## Phases\n\n### Phase 3 — Bad ref [A999, P001]\n- [ ] thing\n"
+        project = Project(
+            id="P001", title="t", status=Status.PLANNING, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        validator = SchemaValidator()
+        # A999 doesn't exist at all; P001 exists but is a Project, not a Design.
+        assert validator.validate_phase_anchors({"P001": raw}, {"P001": project}) is False
+        assert len(validator.warnings) == 1
 
     def test_get_report(self) -> None:
         """Test validation report generation."""

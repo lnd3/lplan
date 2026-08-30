@@ -133,6 +133,17 @@ class OverviewView {
       </div>`);
     }
 
+    const warnings = na.validator_warnings || [];
+    if (warnings.length) {
+      let rows = warnings.map(w => `<div style="padding: 6px 0; border-bottom: 1px solid #313244; cursor: pointer;" data-id="${w.id}" data-type="${w.type}" data-path="${w.path || ''}" data-title="${OverviewView.escapeAttr(w.id)}">
+        <span style="color: #cba6f7;">${w.id}</span> <span style="color: #a6adc8; font-size: 12px;">${OverviewView.escapeAttr(w.message)}</span>
+      </div>`).join('');
+      sections.push(`<div class="needs-attention-section" style="margin-bottom: 12px;">
+        <div style="font-size: 13px; color: #cba6f7; font-weight: 600; margin-bottom: 4px;">⚠ Validator warnings (from <code>plan validate</code>)</div>
+        ${rows}
+      </div>`);
+    }
+
     const heading = `<span style="font-size: 14px; color: #cdd6f4; font-weight: 600;">Needs Attention</span>`;
 
     if (!sections.length) {
