@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 15:12:23 UTC*
+*Last updated: 2026-08-30 16:27:41 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -40,7 +40,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 
 | ID | Title | Status | Priority | Key Open Work |
 | --- | --- | --- | --- | --- |
-| [P001](projects/P001-tier1-engine.md) | Tier 1 - Python Execution Engine | DONE | HIGH | TBD |
+| [P001](projects/P001-tier1-engine.md) | Tier 1 - Python Execution Engine | IN_PROGRESS | HIGH | TBD |
 | [P002](projects/P002-tier2-analysis.md) | Tier 2 - Analysis & Query Tools | DONE | MEDIUM | TBD |
 | [P003](projects/P003-tier3-automation.md) | Tier 3 - Automation & Visualization | DONE | MEDIUM | TBD |
 | [P004](projects/P004-web-server-ui-refactoring.md) | Web Server & UI Refactoring | DONE | HIGH | TBD |
@@ -86,3 +86,4 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A024](actions/A024-memory-maintenance-workflow.md) | AI Agent Memory Maintenance — Workflow Documentation | DONE | — | TBD |
 | [A025](actions/A025-consumer-repo-alignment-check.md) | Consumer Repo Structural Alignment Check | DONE | — | TBD |
 | [A026](actions/A026-d005-tooling-implementation.md) | D005 Tooling Implementation — Companion File Support | DONE | D005 | TBD |
+| [A027](actions/A027-validator-parent-child-consistency.md) | Validator — Parent-Child Status Consistency Check | IN_PROGRESS | — | TBD |

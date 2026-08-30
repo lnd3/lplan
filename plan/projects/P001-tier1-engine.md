@@ -1,12 +1,12 @@
 ---
 id: P001
 title: Tier 1 - Python Execution Engine
-status: DONE
+status: IN_PROGRESS
 priority: HIGH
 priority_drivers:
   - critical_live_path_only
 created: 2026-08-20
-updated: 2026-08-24
+updated: 2026-08-30
 description: Programmatic priority scoring and dependency analysis
 enables:
   - P002
@@ -63,3 +63,8 @@ Not included:
 2026-08-20 — Completed: All core components built and tested. 58/58 tests passing.
 2026-08-20 — Completed: Migration and user documentation (2,700+ lines).
 2026-08-20 — Completed: Created DOCS_INDEX.md navigation hub.
+2026-08-30 — Reopened IN_PROGRESS: A027 adds parent-child status consistency check to
+  validate_relationships(). DONE parent with non-terminal children now emits a warning.
+  Root cause that prompted this: TradeFlow P005 stayed DONE while D007+A006 were open
+  for 9 days; P001 stayed BLOCKED after its blocker resolved. The new check catches
+  both the premature-DONE and the stale-BLOCKED patterns at the DONE side.

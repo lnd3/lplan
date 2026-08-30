@@ -149,6 +149,40 @@ class SchemaValidator:
                         )
                     )
 
+        # Check 1 (A027): DONE parent with non-terminal children
+        # Collect children per project and per design
+        children_by_project: Dict[str, List[PlanEntity]] = {}
+        children_by_design: Dict[str, List[PlanEntity]] = {}
+        for entity_id, entity in entities.items():
+            if isinstance(entity, Design) and entity.project:
+                children_by_project.setdefault(entity.project, []).append(entity)
+            elif isinstance(entity, Action):
+                if entity.project:
+                    children_by_project.setdefault(entity.project, []).append(entity)
+                if entity.design:
+                    children_by_design.setdefault(entity.design, []).append(entity)
+
+        terminal = {Status.DONE, Status.DEFERRED, Status.CANCELLED}
+        for entity_id, entity in entities.items():
+            if entity.status != Status.DONE:
+                continue
+            if not isinstance(entity, (Project, Design)):
+                continue
+            children = []
+            if isinstance(entity, Project):
+                children = children_by_project.get(entity_id, [])
+            elif isinstance(entity, Design):
+                children = children_by_design.get(entity_id, [])
+            non_terminal = [c for c in children if c.status not in terminal]
+            if non_terminal:
+                ids = ", ".join(c.id for c in non_terminal)
+                self.warnings.append(
+                    ValidationWarning(
+                        entity_id, "status",
+                        f"DONE but has non-terminal children: {ids}"
+                    )
+                )
+
         return len(self.errors) == 0
 
     def _validate_project(self, entity: Project) -> None:
