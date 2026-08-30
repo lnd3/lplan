@@ -29,7 +29,7 @@ Visualization transforms planning from a technical exercise into a collaborative
 
 ## Linked
 
-- **Master Plans**: M001 (Developer Experience)
+- **Master Plans**: M001 (lplan Framework Development)
 - **Projects**: P003 (Tier 3 Automation), P004 (Web Refactoring)
 
 ## Key Evidence

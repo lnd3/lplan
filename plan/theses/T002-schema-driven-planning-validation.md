@@ -29,7 +29,7 @@ Schema-driven planning shifts verification from manual review to automated tooli
 
 ## Linked
 
-- **Master Plans**: M001 (Developer Experience)
+- **Master Plans**: M001 (lplan Framework Development)
 - **Projects**: P001 (Tier 1 Engine), P002 (Tier 2 Analysis)
 
 ## Key Evidence

@@ -32,7 +32,7 @@ Each level serves a distinct purpose and audience, with clear separation of conc
 2. **Master Plan** (M-prefix) — Long-term strategic visions and goals
    - Stakeholder-owned across 5-year outlook
    - Informs which projects get built
-   - Example: "Developer Experience Excellence" (M001)
+   - Example: "lplan Framework Development" (M001)
 
 3. **Project** (P-prefix) — High-level goals and initiatives
    - Can depend on other projects or external systems

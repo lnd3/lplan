@@ -6,7 +6,7 @@ priority: LOW
 priority_drivers:
   - critical_live_path_only
 created: 2026-08-27
-updated: 2026-08-27
+updated: 2026-08-30
 description: Catch-all project for drive-by bug fixes and layout fixes landed by agents/humans whose active task was in another repo, not lplan's own plan. See WORKFLOW.md § "External Contribution Workflow (Drive-By Fixes)".
 depends: []
 external_dependencies: []
@@ -34,5 +34,6 @@ N/A — this project has no task list of its own. Its "tasks" are the Actions lo
 
 ## Log
 
+2026-08-30 — Found while aligning P009 with current state (at user request): A024 (AI Agent Memory Maintenance, filed 2026-08-30) was already correctly listed under Linked § Actions, but this project's own `updated` date and Log were never touched to reflect it — a real instance of the "bubble up one level" gap WORKFLOW.md's Bubbling Up section names. Fixed. Note A025 and A026 do *not* belong here despite also landing 2026-08-30 — both were explicitly flagged to the user per the tightened External Contribution Workflow rather than filed as routine drive-by, and both ended up (mistakenly) under P008 instead; see P008's own Log.
 2026-08-27 — Project created as part of fleshing out the drive-by contribution convention (WORKFLOW.md). No actions filed yet; status stays IN_PROGRESS indefinitely since it's an ongoing catch-all, not a project that reaches DONE.
 2026-08-27 — Backfilled A016–A019: tree-view click/highlight/dedup fixes, root-badge coverage for all parentless items (including actions that previously vanished from the tree entirely), Save/Cancel button visibility, sidebar toggle glyphs, INDEX.md edit-disable, README-based repo name, and full thesis<->master_plan bidirectional display — all landed drive-by from superplan's context before this convention existed, filed retroactively at the user's request.

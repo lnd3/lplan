@@ -31,7 +31,7 @@ Organizations need a way to declare strategic visions and goals that multiple re
 - **Full UI integration**: Master plans visible in Files view, Tree view, Items view, INDEX
 
 Example master plans created:
-- M001: Developer Experience Excellence (Engineering Leadership)
+- M001: Developer Experience Excellence (Engineering Leadership) — placeholder content, later rewritten in place 2026-08-30 as "lplan Framework Development," lplan's actual master plan, once it was clear the framework had accumulated a real enough history to warrant one
 - M002: Scalability Foundation (Infrastructure Team) — moved to the accessibility-lplan repo 2026-08-30; not part of lplan's own plan anymore, see Log
 
 ## Scope
@@ -73,13 +73,14 @@ Example master plans created:
 - [x] Polish Tree view layout (bullet points, no indentation)
 
 ### Phase 4: Examples & Documentation
-- [x] Create M001 (Developer Experience Excellence)
+- [x] Create M001 (Developer Experience Excellence — since rewritten as "lplan Framework Development")
 - [x] Create M002 (Scalability Foundation) — later moved to accessibility-lplan repo, no longer here
 - [x] Create master_plan.md.template
 - [x] Update INDEX.md.template with Master Plans section
 
 ## Log
 
+2026-08-30 — M001, this project's other example master plan, rewritten in place at user request: its generic placeholder content ("5-year DX vision," fabricated survey data) replaced with lplan's actual development history and roadmap, retitled "lplan Framework Development." Unlike M002, not deleted or moved — it just became real instead of staying a demo.
 2026-08-30 — M002 (Scalability Foundation) moved to the accessibility-lplan repo, at user request — it's irrelevant to lplan's own plan. Removed from parent_master_plan here and from P008/T001/T002; deleted plan/master_plans/M002-scalability-foundation.md itself.
 2026-08-24 — All views updated. Master plans fully integrated and navigable.
 2026-08-24 — Core implementation and API support complete.
