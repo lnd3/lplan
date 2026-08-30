@@ -354,8 +354,8 @@ ${_LIBRARIES_HEAD}
   <button data-action="show-browser">📁 Files</button>
   <button data-action="show-tree">🌳 Tree</button>
   <button data-action="show-analytics">📊 Analytics</button>
-  <button data-action="show-status">📋 Items</button>
-  <button data-action="show-overview">🩺 Status</button>
+  <button data-action="show-items">📋 Items</button>
+  <button data-action="show-status">🩺 Status</button>
 </div>
 
 <div id="main">
@@ -381,8 +381,8 @@ ${_LIBRARIES_HEAD}
     <div id="validate-banner"></div>
     <div id="tree-view" style="display: none;"></div>
     <div id="analytics-dashboard" style="display: none;"></div>
+    <div id="items-view" style="display: none;"></div>
     <div id="status-view" style="display: none;"></div>
-    <div id="overview-view" style="display: none;"></div>
   </div>
 </div>
 
@@ -429,8 +429,8 @@ document.addEventListener('mouseup', () => {
 <script src="/static/tree.js"></script>
 <script src="/static/analytics.js"></script>
 <script src="/static/viewer.js"></script>
+<script src="/static/items.js"></script>
 <script src="/static/status.js"></script>
-<script src="/static/overview.js"></script>
 <script src="/static/dispatcher.js"></script>
 
 <script>

@@ -31,7 +31,7 @@ One module per concern, each independently testable, rather than one large "anal
 ## Constraints
 
 - Dependency-graph SVG (`report.py`) is static-report-only — it is **not** currently wired into the live Analytics dashboard. Someone opening the "📊 Analytics" tab sees Gantt + burndown, not a dependency graph; someone running `plan report` sees the dependency graph but not an interactive one. This is the gap A015 is still open against.
-- The static-report dependency graph has no hover tooltips or click-to-navigate — it's plain SVG in a static HTML file, so neither is meaningful there. If the graph gets wired into the live dashboard instead, interactivity becomes possible using the same click→`EntityViewer.show()` pattern P010's `overview.js` already uses.
+- The static-report dependency graph has no hover tooltips or click-to-navigate — it's plain SVG in a static HTML file, so neither is meaningful there. If the graph gets wired into the live dashboard instead, interactivity becomes possible using the same click→`EntityViewer.show()` pattern P010's `status.js` (renamed 2026-08-30, was `overview.js`) already uses.
 
 ## Migration
 

@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 20:55:14 UTC*
+*Last updated: 2026-08-30 21:02:37 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -93,3 +93,4 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A030](actions/A030-checkbox-based-progress.md) | Checkbox-Based Progress for Project/Master Plan Rollups | DONE | D004 | TBD |
 | [A031](actions/A031-items-view-completion-sort.md) | Items View — Completion Column + Default Sort Least-Complete-First | DONE | D004 | TBD |
 | [A032](actions/A032-progress-badges-and-sorted-dashboard.md) | Tree View Progress Badges, Items View Label Rename, Status Dashboard Sort | DONE | D004 | TBD |
+| [A033](actions/A033-rename-status-items-views.md) | Rename Internal View Naming to Match Toolbar Buttons | DONE | D004 | TBD |
