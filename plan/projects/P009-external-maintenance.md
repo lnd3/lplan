@@ -26,7 +26,7 @@ Give drive-by contributions to lplan's own source a place to attach without requ
 
 - **Projects**: none — actions here may later be re-filed into P001–P008 during a normal upkeep pass.
 - **Designs**: none.
-- **Actions**: A016, A017, A018, A019
+- **Actions**: A016, A017, A018, A019, A024
 
 ## Tasks
 

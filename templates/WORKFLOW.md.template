@@ -69,6 +69,21 @@ This document extends the **universal lplan workflow** (see `deps/lplan/WORKFLOW
 
 ---
 
+## AI Agent Memory Maintenance
+
+*If this repo uses a persistent AI agent memory file (e.g. `~/.claude/projects/.../memory/MEMORY.md`), fill in the repo-specific rules here. The universal rules live in `deps/lplan/WORKFLOW.md § AI Agent Memory Maintenance`.*
+
+**Memory file location**: [path]
+**Plans section line limit**: [~150 lines recommended]
+**Session-start reads**: `plan/FOCUS.md`, `plan/INDEX.md` (not auto-loaded — must be read explicitly)
+**Plans section update trigger**: whenever a plan entity changes status, priority, or key next step
+
+**Pruning policy**: [when to prune, what to move to topic files vs keep inline]
+
+**Automation**: [`plan generate-index` auto-injects Plans section — or: manual until A009 Phase 3 ships]
+
+---
+
 ## Integration with lplan Workflow
 
 ### Mapping Team Process to Scale-Based Workflow

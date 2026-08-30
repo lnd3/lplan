@@ -71,6 +71,33 @@ Full rationale (why this needed spelling out): [`WORKFLOW_DETAILS.md` § Extende
 
 ---
 
+## AI Agent Memory Maintenance
+
+When an AI agent maintains a persistent memory file (e.g. `~/.claude/projects/.../memory/MEMORY.md`), that file's **Plans section** is the only plan content guaranteed to be in context at session start without an explicit read. Keep it current and compact.
+
+### Rules
+
+**At session start** — read `plan/FOCUS.md` and `plan/INDEX.md` before working. These are not auto-loaded; they must be explicitly read.
+
+**When plan state changes** — update MEMORY.md's Plans section to match. This is a Level 1 change (entity only), but failing to do it means the next session starts with stale context.
+
+**When MEMORY.md exceeds ~150 lines** — prune it. Move verbose detail into topic files (already linked from MEMORY.md); keep only the *non-obvious* rule or the *pointer* to where to look. Bug fix details belong in git history, not memory.
+
+**What the Plans section should contain** — one line per active entity (non-DONE, non-DEFERRED, non-CANCELLED): ID, status/priority, and the single most useful orienting fact. DONE items can be removed. Example:
+
+```markdown
+## Plans
+- P003 `PLANNING/HIGH` — Headless bot. Phase 1 next: ECS world + tick loop.
+- D018 `PLANNING` — BotSession control surface (P003). 5-step migration, Step 1 next.
+- A011 `IN_PROGRESS` — Account Registry implementation.
+```
+
+### Automation target
+
+`plan generate-index` (or a dedicated `plan export-memory` command) should regenerate the Plans section automatically, so it never goes stale. Until that is implemented, update it manually when plan status changes.
+
+---
+
 ## Anti-Patterns
 
 - **Workflow overhead** — a CHANGELOG entry for every typo. Scale with impact.
