@@ -208,8 +208,13 @@ class SchemaValidator:
             True if no unanchored phases were found (warnings don't fail validation).
         """
         found_unanchored = False
+        terminal = {Status.DONE, Status.DEFERRED, Status.CANCELLED}
 
         for project_id, raw_content in raw_content_by_project_id.items():
+            project_entity = entities.get(project_id)
+            if project_entity and project_entity.status in terminal:
+                continue  # closed project: phase gaps are historical, not actionable
+
             phases_section = self._extract_phases_section(raw_content)
             if phases_section is None:
                 continue  # no ## Phases section: not opted in, nothing to check
