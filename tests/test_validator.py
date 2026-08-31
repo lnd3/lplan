@@ -2,7 +2,7 @@
 
 from datetime import date
 import pytest
-from planner.models import Project, Design, Action, Status, Priority
+from planner.models import Project, Design, Action, PlanFile, Status, Priority
 from planner.validator import SchemaValidator
 
 
@@ -309,6 +309,59 @@ class TestSchemaValidator:
         # A999 doesn't exist at all; P001 exists but is a Project, not a Design.
         assert validator.validate_phase_anchors({"P001": raw}, {"P001": project}) is False
         assert len(validator.warnings) == 1
+
+    def test_validate_unique_ids_no_duplicates(self) -> None:
+        """Distinct IDs across distinct files: no error."""
+        p1 = Project(
+            id="P001", title="a", status=Status.PLANNING, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        p2 = Project(
+            id="P002", title="b", status=Status.PLANNING, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        files = {
+            "plan/projects/P001-a.md": PlanFile(entity=p1),
+            "plan/projects/P002-b.md": PlanFile(entity=p2),
+        }
+        validator = SchemaValidator()
+        assert validator.validate_unique_ids(files) is True
+        assert len(validator.errors) == 0
+
+    def test_validate_unique_ids_catches_duplicate(self) -> None:
+        """Two different files claiming the same ID: an error naming both files."""
+        p1 = Project(
+            id="P001", title="original", status=Status.PLANNING, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        p2 = Project(
+            id="P001", title="collides with the above", status=Status.PLANNING, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        files = {
+            "plan/projects/P001-original.md": PlanFile(entity=p1),
+            "plan/projects/P001-renamed-but-not-really.md": PlanFile(entity=p2),
+        }
+        validator = SchemaValidator()
+        assert validator.validate_unique_ids(files) is False
+        assert len(validator.errors) == 1
+        error = validator.errors[0]
+        assert error.entity_id == "P001"
+        assert "P001-original.md" in error.message
+        assert "P001-renamed-but-not-really.md" in error.message
+
+    def test_validate_unique_ids_skips_parse_errors(self) -> None:
+        """A file that failed to parse (dict with 'error') isn't treated as an entity."""
+        p1 = Project(
+            id="P001", title="a", status=Status.PLANNING, priority=Priority.HIGH,
+            priority_drivers=["strategic_edge"], created=date(2026, 8, 20), updated=date(2026, 8, 20),
+        )
+        files = {
+            "plan/projects/P001-a.md": PlanFile(entity=p1),
+            "plan/projects/broken.md": {"error": "malformed YAML"},
+        }
+        validator = SchemaValidator()
+        assert validator.validate_unique_ids(files) is True
 
     def test_get_report(self) -> None:
         """Test validation report generation."""

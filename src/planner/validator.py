@@ -3,7 +3,7 @@
 import re
 from typing import List, Dict, Any, Set, Optional, Tuple
 from difflib import get_close_matches
-from .models import Project, Design, Action, Thesis, MasterPlan, Concept, PlanEntity, Status, Priority
+from .models import Project, Design, Action, Thesis, MasterPlan, Concept, PlanEntity, PlanFile, Status, Priority
 
 
 class ValidationError:
@@ -79,6 +79,44 @@ class SchemaValidator:
                 all_valid = False
 
         return all_valid
+
+    def validate_unique_ids(self, files: Dict[str, PlanFile]) -> bool:
+        """Detect two different files claiming the same entity ID.
+
+        Every downstream consumer (this CLI's own `validate_relationships`,
+        `generate-index`, every server.py route, `status_overview.py`) collapses
+        parsed files into a `{entity.id: entity}` dict — the second file parsed
+        silently wins and the first vanishes, with no error anywhere. Found in
+        practice: a merge left two Action files both claiming `id: A033`; one
+        was silently dropped from `entities` and `plan validate` reported no
+        problem at all. This is an error, not a warning — an ambiguous ID isn't
+        a judgment call, it's a correctness bug.
+
+        Args:
+            files: filepath -> PlanFile, i.e. `PlanParser.parse_directory()`'s
+                return value, *before* it gets collapsed into an ID-keyed dict.
+
+        Returns:
+            True if every ID was claimed by exactly one file.
+        """
+        by_id: Dict[str, List[str]] = {}
+        for filepath, result in files.items():
+            if isinstance(result, dict) and "error" in result:
+                continue
+            by_id.setdefault(result.entity.id, []).append(filepath)
+
+        found_duplicate = False
+        for entity_id, filepaths in sorted(by_id.items()):
+            if len(filepaths) > 1:
+                found_duplicate = True
+                self.errors.append(
+                    ValidationError(
+                        entity_id, "id",
+                        f"Claimed by {len(filepaths)} files: {', '.join(sorted(filepaths))}"
+                    )
+                )
+
+        return not found_duplicate
 
     def validate_relationships(
         self, entities: Dict[str, PlanEntity]

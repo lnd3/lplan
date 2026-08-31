@@ -51,6 +51,15 @@ def validate(plan_dir: str) -> None:
         click.echo(f"Error parsing files: {e}", err=True)
         sys.exit(1)
 
+    # Duplicate-ID check first, on the raw filepath-keyed parse — once entities
+    # get collapsed into an ID-keyed dict below, a duplicate silently loses
+    # whichever file was parsed first, with nothing left to detect it against.
+    validator = SchemaValidator()
+    has_duplicate_ids = not validator.validate_unique_ids(files)
+    if has_duplicate_ids:
+        for error in validator.errors:
+            click.echo(f"  ✗ {error}", err=True)
+
     # Separate valid entities and errors
     entities = {}
     errors = []
@@ -62,7 +71,6 @@ def validate(plan_dir: str) -> None:
             entities[result.entity.id] = result.entity
 
     # Validate each entity
-    validator = SchemaValidator()
     entity_errors = 0
 
     for entity_id, entity in entities.items():
@@ -93,6 +101,10 @@ def validate(plan_dir: str) -> None:
         click.echo(f"✗ {len(errors)} files had parse errors:", err=True)
         for filepath, error in errors:
             click.echo(f"  {filepath}: {error}", err=True)
+
+    if has_duplicate_ids:
+        click.echo("✗ duplicate entity IDs found (see above)", err=True)
+        sys.exit(1)
 
     if entity_errors > 0:
         click.echo(f"✗ {entity_errors} entities failed validation", err=True)

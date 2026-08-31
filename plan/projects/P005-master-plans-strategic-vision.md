@@ -1,12 +1,12 @@
 ---
 id: P005
 title: Master Plans & Strategic Vision Architecture
-status: DONE
+status: IN_PROGRESS
 priority: HIGH
 priority_drivers:
   - critical_live_path_only
 created: 2026-08-22
-updated: 2026-08-24
+updated: 2026-08-31
 description: Implement cross-repo distribution of strategic visions and goals via MasterPlan entities.
 depends:
   - P001
@@ -46,11 +46,12 @@ Example master plans created:
 
 ## Linked
 
-- **Designs**: D005: MasterPlan Architecture Design
+- **Designs**:
+  - D009: Master Plan Priority Stack (IDEA — designed 2026-08-31, not yet implemented)
+  - "D005: MasterPlan Architecture Design" was speculatively planned here originally but never created as a file; the ID was later reused for an unrelated design (Template File Family Scaling). Same for A009/A010 below — never created, IDs not yet reused elsewhere as of this writing.
 - **Actions**:
-  - A008: Implement MasterPlan model
-  - A009: Add master_plans to all views
-  - A010: Create example master plans
+  - A008: Implement MasterPlan model (DONE)
+  - A009, A010 — speculatively planned ("Add master_plans to all views", "Create example master plans") but never created as their own actions; the underlying work happened, just untracked by a dedicated action (same pattern as P007's A014/A016)
 
 ## Tasks
 
@@ -82,6 +83,7 @@ Example master plans created:
 
 2026-08-30 — M001, this project's other example master plan, rewritten in place at user request: its generic placeholder content ("5-year DX vision," fabricated survey data) replaced with lplan's actual development history and roadmap, retitled "lplan Framework Development." Unlike M002, not deleted or moved — it just became real instead of staying a demo.
 2026-08-30 — M002 (Scalability Foundation) moved to the accessibility-lplan repo, at user request — it's irrelevant to lplan's own plan. Removed from parent_master_plan here and from P008/T001/T002; deleted plan/master_plans/M002-scalability-foundation.md itself.
+2026-08-31 — Reopened IN_PROGRESS to host D009 (Master Plan Priority Stack) — an ordered-execution-priority field for a master plan's child projects, designed at user request after real overlap/contention between projects surfaced the need. Same reopening pattern as P001 for A027/D008: extending a DONE project's original scope rather than filing the new work somewhere it doesn't belong. Also fixed this project's own stale Linked references while editing it (D005/A009/A010 were speculative IDs never created, later reused elsewhere for D005 specifically — see Linked section).
 2026-08-24 — All views updated. Master plans fully integrated and navigable.
 2026-08-24 — Core implementation and API support complete.
 2026-08-22 — Project started. Architecture designed with team.

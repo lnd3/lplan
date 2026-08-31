@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-08-30 22:19:06 UTC*
+*Last updated: 2026-08-31 16:42:51 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -44,7 +44,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [P002](projects/P002-tier2-analysis.md) | Tier 2 - Analysis & Query Tools | DONE | MEDIUM | TBD |
 | [P003](projects/P003-tier3-automation.md) | Tier 3 - Automation & Visualization | DONE | MEDIUM | TBD |
 | [P004](projects/P004-web-server-ui-refactoring.md) | Web Server & UI Refactoring | DONE | HIGH | TBD |
-| [P005](projects/P005-master-plans-strategic-vision.md) | Master Plans & Strategic Vision Architecture | DONE | HIGH | TBD |
+| [P005](projects/P005-master-plans-strategic-vision.md) | Master Plans & Strategic Vision Architecture | IN_PROGRESS | HIGH | TBD |
 | [P006](projects/P006-thesis-framework-integration.md) | Thesis Framework Integration | DONE | MEDIUM | TBD |
 | [P007](projects/P007-analytics-reporting-dashboard.md) | Analytics & Reporting Dashboard | IN_PROGRESS | MEDIUM | TBD |
 | [P008](projects/P008-cross-repo-planning-integration.md) | Cross-Repo Planning Integration | PLANNING | MEDIUM | TBD |
@@ -64,6 +64,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [D005](designs/D005-template-file-family-scaling.md) | Template File Family Scaling 📎 _see also: `D005_learnings.md`_ | DONE | P008 | (link if applicable) |
 | [D007](designs/D007-analytics-architecture.md) | Analytics Architecture | DONE | P007 | (link if applicable) |
 | [D008](designs/D008-project-phase-action-linking.md) | Project Phase → Design/Action Linking (Loose Coupling) | IN_PROGRESS | P001 | (link if applicable) |
+| [D009](designs/D009-master-plan-priority-stack.md) | Master Plan Priority Stack | IDEA | P005 | (link if applicable) |
 
 ---
 
@@ -94,3 +95,5 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A031](actions/A031-items-view-completion-sort.md) | Items View — Completion Column + Default Sort Least-Complete-First | DONE | D004 | TBD |
 | [A032](actions/A032-progress-badges-and-sorted-dashboard.md) | Tree View Progress Badges, Items View Label Rename, Status Dashboard Sort | DONE | D004 | TBD |
 | [A033](actions/A033-rename-status-items-views.md) | Rename Internal View Naming to Match Toolbar Buttons | DONE | D004 | TBD |
+| [A034](actions/A034-skip-phase-anchors-on-terminal-projects.md) | Skip phase-anchor warnings on terminal-status projects | DONE | — | TBD |
+| [A035](actions/A035-validator-duplicate-id-check.md) | Validator — Duplicate Entity ID Check | DONE | — | TBD |
