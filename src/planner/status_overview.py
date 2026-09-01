@@ -10,7 +10,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from .graph import DependencyGraph
-from .models import Action, Concept, Design, MasterPlan, PlanFile, Project, Thesis
+from .models import Action, Concept, Design, MasterPlan, PlanFile, Project, Status, Thesis
 from .parser import count_checkboxes
 from .refs import check_references
 from .validator import SchemaValidator
@@ -236,9 +236,12 @@ def collect_validator_warnings(
     }
     path_by_id = path_by_id or {}
 
+    terminal = {Status.DONE, Status.DEFERRED, Status.CANCELLED}
     results = []
     for w in validator.warnings:
         entity = entities_by_id.get(w.entity_id)
+        if entity and getattr(entity, "status", None) in terminal:
+            continue  # closed entities don't need attention
         results.append({
             "id": w.entity_id,
             "type": type_names.get(type(entity), "unknown"),

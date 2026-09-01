@@ -229,15 +229,16 @@ class SchemaValidator:
     def validate_phase_anchors(
         self, raw_content_by_project_id: Dict[str, str], entities: Dict[str, PlanEntity]
     ) -> bool:
-        """D008: warn on project phase headers with no Design anchor.
+        """D008: warn on project phase headers with no Design anchor or task checkboxes.
 
         A project file may have a `## Phases` section with headers like:
             ### Phase 1 — Strategy Pipeline [D001 DONE, A001 DONE]
-        The bracketed IDs are human-maintained annotations. D008's single
-        structural rule: each phase must reference at least one Design entity.
-        This is a soft check (warning only) — phases are free-form, gaps are
-        expected, and a project with no `## Phases` section at all is simply
-        not opted into the convention (nothing to check).
+        The bracketed IDs are human-maintained annotations. D008's structural rules:
+        1. Each phase must reference at least one Design entity (anchor check).
+        2. Each non-completed phase must contain at least one task checkbox
+           (`- [ ]` or `- [x]`). Phases with "✓ DONE" in the header are exempt.
+        Both are soft checks (warnings only) — phases are free-form, and a project
+        with no `## Phases` section at all is simply not opted in (nothing to check).
 
         Args:
             raw_content_by_project_id: project entity ID -> that project file's
@@ -249,6 +250,7 @@ class SchemaValidator:
         """
         found_unanchored = False
         terminal = {Status.DONE, Status.DEFERRED, Status.CANCELLED}
+        checkbox_re = re.compile(r"^\s*-\s+\[[ xX]\]")
 
         for project_id, raw_content in raw_content_by_project_id.items():
             project_entity = entities.get(project_id)
@@ -259,7 +261,7 @@ class SchemaValidator:
             if phases_section is None:
                 continue  # no ## Phases section: not opted in, nothing to check
 
-            for phase_name, refs in self._extract_phase_headers(phases_section):
+            for phase_name, refs, body in self._extract_phases_with_content(phases_section):
                 design_refs = [r for r in refs if isinstance(entities.get(r), Design)]
                 if not design_refs:
                     found_unanchored = True
@@ -270,6 +272,20 @@ class SchemaValidator:
                             f"({'refs: ' + ', '.join(refs) if refs else 'no entity refs found'})"
                         )
                     )
+
+                # Checkboxes required unless the phase is explicitly marked done.
+                if "✓ DONE" not in phase_name:
+                    has_checkboxes = any(
+                        checkbox_re.match(line) for line in body.split("\n")
+                    )
+                    if not has_checkboxes:
+                        self.warnings.append(
+                            ValidationWarning(
+                                project_id, "phase",
+                                f"Phase '{phase_name}' has no task checkboxes "
+                                f"(add '- [ ] ...' items so progress is trackable)"
+                            )
+                        )
 
         return not found_unanchored
 
@@ -293,21 +309,49 @@ class SchemaValidator:
         return "\n".join(lines[start:end])
 
     @staticmethod
-    def _extract_phase_headers(phases_section: str) -> List[Tuple[str, List[str]]]:
-        """Parse `### <name> [<refs>]` headers into (name, [entity_ids]) pairs."""
-        results: List[Tuple[str, List[str]]] = []
-        header_re = re.compile(r"^###\s+(.+?)\s*(?:\[([^\]]*)\])?\s*$")
+    def _extract_phases_with_content(phases_section: str) -> List[Tuple[str, List[str], str]]:
+        """Parse phase headers with their body text into (name, [entity_ids], body) triples.
+
+        Scans all `[...]` blocks anywhere in the header line for entity IDs —
+        so `### Phase 1 — Name [D024] ✓ DONE` correctly yields refs=['D024'].
+        """
+        results: List[Tuple[str, List[str], str]] = []
+        header_re = re.compile(r"^###\s+(.+)")
+        bracket_re = re.compile(r"\[([^\]]*)\]")
         id_re = re.compile(r"\b([A-Z]\d+)\b")
 
-        for line in phases_section.split("\n"):
+        lines = phases_section.split("\n")
+        current_name: Optional[str] = None
+        current_refs: List[str] = []
+        current_body: List[str] = []
+
+        for line in lines:
             match = header_re.match(line)
-            if not match:
-                continue
-            name, bracket_content = match.groups()
-            refs = id_re.findall(bracket_content) if bracket_content else []
-            results.append((name.strip(), refs))
+            if match:
+                if current_name is not None:
+                    results.append((current_name, current_refs, "\n".join(current_body)))
+                name = match.group(1).strip()
+                refs: List[str] = []
+                for bracket in bracket_re.finditer(name):
+                    refs.extend(id_re.findall(bracket.group(1)))
+                current_name = name
+                current_refs = refs
+                current_body = []
+            elif current_name is not None:
+                current_body.append(line)
+
+        if current_name is not None:
+            results.append((current_name, current_refs, "\n".join(current_body)))
 
         return results
+
+    @staticmethod
+    def _extract_phase_headers(phases_section: str) -> List[Tuple[str, List[str]]]:
+        """Parse `### <name> [<refs>]` headers into (name, [entity_ids]) pairs."""
+        return [
+            (name, refs)
+            for name, refs, _ in SchemaValidator._extract_phases_with_content(phases_section)
+        ]
 
     def _validate_project(self, entity: Project) -> None:
         """Validate project-specific rules."""
