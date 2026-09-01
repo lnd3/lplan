@@ -25,18 +25,52 @@ class TestSchemaValidator:
         assert len(validator.errors) == 0
 
     def test_validate_project_empty_drivers(self) -> None:
-        """Test that empty priority_drivers fails."""
-        # This would fail during model creation, so we test via direct instantiation
-        with pytest.raises(ValueError):
-            Project(
-                id="P001",
-                title="Test",
-                status=Status.PLANNING,
-                priority=Priority.HIGH,
-                priority_drivers=[],
-                created=date(2026, 8, 20),
-                updated=date(2026, 8, 20),
-            )
+        """Empty priority_drivers parses fine but fails SchemaValidator."""
+        project = Project(
+            id="P001",
+            title="Test",
+            status=Status.PLANNING,
+            priority=Priority.HIGH,
+            priority_drivers=[],
+            created=date(2026, 8, 20),
+            updated=date(2026, 8, 20),
+        )
+        validator = SchemaValidator()
+        assert validator.validate_entity(project) is False
+        assert any(e.field == "priority_drivers" for e in validator.errors)
+
+    def test_validate_project_unknown_driver(self) -> None:
+        """A priority_drivers entry outside the framework's driver keys fails."""
+        project = Project(
+            id="P001",
+            title="Test",
+            status=Status.PLANNING,
+            priority=Priority.HIGH,
+            priority_drivers=["not_a_real_driver"],
+            created=date(2026, 8, 20),
+            updated=date(2026, 8, 20),
+        )
+        validator = SchemaValidator()
+        assert validator.validate_entity(project) is False
+        assert any(
+            e.field == "priority_drivers" and "not_a_real_driver" in e.message
+            for e in validator.errors
+        )
+
+    def test_validate_project_deferred_wait_driver_allowed(self) -> None:
+        """deferred_wait_* drivers are a recognized pattern, not unknown keys."""
+        project = Project(
+            id="P001",
+            title="Test",
+            status=Status.PLANNING,
+            priority=Priority.HIGH,
+            priority_drivers=["deferred_wait_upstream_api"],
+            created=date(2026, 8, 20),
+            updated=date(2026, 8, 20),
+        )
+        validator = SchemaValidator()
+        assert validator.validate_entity(project) is True
+        assert len(validator.errors) == 0
 
     def test_validate_valid_design(self) -> None:
         """Test validating a valid design."""

@@ -90,18 +90,30 @@ class TestProject:
                 updated=date(2026, 8, 19),  # Before created
             )
 
-    def test_empty_priority_drivers_fails(self) -> None:
-        """Test that empty priority_drivers list raises error."""
-        with pytest.raises(ValueError, match="priority_drivers must not be empty"):
-            Project(
-                id="P001",
-                title="Test",
-                status=Status.PLANNING,
-                priority=Priority.HIGH,
-                priority_drivers=[],  # Empty
-                created=date(2026, 8, 20),
-                updated=date(2026, 8, 20),
-            )
+    def test_priority_drivers_omitted_defaults_empty(self) -> None:
+        """Omitting priority_drivers must not raise at parse time; it defaults to []."""
+        project = Project(
+            id="P001",
+            title="Test",
+            status=Status.PLANNING,
+            priority=Priority.HIGH,
+            created=date(2026, 8, 20),
+            updated=date(2026, 8, 20),
+        )
+        assert project.priority_drivers == []
+
+    def test_empty_priority_drivers_allowed_at_model_level(self) -> None:
+        """Empty priority_drivers no longer raises at model level (enforced by SchemaValidator instead)."""
+        project = Project(
+            id="P001",
+            title="Test",
+            status=Status.PLANNING,
+            priority=Priority.HIGH,
+            priority_drivers=[],  # Empty
+            created=date(2026, 8, 20),
+            updated=date(2026, 8, 20),
+        )
+        assert project.priority_drivers == []
 
 
 class TestDesign:

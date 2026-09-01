@@ -29,7 +29,7 @@ field2: value2
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `priority` | enum | YES | HIGH, MEDIUM, LOW |
-| `priority_drivers` | list | YES | List of driver keys (see priority-framework.md) |
+| `priority_drivers` | list | NO (default `[]`) | List of driver keys (see priority-framework.md). May be omitted at parse time, but the validator requires it non-empty and every key to match a known driver — see priority-framework.md. |
 | `depends` | list | NO | Projects this depends on, as "repo:ID" refs (e.g., `["tradeflow:P001", "ltools:L001"]`) |
 | `external_dependencies` | list | NO | Dependencies on external repos/features not formalized as projects |
 | `enables` | list | NO | Projects this unblocks when complete, as "repo:ID" refs |

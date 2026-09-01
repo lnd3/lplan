@@ -4,6 +4,7 @@ import re
 from typing import List, Dict, Any, Set, Optional, Tuple
 from difflib import get_close_matches
 from .models import Project, Design, Action, Thesis, MasterPlan, Concept, PlanEntity, PlanFile, Status, Priority
+from .priority import PriorityEngine
 
 
 class ValidationError:
@@ -50,6 +51,7 @@ class SchemaValidator:
     def __init__(self) -> None:
         self.errors: List[ValidationError] = []
         self.warnings: List[ValidationWarning] = []
+        self._priority_engine = PriorityEngine()
 
     def validate_entity(self, entity: PlanEntity) -> bool:
         """Validate a single entity. Returns True if valid."""
@@ -313,6 +315,18 @@ class SchemaValidator:
             self.errors.append(
                 ValidationError(entity.id, "priority_drivers", "Must not be empty")
             )
+        else:
+            for driver in entity.priority_drivers:
+                known = driver in self._priority_engine.drivers or driver.startswith("deferred_wait_")
+                if not known:
+                    self.errors.append(
+                        ValidationError(
+                            entity.id,
+                            "priority_drivers",
+                            f"Unknown driver key: {driver!r}",
+                            suggestion="See priority-framework.md for valid driver keys",
+                        )
+                    )
 
         # Check if project status is valid
         if entity.status not in Status:

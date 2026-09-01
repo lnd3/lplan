@@ -12,11 +12,11 @@ A project file defines a high-level goal, scope, and task list.
 - `title`: Human-readable goal
 - `status`: IDEA, PLANNING, IN_PROGRESS, BLOCKED, DONE, DEFERRED, CANCELLED
 - `priority`: HIGH, MEDIUM, LOW
-- `priority_drivers`: List of driver keys from priority-framework.md
 - `created`: YYYY-MM-DD
 - `updated`: YYYY-MM-DD
 
 ## Optional Frontmatter Fields
+- `priority_drivers`: List of driver keys from priority-framework.md. May be omitted at parse time (defaults to `[]`), but the validator requires it non-empty and every key to match a known driver.
 - `depends`: List of "repo:ID" projects this depends on
 - `external_dependencies`: List of external repo features needed
 - `enables`: List of "repo:ID" projects this unblocks
