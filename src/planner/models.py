@@ -130,7 +130,7 @@ class MasterPlan(PlanEntity):
 class Project(PlanEntity):
     """Project entity - high-level goal."""
     priority: Priority
-    priority_drivers: List[str]
+    priority_drivers: List[str] = Field(default_factory=list)
     depends: List[str] = Field(default_factory=list)
     external_dependencies: List[ExternalDependency] = Field(default_factory=list)
     enables: List[str] = Field(default_factory=list)
@@ -143,14 +143,6 @@ class Project(PlanEntity):
     @classmethod
     def validate_project_status(cls, v: Status) -> Status:
         """Projects can have all statuses."""
-        return v
-
-    @field_validator("priority_drivers")
-    @classmethod
-    def validate_priority_drivers(cls, v: List[str]) -> List[str]:
-        """Priority drivers must be non-empty list."""
-        if not v:
-            raise ValueError("priority_drivers must not be empty")
         return v
 
 
