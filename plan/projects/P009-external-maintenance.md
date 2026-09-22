@@ -26,13 +26,21 @@ Give drive-by contributions to lplan's own source a place to attach without requ
 
 - **Projects**: none — actions here may later be re-filed into P001–P008 during a normal upkeep pass.
 - **Designs**: none.
-- **Actions**: A016, A017, A018, A019, A024, A036
+- **Actions**: A016, A017, A018, A019, A024, A036, A037
 
 ## Tasks
 
 N/A — this project has no task list of its own. Its "tasks" are the Actions logged under it, each already complete.
 
 ## Log
+
+2026-09-22 — A037 filed: `scripts/lplan-server.sh`, a start/stop/
+restart/status/logs/list wrapper around `plan serve`/`stop`/`restart`
+for backgrounding the plan web server with log capture. Filed from
+superplan's context (user request landed there) but explicitly flagged
+to the user as a new capability, not a bug fix, per WORKFLOW.md's
+drive-by convention — new script, no changes to `src/`, `WORKFLOW.md`,
+`templates/*`, `CLAUDE.md`, or `README.md`.
 
 2026-09-01 — A036 filed retroactively for 68d3796 (priority_drivers made optional): that commit landed with only a CHANGELOG line, no Action, missing the WORKFLOW.md-required pairing for a drive-by bug fix. Also closed a real gap found while reviewing it: the commit's "no validator needed" claim was inaccurate (SchemaValidator's own empty-check still applied), and priority_drivers contents were never validated against the real driver vocabulary — added that check, fixed two stale tests, updated schema/frontmatter.md and schema/project.schema.md (still said required).
 2026-08-30 — Found while aligning P009 with current state (at user request): A024 (AI Agent Memory Maintenance, filed 2026-08-30) was already correctly listed under Linked § Actions, but this project's own `updated` date and Log were never touched to reflect it — a real instance of the "bubble up one level" gap WORKFLOW.md's Bubbling Up section names. Fixed. Note A025 and A026 do *not* belong here despite also landing 2026-08-30 — both were explicitly flagged to the user per the tightened External Contribution Workflow rather than filed as routine drive-by, and both ended up (mistakenly) under P008 instead; see P008's own Log.
