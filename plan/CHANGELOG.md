@@ -6,7 +6,6 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 
 ---
 
-2026-09-01 | A036 | NEW → DONE | priority_drivers made optional (default=[]) in Project model — was required+non-empty, causing parse failure and entities vanishing from all views when field omitted. Model-level validator removed; SchemaValidator still requires it non-empty, and now also validates present driver keys against the framework vocabulary. Schema docs and stale tests updated to match. Filed under P009 (originating fix was drive-by from TradeFlow).
 2026-08-30 | D005 | NEW → PLANNING | Template File Family Scaling design — companion file convention for any template-instantiated file (_extension, _tmp, _learnings, _history, _whatever). Non-breaking; opt-in.
 2026-08-30 | A025 | NEW → DONE | Consumer repo structural alignment check added to WORKFLOW_DETAILS.md § Framework Updates + WORKFLOW.md reference (policy change, explicitly flagged — not P009)
 2026-08-30 | A024 | NEW → DONE | AI agent memory maintenance documented in WORKFLOW.md + template + TradeFlow plan/WORKFLOW.md (drive-by from TradeFlow)
@@ -100,4 +99,8 @@ Format: `YYYY-MM-DD | ID | old_status → new_status | note`
 
 2026-09-01 | P009 | drive-by (TradeFlow) | Two validator/dashboard improvements: (1) validate_phase_anchors() now warns when a non-terminal phase (no "✓ DONE" in header) contains no task checkboxes (`- [ ]` / `- [x]`); also fixed bracket-ref extraction regex so IDs in `[D024] ✓ DONE`-style headers are found correctly (previously the suffix broke the old end-anchored regex). (2) collect_validator_warnings() in status_overview.py now skips warnings where the entity is DONE/DEFERRED/CANCELLED — terminal items don't need dashboard attention. TradeFlow validate: 13 → 10 warnings.
 
+2026-09-01 | A036 | NEW → DONE | priority_drivers made optional (default=[]) in Project model — was required+non-empty, causing parse failure and entities vanishing from all views when field omitted. Model-level validator removed; SchemaValidator still requires it non-empty, and now also validates present driver keys against the framework vocabulary. Schema docs and stale tests updated to match. Filed under P009 (originating fix was drive-by from TradeFlow).
+
 2026-09-22 | P009, A037 | NEW → DONE | Drive-by (superplan) | Added `scripts/lplan-server.sh`: start/stop/restart/status/logs/list wrapper around `plan serve`/`stop`/`restart`, backgrounding the server via `nohup` with output captured to `plan_dir/.plan-server.log` (neither `plan serve` — foreground only — nor `plan restart` — no log redirection — did this already). Reads/writes the same `.plan-server.pid` JSON the CLI already produces; no changes to `src/`, `WORKFLOW.md`, `templates/*`, `CLAUDE.md`, or `README.md`. Verified live against a scratch `plan init`'d directory.
+
+2026-10-01 | A037 | updated | `scripts/lplan-server.sh` gained `--host`/`--port`/`--edit`/`--no-edit` flags so host/port/edit mode can be set directly on the command line instead of only via `LPLAN_HOST`/`LPLAN_PORT`/`LPLAN_EDIT` env vars, per user request. Flags take precedence over the env vars when both are given; env vars remain the fallback default. `plan_dir` is now parsed positionally instead of fixed at `$2`. Verified live: flag override, env-var fallback, unknown-flag rejection, and a full start/status/stop cycle with `--port` set.

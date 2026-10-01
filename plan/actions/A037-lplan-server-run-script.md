@@ -6,7 +6,7 @@ priority: LOW
 priority_drivers:
   - convenience
 created: 2026-09-22
-updated: 2026-09-22
+updated: 2026-10-01
 depends: []
 external_dependencies: []
 enables: []
@@ -30,9 +30,12 @@ restart` itself doesn't redirect output to a log file, hence not
 delegating restart wholesale), `status` (reads the same
 `.plan-server.pid` the Python CLI already writes), `logs` (tail -f),
 `list` (prints the command usage — no separate discovery mechanism
-existed). Config via `LPLAN_HOST`/`LPLAN_PORT`/`LPLAN_EDIT` env vars.
-Takes `plan_dir` as an optional second arg (default `./plan`), run
-from the consuming repo's root — same convention as `./deps/lplan/bin/plan
+existed). Config via `--host`/`--port`/`--edit`/`--no-edit` flags, or
+the `LPLAN_HOST`/`LPLAN_PORT`/`LPLAN_EDIT` env vars as a fallback when a
+flag isn't given — flags win when both are set. Takes `plan_dir` as an
+optional positional arg (default `./plan`, position no longer fixed —
+flags and the positional arg can appear in any order), run from the
+consuming repo's root — same convention as `./deps/lplan/bin/plan
 validate ./plan`.
 
 Deliberately doesn't touch `src/`, `cli.py`, or the PID-file format —
@@ -42,6 +45,7 @@ with `plan stop`/`plan restart` run directly.
 
 ## Log
 
+2026-10-01 — Added `--host`/`--port`/`--edit`/`--no-edit` flags so host/port/edit mode can be set directly on the command line instead of only via env vars, per user request ("avoid the silly environment stuff"). Flags take precedence over `LPLAN_HOST`/`LPLAN_PORT`/`LPLAN_EDIT` when both are given; env vars remain the fallback. `plan_dir` is now parsed positionally rather than fixed at `$2`, so it can appear before or after the flags. Verified: flags override env vars, env vars still apply with no flags, unknown flags exit non-zero with a message, and a live `start`/`status`/`stop` cycle with `--port` works end to end. Level 2 (Medium) per WORKFLOW.md — CLI ergonomics on an existing script, not a new capability; logged here on A037 rather than a new Action since it's a direct extension of what A037 already built.
 2026-09-22 — Built and verified live: started against a scratch `plan
 init`'d directory, confirmed HTTP 200, confirmed the log file captured
 Flask's request log, confirmed `stop` cleared the PID file and `status`
