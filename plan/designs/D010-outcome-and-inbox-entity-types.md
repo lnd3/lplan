@@ -176,3 +176,52 @@ silent drive-by, regardless of how small the diff looks. Full
 2 pre-existing, unrelated failures in `test_status_overview.py` as
 before this change). Flagged directly to the user: this changes a
 file every lplan-based repo inherits, not just EphemNet's own copy.
+
+2026-10-04 (later) — Two follow-up gaps closed, both per direct
+request, in the same design:
+
+1. **Documentation never caught up to the code.** The initial build
+   wired both types through every functional layer but never touched
+   `README.md`'s own "File formats" section, `QUICK_REFERENCE.md`'s
+   per-type YAML reference, or the per-type `schema/*.md` docs every
+   other type (Action/Design/Project) has. Added `schema/outcome.
+   schema.md`/`schema/inbox_message.schema.md`, a terse README
+   mention, and full `QUICK_REFERENCE.md` sections (YAML shape, "when
+   to add," and a Title Conventions table row each) mirroring Concept/
+   Thesis's own existing treatment there.
+
+2. **The web UI (`plan serve`) didn't know either type existed.**
+   `server.py` builds the JSON every one of its own four views reads
+   from — Files (`/api/tree`), Tree (`/api/hierarchy`), Items (`/api/
+   status`), and Status (`/api/status-overview`, backed by `status_
+   overview.py`'s `compute_status_overview`). Every one of these had
+   its own `concepts`/`theses`/`.../actions` dict-building hardcoded,
+   with no fallback path for an unrecognized type — Outcome/
+   InboxMessage entities were invisible everywhere in the UI even
+   though the CLI (`validate`/`generate-index`/`log`) already fully
+   supported them. Added both types to every one of those dict-
+   building blocks, plus `status_overview.py`'s `overall_totals`/
+   `compute_status_overview`/`collect_validator_warnings` (the latter
+   three functions — `find_stale`/`find_blocked`/`dangling_references`
+   — needed zero changes at all, already fully generic over whatever
+   `entities_by_type`/`entities_by_id` dicts they're handed).
+
+   Frontend (`static/tree.js`, `static/status.js`, `static/items.js`)
+   updated to match: new flat-list sections in the Tree sidebar
+   (mirroring Concept's own flat, ungrouped-by-parent treatment),
+   new filter-dropdown options and type colors/icons in Items, and
+   the `TYPE_DIRS`/totals-ordering dicts in Status. `static/files.js`
+   needed no changes at all — it renders whatever `/api/tree` returns
+   with zero type-specific logic, so adding `outcomes`/`inbox` to that
+   endpoint's own category list was sufficient on its own.
+
+   No `tests/test_server.py` exists in this repo at all (server.py's
+   Flask routes aren't unit-tested currently, independent of this
+   change) — verified instead by exercising all four endpoints
+   directly via Flask's own test client against a real scratch plan
+   directory containing one Project, one Outcome, and one
+   InboxMessage, confirming each endpoint's JSON actually includes
+   both new types with sane field values. `node --check` confirmed
+   no JS syntax errors in all three edited frontend files. Full
+   `pytest` suite re-run clean (130 passed, same 2 pre-existing
+   failures) after the `status_overview.py` changes.

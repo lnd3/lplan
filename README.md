@@ -96,6 +96,11 @@ updated: YYYY-MM-DD
 
 **Design** / **Action** follow the same pattern with `project: P001` / `design: D001`.
 
+**Outcome** (`O001`, `plan/outcomes/`) — a completed body of work written up for
+reuse by OTHER repos, not just this one's own history; `audience: [other-repo]`.
+**Inbox Message** (`I001`, `plan/inbox/`) — a short, dated cross-repo note; `from_project`/`to`.
+Full shape of both: [QUICK_REFERENCE.md](QUICK_REFERENCE.md).
+
 ---
 
 ## Workflow

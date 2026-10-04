@@ -10,7 +10,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from .graph import DependencyGraph
-from .models import Action, Concept, Design, MasterPlan, PlanFile, Project, Status, Thesis
+from .models import Action, Concept, Design, InboxMessage, MasterPlan, Outcome, PlanFile, Project, Status, Thesis
 from .parser import count_checkboxes
 from .refs import check_references
 from .validator import SchemaValidator
@@ -128,6 +128,8 @@ def overall_totals(
     projects: Dict[str, Project],
     designs: Dict[str, Design],
     actions: Dict[str, Action],
+    outcomes: Optional[Dict[str, Outcome]] = None,
+    inbox_messages: Optional[Dict[str, InboxMessage]] = None,
 ) -> Dict[str, Dict[str, int]]:
     """Status counts per entity type, e.g. {"project": {"DONE": 6, "IN_PROGRESS": 2, ...}}."""
     groups = {
@@ -137,6 +139,8 @@ def overall_totals(
         "project": projects,
         "design": designs,
         "action": actions,
+        "outcome": outcomes or {},
+        "inbox_message": inbox_messages or {},
     }
     totals: Dict[str, Dict[str, int]] = {}
     for type_name, entities in groups.items():
@@ -233,6 +237,7 @@ def collect_validator_warnings(
     type_names = {
         Concept: "concept", Thesis: "thesis", MasterPlan: "master_plan",
         Project: "project", Design: "design", Action: "action",
+        Outcome: "outcome", InboxMessage: "inbox_message",
     }
     path_by_id = path_by_id or {}
 
@@ -277,10 +282,14 @@ def compute_status_overview(
     path_by_id: Optional[Dict[str, str]] = None,
     stale_days: int = DEFAULT_STALE_DAYS,
     today: Optional[date] = None,
+    outcomes: Optional[Dict[str, Outcome]] = None,
+    inbox_messages: Optional[Dict[str, InboxMessage]] = None,
 ) -> Dict[str, Any]:
     """Assemble the full /api/status-overview payload."""
     today = today or date.today()
     path_by_id = path_by_id or {}
+    outcomes = outcomes or {}
+    inbox_messages = inbox_messages or {}
 
     entities_by_type = {
         "concept": concepts,
@@ -289,6 +298,8 @@ def compute_status_overview(
         "project": projects,
         "design": designs,
         "action": actions,
+        "outcome": outcomes,
+        "inbox_message": inbox_messages,
     }
     entities_by_id: Dict[str, Any] = {}
     for group in entities_by_type.values():
@@ -309,7 +320,7 @@ def compute_status_overview(
     )
 
     return {
-        "totals": overall_totals(concepts, theses, master_plans, projects, designs, actions),
+        "totals": overall_totals(concepts, theses, master_plans, projects, designs, actions, outcomes, inbox_messages),
         "master_plan_rollups": master_plan_rollups,
         "project_rollups": project_rollups,
         "needs_attention": {

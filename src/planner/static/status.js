@@ -9,6 +9,8 @@ class StatusView {
     project: 'projects',
     design: 'designs',
     action: 'actions',
+    outcome: 'outcomes',
+    inbox_message: 'inbox',
   };
 
   static async show() {
@@ -72,8 +74,8 @@ class StatusView {
   }
 
   static renderTotals(totals) {
-    const order = ['thesis', 'master_plan', 'project', 'design', 'action', 'concept'];
-    const labels = { thesis: 'Theses', master_plan: 'Master Plans', project: 'Projects', design: 'Designs', action: 'Actions', concept: 'Concepts' };
+    const order = ['thesis', 'master_plan', 'project', 'design', 'action', 'concept', 'outcome', 'inbox_message'];
+    const labels = { thesis: 'Theses', master_plan: 'Master Plans', project: 'Projects', design: 'Designs', action: 'Actions', concept: 'Concepts', outcome: 'Outcomes', inbox_message: 'Inbox' };
     const doneish = new Set(['DONE', 'STABLE', 'HELD']);
 
     let html = '<div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">';

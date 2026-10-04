@@ -2,7 +2,7 @@ class TreeView {
   static treeHierarchy = null;
   static selectedTreeItem = null;
 
-  static TYPE_COLORS = { concept: '#94e2d5', thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
+  static TYPE_COLORS = { concept: '#94e2d5', thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2', outcome: '#a6e3a1', inbox_message: '#f38ba8' };
 
   // Card styling for content-pane child lists, keyed by id prefix — covers
   // project->{design,action} (D/A) and the thesis<->master_plan link (T/M),
@@ -14,6 +14,8 @@ class TreeView {
     A: { type: 'action',      icon: '✓',  bg: 'rgba(147, 153, 178, 0.1)', border: 'rgba(147, 153, 178, 0.2)' },
     M: { type: 'master_plan', icon: '🎯', bg: 'rgba(249, 226, 175, 0.1)', border: 'rgba(249, 226, 175, 0.2)' },
     T: { type: 'thesis',      icon: '💡', bg: 'rgba(203, 166, 247, 0.1)', border: 'rgba(203, 166, 247, 0.2)' },
+    O: { type: 'outcome',       icon: '📦', bg: 'rgba(166, 227, 161, 0.1)', border: 'rgba(166, 227, 161, 0.2)' },
+    I: { type: 'inbox_message', icon: '📨', bg: 'rgba(243, 139, 168, 0.1)', border: 'rgba(243, 139, 168, 0.2)' },
   };
 
   static typeFromId(id) {
@@ -171,6 +173,8 @@ class TreeView {
       const theses = hierarchy.theses || [];
       const masterPlans = hierarchy.master_plans || [];
       const orphanActions = hierarchy.orphan_actions || [];
+      const outcomes = hierarchy.outcomes || [];
+      const inboxMessages = hierarchy.inbox || [];
 
       // Indexed by id so showTreeRoot() can look up a thesis's linked master
       // plans (and vice versa) when rendering the content pane — the
@@ -207,6 +211,41 @@ class TreeView {
               </div>
             </div>`;
           }
+        }
+        html += '</div>';
+      }
+
+      // Outcomes (flat — a completed body of work written up for reuse by
+      // OTHER repos, never has children of its own).
+      if (outcomes.length > 0) {
+        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 4px;">';
+        html += '<div style="font-weight: bold; color: #a6e3a1; padding: 5px 10px; font-size: 12px;">OUTCOMES</div>';
+        for (const o of outcomes) {
+          html += `<div class="tree-item" id="tree-${o.id}">
+            <div style="display: flex; align-items: center; flex-wrap: wrap;">
+              <span class="tree-toggle" data-has-children="false">•</span>
+              ${TreeView.parentBadge(o.id, TreeView.TYPE_COLORS.outcome)}
+              <div class="tree-node tree-node-project" style="color:#a6e3a1; font-size:12px;"
+                onclick='TreeView.showTreeRoot("${o.id}", "${TreeView.escapeAttr(o.title)}", "outcome", "${TreeView.escapeAttr(o.path)}")' data-id="${o.id}">${o.title}</div>
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      // Inbox (flat — a short, dated cross-repo note, never has children).
+      if (inboxMessages.length > 0) {
+        html += '<div style="padding: 10px 0; border-bottom: 1px solid #313244; margin-bottom: 4px;">';
+        html += '<div style="font-weight: bold; color: #f38ba8; padding: 5px 10px; font-size: 12px;">INBOX</div>';
+        for (const i of inboxMessages) {
+          html += `<div class="tree-item" id="tree-${i.id}">
+            <div style="display: flex; align-items: center; flex-wrap: wrap;">
+              <span class="tree-toggle" data-has-children="false">•</span>
+              ${TreeView.parentBadge(i.id, TreeView.TYPE_COLORS.inbox_message)}
+              <div class="tree-node tree-node-project" style="color:#f38ba8; font-size:12px;"
+                onclick='TreeView.showTreeRoot("${i.id}", "${TreeView.escapeAttr(i.title)}", "inbox_message", "${TreeView.escapeAttr(i.path)}")' data-id="${i.id}">${i.title}</div>
+            </div>
+          </div>`;
         }
         html += '</div>';
       }
@@ -379,10 +418,10 @@ class TreeView {
         }
       }
 
-      const typeLabel = { concept: 'Concept', master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action' }[type] || type;
-      const typeIcons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+      const typeLabel = { concept: 'Concept', master_plan: 'Master Plan', thesis: 'Thesis', project: 'Project', design: 'Design', action: 'Action', outcome: 'Outcome', inbox_message: 'Inbox Message' }[type] || type;
+      const typeIcons = { thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓', outcome: '📦', inbox_message: '📨' };
       const typeIcon = typeIcons[type] || '•';
-      const TYPE_COLORS = { thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2' };
+      const TYPE_COLORS = { thesis: '#cba6f7', master_plan: '#f9e2af', project: '#89b4fa', design: '#a6adc8', action: '#9399b2', outcome: '#a6e3a1', inbox_message: '#f38ba8' };
       const typeColor = TYPE_COLORS[type] || '#cdd6f4';
 
       preview.innerHTML = `

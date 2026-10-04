@@ -313,6 +313,44 @@ updated: 2026-08-20
 ---
 ```
 
+### Outcome
+```yaml
+---
+id: O001
+title: Integration Handoff — from Us, for the Next Repo
+status: DONE          # typically DONE — documents work already shipped
+project: P001          # optional
+audience: [other-repo-1, other-repo-2]   # which repos this was written for
+sources: [D001, A001]                     # which designs/actions this distills
+created: 2026-08-20
+updated: 2026-08-20
+---
+```
+
+**When to add an outcome** — use an Outcome (not a Design or Action) when:
+- Real work has already shipped, and you're writing it up for a DIFFERENT repo's
+  maintainer to read, not just recording this repo's own history
+- A Design specifies work not yet done; an Action is a terse task; an Outcome is a
+  retrospective/handoff meant to be read start to end by someone else
+
+### Inbox Message
+```yaml
+---
+id: I001
+title: Short Subject Line
+status: IDEA           # IDEA = unread, DONE = acknowledged (reused loosely)
+from_project: EphemNet
+to: lplan maintainers
+created: 2026-08-20
+updated: 2026-08-20
+---
+```
+
+**When to add an inbox message** — use an InboxMessage (not an Action) when:
+- Another repo or agent is leaving a short, dated note for THIS repo's maintainers
+  (a tool-extension request, a "this is ready" pointer) — not a task to schedule,
+  not a body of finished work (see Outcome for that)
+
 ## Title Conventions
 
 In the Items view and throughout the UI, entity titles display as: **ID badge** + **Title text** + **Parent ID badges** (if applicable).
@@ -341,6 +379,8 @@ The `title` field in your entity file should contain **only the main descriptive
 | Project | `Build Auth Service` | `Build Auth Service [P001→P003, HIGH, strategic_edge]` |
 | Design | `JWT Token Strategy` | `JWT Token Strategy (for P001, auth-spec.json)` |
 | Action | `Implement Token Validation` | `Implement Token Validation (D001→A002, HIGH)` |
+| Outcome | `Stripe Integration Handoff` | `Stripe Integration Handoff (for cinderapps, offgridapp, DONE)` |
+| Inbox Message | `O001 Is Ready` | `O001 Is Ready (from: EphemNet, to: lplan maintainers)` |
 
 **Golden rule:** Your title field should be readable in a plain text editor without any special characters or metadata cruft. The UI layers on ID badges and parent links — your title just needs to name the thing.
 

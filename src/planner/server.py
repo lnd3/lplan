@@ -89,7 +89,7 @@ def _build_tree(plan_dir: Path) -> list[Dict[str, Any]]:
             tree.append({"name": name, "path": name, "type": "file"})
 
     # Category directories
-    for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
+    for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions", "outcomes", "inbox"]:
         cat_dir = plan_dir / category
         if not cat_dir.exists():
             continue
@@ -185,10 +185,12 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     if entity.id in mp_thesis_map:
                         mp_thesis_map[entity.id].append(t_id)
 
-        # Build hierarchy: concepts (flat) + theses → master plans → projects → designs → actions
-        hierarchy = {"concepts": [], "theses": [], "master_plans": [], "projects": []}
+        # Build hierarchy: concepts/outcomes/inbox (flat) + theses → master plans → projects → designs → actions
+        hierarchy = {"concepts": [], "theses": [], "master_plans": [], "projects": [], "outcomes": [], "inbox": []}
 
         concepts_flat = {}
+        outcomes_flat = {}
+        inbox_flat = {}
         for path_key, file_data in files.items():
             if isinstance(file_data, dict) and "error" in file_data:
                 continue
@@ -201,8 +203,28 @@ def _build_hierarchy(plan_dir: Path) -> Dict[str, Any]:
                     "concept_type": entity.concept_type.value,
                     "status": entity.status.value if hasattr(entity.status, 'value') else str(entity.status),
                 }
+            elif entity.__class__.__name__.lower() == "outcome":
+                outcomes_flat[entity.id] = {
+                    "id": entity.id,
+                    "title": entity.title,
+                    "path": path_key,
+                    "status": entity.status.value if hasattr(entity.status, 'value') else str(entity.status),
+                    "audience": getattr(entity, "audience", []),
+                }
+            elif entity.__class__.__name__.lower() == "inboxmessage":
+                inbox_flat[entity.id] = {
+                    "id": entity.id,
+                    "title": entity.title,
+                    "path": path_key,
+                    "status": entity.status.value if hasattr(entity.status, 'value') else str(entity.status),
+                    "from_project": getattr(entity, "from_project", None),
+                }
         for c_id, c in sorted(concepts_flat.items()):
             hierarchy["concepts"].append(c)
+        for o_id, o in sorted(outcomes_flat.items()):
+            hierarchy["outcomes"].append(o)
+        for i_id, i in sorted(inbox_flat.items()):
+            hierarchy["inbox"].append(i)
 
         for t_id, t in sorted(theses.items()):
             # Embed linked master plans so the UI can render the many-to-many relationship
@@ -686,7 +708,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
         """Get status view data: all entities with metadata for table display."""
         try:
             from datetime import datetime
-            from planner.models import Design, Action, MasterPlan, Thesis, Concept
+            from planner.models import Design, Action, MasterPlan, Thesis, Concept, Outcome, InboxMessage
             from planner.status_overview import project_rollup, master_plan_rollup
 
             parsed = PlanParser.parse_directory(plan_dir)
@@ -696,6 +718,8 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
             projects = {}
             designs = {}
             actions = {}
+            outcomes = {}
+            inbox_messages = {}
             path_map = {}
             plan_files_by_id = {}
 
@@ -722,6 +746,12 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                 elif isinstance(entity, Action):
                     actions[entity.id] = entity
                     path_map[f"action_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
+                elif isinstance(entity, Outcome):
+                    outcomes[entity.id] = entity
+                    path_map[f"outcome_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
+                elif isinstance(entity, InboxMessage):
+                    inbox_messages[entity.id] = entity
+                    path_map[f"inbox_message_{entity.id}"] = filename.replace(str(plan_dir) + "/", "")
 
             graph = DependencyGraph(projects)
             entities = []
@@ -821,6 +851,36 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     "depends_on_count": 0,
                 })
 
+            for o in sorted(outcomes.values(), key=lambda x: x.id):
+                entities.append({
+                    "id": o.id,
+                    "title": o.title,
+                    "type": "outcome",
+                    "status": o.status,
+                    "priority": "MEDIUM",
+                    "parent_project": getattr(o, "project", None),
+                    "created": o.created.isoformat() if o.created else None,
+                    "updated": o.updated.isoformat() if o.updated else None,
+                    "description": o.description[:100] + "..." if o.description and len(o.description) > 100 else o.description,
+                    "path": path_map.get(f"outcome_{o.id}", f"outcomes/{o.id}.md"),
+                    "audience": o.audience,
+                })
+
+            for i in sorted(inbox_messages.values(), key=lambda x: x.id):
+                entities.append({
+                    "id": i.id,
+                    "title": i.title,
+                    "type": "inbox_message",
+                    "status": i.status,
+                    "priority": "MEDIUM",
+                    "created": i.created.isoformat() if i.created else None,
+                    "updated": i.updated.isoformat() if i.updated else None,
+                    "description": i.description[:100] + "..." if i.description and len(i.description) > 100 else i.description,
+                    "path": path_map.get(f"inbox_message_{i.id}", f"inbox/{i.id}.md"),
+                    "from_project": i.from_project,
+                    "to": i.to,
+                })
+
             return jsonify({
                 "ok": True,
                 "data": {
@@ -831,6 +891,8 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                         "projects": len(projects),
                         "designs": len(designs),
                         "actions": len(actions),
+                        "outcomes": len(outcomes),
+                        "inbox_messages": len(inbox_messages),
                     }
                 }
             })
@@ -841,7 +903,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
     def get_status_overview():
         """Hierarchy-wide rollups + needs-attention signals (Plan Health Dashboard)."""
         try:
-            from planner.models import Action, Concept, Design, MasterPlan, Thesis
+            from planner.models import Action, Concept, Design, InboxMessage, MasterPlan, Outcome, Thesis
             from planner.status_overview import DEFAULT_STALE_DAYS, compute_status_overview
 
             stale_days = request.args.get("stale_days", DEFAULT_STALE_DAYS, type=int)
@@ -849,6 +911,7 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
             parsed = PlanParser.parse_directory(plan_dir)
             concepts, theses, master_plans = {}, {}, {}
             projects, designs, actions = {}, {}, {}
+            outcomes, inbox_messages = {}, {}
             plan_files_by_id = {}
             path_by_id = {}
 
@@ -870,11 +933,16 @@ def create_app(plan_dir: Path, edit: bool = False, validate_on_save: bool = True
                     designs[entity.id] = entity
                 elif isinstance(entity, Action):
                     actions[entity.id] = entity
+                elif isinstance(entity, Outcome):
+                    outcomes[entity.id] = entity
+                elif isinstance(entity, InboxMessage):
+                    inbox_messages[entity.id] = entity
 
             graph = DependencyGraph(projects)
             data = compute_status_overview(
                 concepts, theses, master_plans, projects, designs, actions,
                 plan_files_by_id, graph, plan_dir, path_by_id, stale_days=stale_days,
+                outcomes=outcomes, inbox_messages=inbox_messages,
             )
             return jsonify({"ok": True, "data": data})
         except Exception as e:

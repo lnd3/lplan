@@ -119,6 +119,8 @@ class ItemsView {
       <option value="project" ${ItemsView.filters.types.includes('project') ? 'selected' : ''}>Project</option>
       <option value="design" ${ItemsView.filters.types.includes('design') ? 'selected' : ''}>Design</option>
       <option value="action" ${ItemsView.filters.types.includes('action') ? 'selected' : ''}>Action</option>
+      <option value="outcome" ${ItemsView.filters.types.includes('outcome') ? 'selected' : ''}>Outcome</option>
+      <option value="inbox_message" ${ItemsView.filters.types.includes('inbox_message') ? 'selected' : ''}>Inbox Message</option>
     </select>`;
 
     html += `<button id="clear-filters" style="padding: 6px 12px; background: #45475a;
@@ -180,6 +182,10 @@ class ItemsView {
         extraBadges = ItemsView.badge(entity.parent_project, '#89b4fa');
       } else if (entity.type === 'action' && entity.parent_design) {
         extraBadges = ItemsView.badge(entity.parent_design, '#a6adc8');
+      } else if (entity.type === 'outcome' && entity.audience) {
+        extraBadges = ItemsView.parentBadges(entity.audience, '#a6e3a1');
+      } else if (entity.type === 'inbox_message' && entity.to) {
+        extraBadges = ItemsView.badge(entity.to, '#f38ba8');
       }
 
       const ownBadge = ItemsView.badge(entity.id, typeColor);
@@ -419,6 +425,8 @@ class ItemsView {
     project:     '#89b4fa',  // blue
     design:      '#a6adc8',  // gray
     action:      '#9399b2',  // dark gray
+    outcome:       '#a6e3a1',  // green
+    inbox_message: '#f38ba8',  // red/pink
   };
 
   static getTypeColor(type) {
@@ -457,7 +465,7 @@ class ItemsView {
   }
 
   static getTypeIcon(type) {
-    const icons = { concept: '📖', thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓' };
+    const icons = { concept: '📖', thesis: '💡', master_plan: '🎯', project: '📋', design: '🎨', action: '✓', outcome: '📦', inbox_message: '📨' };
     return `<span style="color:${ItemsView.getTypeColor(type)}">${icons[type] || '•'}</span>`;
   }
 
