@@ -1,6 +1,6 @@
 # lplan Plan Index
 
-*Last updated: 2026-09-01 13:06:18 UTC*
+*Last updated: 2026-10-04 15:38:41 UTC*
 
 Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRED` · `CANCELLED`
 
@@ -65,6 +65,7 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [D007](designs/D007-analytics-architecture.md) | Analytics Architecture | DONE | P007 | (link if applicable) |
 | [D008](designs/D008-project-phase-action-linking.md) | Project Phase → Design/Action Linking (Loose Coupling) | IN_PROGRESS | P001 | (link if applicable) |
 | [D009](designs/D009-master-plan-priority-stack.md) | Master Plan Priority Stack | IDEA | P005 | (link if applicable) |
+| [D010](designs/D010-outcome-and-inbox-entity-types.md) | Outcome and InboxMessage entity types | DONE | P008 | (link if applicable) |
 
 ---
 
@@ -97,3 +98,13 @@ Status: `IDEA` · `PLANNING` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `DEFERRE
 | [A033](actions/A033-rename-status-items-views.md) | Rename Internal View Naming to Match Toolbar Buttons | DONE | D004 | TBD |
 | [A034](actions/A034-skip-phase-anchors-on-terminal-projects.md) | Skip phase-anchor warnings on terminal-status projects | DONE | — | TBD |
 | [A035](actions/A035-validator-duplicate-id-check.md) | Validator — Duplicate Entity ID Check | DONE | — | TBD |
+| [A036](actions/A036-priority-drivers-optional.md) | Priority Drivers — Optional at Parse, Enforced by Validator | DONE | — | TBD |
+| [A037](actions/A037-lplan-server-run-script.md) | lplan-server.sh run script (start/stop/restart/status/logs/list) | DONE | — | TBD |
+
+---
+
+## Inbox
+
+| ID | Title | Status | From | To |
+| --- | --- | --- | --- | --- |
+| [I001](inbox/I001-ephemnet-outcome-handoff-request.md) | EphemNet requested Outcome/InboxMessage entity types for a Stripe integration handoff doc | DONE | EphemNet | lplan maintainers |

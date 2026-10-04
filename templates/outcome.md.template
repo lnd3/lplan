@@ -1,0 +1,36 @@
+---
+id: OXXX
+title: Outcome Title Here
+status: DONE
+project: PXXX
+audience: [other-repo-1, other-repo-2]
+sources: [DXXX, AXXX]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## Why this exists
+
+What was built, and why is it worth writing up for OTHER repos/projects
+(not just this one's own history — that's what the Log sections on
+`sources` already cover)?
+
+## What we started from
+
+The state of things before this work — existing libraries, prior art,
+what was already proven vs. still open.
+
+## What we built
+
+The concrete shape of the finished thing — architecture, key files,
+decisions that mattered.
+
+## Gotchas for the next integration
+
+Specific pitfalls hit along the way, named plainly enough that a
+different repo doing the same integration can avoid them without
+re-deriving them from scratch.
+
+## Log
+
+YYYY-MM-DD — Outcome written up.

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from planner.models import Project, Design, Action, Status, Priority
+from planner.models import Project, Design, Action, Outcome, InboxMessage, Status, Priority
 from planner.index_gen import generate_index, write_index, append_changelog
 
 
@@ -62,6 +62,46 @@ def test_generate_index_structure(sample_entities):
     assert "## Projects" in index_md
     assert "## Designs" in index_md
     assert "## Actions" in index_md
+
+
+def test_generate_index_omits_outcomes_and_inbox_when_absent(sample_entities):
+    """No ## Outcomes/## Inbox sections at all when there are none — same
+    "absent, not empty" convention Concepts/Theses/Master Plans already use."""
+    index_md = generate_index(sample_entities, "Test Repo")
+    assert "## Outcomes" not in index_md
+    assert "## Inbox" not in index_md
+
+
+def test_generate_index_includes_outcome_and_inbox_message():
+    """Test that Outcome and InboxMessage entities get their own sections."""
+    o1 = Outcome(
+        id="O001",
+        title="Stripe Integration Handoff",
+        status=Status.DONE,
+        project="P001",
+        audience=["cinderapps", "offgridapp"],
+        sources=["D012"],
+        created=date(2026, 10, 4),
+        updated=date(2026, 10, 4),
+    )
+    i1 = InboxMessage(
+        id="I001",
+        title="Requesting a new entity type",
+        status=Status.IDEA,
+        from_project="EphemNet",
+        to="lplan maintainers",
+        created=date(2026, 10, 4),
+        updated=date(2026, 10, 4),
+    )
+
+    index_md = generate_index({"O001": o1, "I001": i1}, "Test Repo")
+
+    assert "## Outcomes" in index_md
+    assert "[O001]" in index_md
+    assert "cinderapps, offgridapp" in index_md
+    assert "## Inbox" in index_md
+    assert "[I001]" in index_md
+    assert "EphemNet" in index_md
 
 
 def test_generate_index_contains_entities(sample_entities):

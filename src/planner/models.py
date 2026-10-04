@@ -169,6 +169,34 @@ class Action(PlanEntity):
     phase: Optional[str] = None  # D008: which project phase this Action belongs to (optional)
 
 
+class Outcome(PlanEntity):
+    """Outcome entity - a completed body of work written up for reuse by
+    OTHER projects/repos, not just this one's own history. Distinct from
+    a Design (a spec for work not yet done) or an Action (a task): an
+    Outcome exists only after real work shipped, and its own value is
+    almost entirely in its body (the retrospective/handoff itself), not
+    its frontmatter. Typically filed with status DONE, since the whole
+    point is summarizing something already finished.
+    """
+    project: Optional[str] = None  # Parent project, if any
+    audience: List[str] = Field(default_factory=list)  # other repos/projects this was written for, e.g. ["cinderapps", "offgridapp"]
+    sources: List[str] = Field(default_factory=list)  # Design/Action IDs this outcome distills
+
+
+class InboxMessage(PlanEntity):
+    """InboxMessage entity - a short, dated note left for this project's
+    own maintainers by another project or agent (e.g. a request to
+    extend a shared tool, or a cross-repo notification) — a record that
+    something was communicated, not a task to schedule (see Action) or
+    a body of finished work to reuse (see Outcome). Reuses the shared
+    Status enum loosely: IDEA means "new, not yet acted on," DONE means
+    "read/acknowledged" — same reused-subset pattern Thesis/Concept
+    already use for their own statuses.
+    """
+    from_project: Optional[str] = None  # which repo/project sent this, e.g. "EphemNet"
+    to: Optional[str] = None  # who it's addressed to, e.g. "lplan maintainers"
+
+
 class PlanFile(BaseModel):
     """Parsed plan file with frontmatter and content."""
     entity: PlanEntity

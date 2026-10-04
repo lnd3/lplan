@@ -7,8 +7,8 @@ from typing import Dict, List, Optional, Tuple, Any
 import yaml
 from .companions import is_companion_file
 from .models import (
-    Project, Design, Action, MasterPlan, Thesis, Concept, ConceptType, PlanEntity, PlanFile, Status, Priority,
-    ExternalDependency
+    Project, Design, Action, MasterPlan, Thesis, Concept, ConceptType, Outcome, InboxMessage,
+    PlanEntity, PlanFile, Status, Priority, ExternalDependency
 )
 
 
@@ -87,6 +87,10 @@ class PlanParser:
             entity = PlanParser._parse_action(frontmatter)
         elif entity_type == "C":
             entity = PlanParser._parse_concept(frontmatter)
+        elif entity_type == "O":
+            entity = PlanParser._parse_outcome(frontmatter)
+        elif entity_type == "I":
+            entity = PlanParser._parse_inbox_message(frontmatter)
         else:
             raise ValueError(f"Unknown entity type from ID: {entity_id}")
 
@@ -110,7 +114,7 @@ class PlanParser:
         """
         results: Dict[str, PlanFile] = {}
 
-        for subdirs in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
+        for subdirs in ["concepts", "theses", "master_plans", "projects", "designs", "actions", "outcomes", "inbox"]:
             subdir = plan_dir / subdirs
             if not subdir.exists():
                 continue
@@ -247,6 +251,47 @@ class PlanParser:
             description=data.get("description"),
             concept_type=ConceptType(data.get("type", "term")),
             related=data.get("related", []),
+        )
+
+    @staticmethod
+    def _parse_outcome(data: Dict[str, Any]) -> Outcome:
+        """Parse outcome frontmatter into Outcome model."""
+        created = data.get("created")
+        updated = data.get("updated")
+        if isinstance(created, str):
+            created = date.fromisoformat(created)
+        if isinstance(updated, str):
+            updated = date.fromisoformat(updated)
+        return Outcome(
+            id=data["id"],
+            title=data["title"],
+            status=Status(data["status"]),
+            created=created,
+            updated=updated,
+            description=data.get("description"),
+            project=data.get("project"),
+            audience=data.get("audience", []),
+            sources=data.get("sources", []),
+        )
+
+    @staticmethod
+    def _parse_inbox_message(data: Dict[str, Any]) -> InboxMessage:
+        """Parse inbox message frontmatter into InboxMessage model."""
+        created = data.get("created")
+        updated = data.get("updated")
+        if isinstance(created, str):
+            created = date.fromisoformat(created)
+        if isinstance(updated, str):
+            updated = date.fromisoformat(updated)
+        return InboxMessage(
+            id=data["id"],
+            title=data["title"],
+            status=Status(data["status"]),
+            created=created,
+            updated=updated,
+            description=data.get("description"),
+            from_project=data.get("from_project"),
+            to=data.get("to"),
         )
 
     @staticmethod

@@ -108,6 +108,66 @@ Action goal
             assert plan_file.entity.id == "A001"
             assert plan_file.entity.status == Status.IN_PROGRESS
 
+    def test_parse_outcome_file(self) -> None:
+        """Test parsing an outcome file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            outcome_dir = tmpdir_path / "outcomes"
+            outcome_dir.mkdir()
+
+            outcome_file = outcome_dir / "O001-test.md"
+            outcome_file.write_text("""---
+id: O001
+title: Test Outcome
+status: DONE
+project: P001
+audience: [other-repo-1, other-repo-2]
+sources: [D001, A001]
+created: 2026-10-04
+updated: 2026-10-04
+---
+
+## Why this exists
+Test body.
+""")
+
+            plan_file = PlanParser.parse_file(outcome_file)
+
+            assert plan_file.entity.id == "O001"
+            assert plan_file.entity.status == Status.DONE
+            assert plan_file.entity.project == "P001"
+            assert plan_file.entity.audience == ["other-repo-1", "other-repo-2"]
+            assert plan_file.entity.sources == ["D001", "A001"]
+
+    def test_parse_inbox_message_file(self) -> None:
+        """Test parsing an inbox message file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            inbox_dir = tmpdir_path / "inbox"
+            inbox_dir.mkdir()
+
+            inbox_file = inbox_dir / "I001-test.md"
+            inbox_file.write_text("""---
+id: I001
+title: Test Message
+status: IDEA
+from_project: EphemNet
+to: lplan maintainers
+created: 2026-10-04
+updated: 2026-10-04
+---
+
+## Message
+Test body.
+""")
+
+            plan_file = PlanParser.parse_file(inbox_file)
+
+            assert plan_file.entity.id == "I001"
+            assert plan_file.entity.status == Status.IDEA
+            assert plan_file.entity.from_project == "EphemNet"
+            assert plan_file.entity.to == "lplan maintainers"
+
     def test_parse_directory(self) -> None:
         """Test parsing an entire plan directory."""
         with tempfile.TemporaryDirectory() as tmpdir:

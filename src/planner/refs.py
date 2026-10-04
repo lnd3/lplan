@@ -8,7 +8,7 @@ from .models import PlanEntity, Project, Design, Action
 _MD_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+\.md)\)")
 _CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 _INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
-_ENTITY_SUBDIRS = ("concepts", "theses", "master_plans", "projects", "designs", "actions")
+_ENTITY_SUBDIRS = ("concepts", "theses", "master_plans", "projects", "designs", "actions", "outcomes", "inbox")
 
 
 def check_companion_links(plan_dir: Path) -> List[Dict[str, str]]:

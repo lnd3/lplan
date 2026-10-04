@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan, Concept
+from .models import PlanEntity, Project, Design, Action, Thesis, MasterPlan, Concept, Outcome, InboxMessage
 
 # D008: severity ordering for a phase's "worst-case child status" (lower = worse)
 _PHASE_STATUS_SEVERITY = {
@@ -142,6 +142,8 @@ def generate_index(
     projects: Dict[str, Project] = {}
     designs: Dict[str, Design] = {}
     actions: Dict[str, Action] = {}
+    outcomes: Dict[str, Outcome] = {}
+    inbox_messages: Dict[str, InboxMessage] = {}
 
     for entity_id, entity in entities.items():
         if isinstance(entity, Concept):
@@ -156,6 +158,10 @@ def generate_index(
             designs[entity.id] = entity
         elif isinstance(entity, Action):
             actions[entity.id] = entity
+        elif isinstance(entity, Outcome):
+            outcomes[entity.id] = entity
+        elif isinstance(entity, InboxMessage):
+            inbox_messages[entity.id] = entity
 
     # Build markdown
     now = datetime.now()
@@ -259,6 +265,40 @@ def generate_index(
         design_ref = action.design if action.design else "—"
         lines.append(f"| [{aid}]({link}) | {action.title}{see_also(aid)} | {action.status.value} | {design_ref} | TBD |")
 
+    if outcomes:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## Outcomes",
+            "",
+            "| ID | Title | Status | Audience | Project |",
+            "| --- | --- | --- | --- | --- |",
+        ])
+        for oid, outcome in sorted(outcomes.items()):
+            filename = id_to_filename.get(oid, f"{oid}-{outcome.title.lower().replace(' ', '-')}.md")
+            link = f"outcomes/{filename}"
+            audience_cell = ", ".join(outcome.audience) if outcome.audience else "—"
+            project_ref = outcome.project if outcome.project else "—"
+            lines.append(f"| [{oid}]({link}) | {outcome.title}{see_also(oid)} | {outcome.status.value} | {audience_cell} | {project_ref} |")
+
+    if inbox_messages:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## Inbox",
+            "",
+            "| ID | Title | Status | From | To |",
+            "| --- | --- | --- | --- | --- |",
+        ])
+        for iid, msg in sorted(inbox_messages.items()):
+            filename = id_to_filename.get(iid, f"{iid}-{msg.title.lower().replace(' ', '-')}.md")
+            link = f"inbox/{filename}"
+            from_cell = msg.from_project if msg.from_project else "—"
+            to_cell = msg.to if msg.to else "—"
+            lines.append(f"| [{iid}]({link}) | {msg.title}{see_also(iid)} | {msg.status.value} | {from_cell} | {to_cell} |")
+
     phase_summaries = _collect_phase_summaries(entities)
     if phase_summaries:
         lines.extend(["", "---", "", "## Phase Summaries", "", "*D008: supplementary view built from children's `phase` fields — the project file's own Phases text stays authoritative.*", ""])
@@ -305,7 +345,7 @@ def write_index(
     # get their own row; they're surfaced as a "see also" note on their root instead.
     id_to_filename: Dict[str, str] = {}
     companions_by_id: Dict[str, List[str]] = {}
-    for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions"]:
+    for category in ["concepts", "theses", "master_plans", "projects", "designs", "actions", "outcomes", "inbox"]:
         category_dir = plan_dir / category
         if not category_dir.exists():
             continue

@@ -3,7 +3,7 @@
 import re
 from typing import List, Dict, Any, Set, Optional, Tuple
 from difflib import get_close_matches
-from .models import Project, Design, Action, Thesis, MasterPlan, Concept, PlanEntity, PlanFile, Status, Priority
+from .models import Project, Design, Action, Thesis, MasterPlan, Concept, Outcome, InboxMessage, PlanEntity, PlanFile, Status, Priority
 from .priority import PriorityEngine
 
 
@@ -64,7 +64,7 @@ class SchemaValidator:
             self._validate_design(entity)
         elif isinstance(entity, Action):
             self._validate_action(entity)
-        elif isinstance(entity, (Thesis, MasterPlan, Concept)):
+        elif isinstance(entity, (Thesis, MasterPlan, Concept, Outcome, InboxMessage)):
             pass  # No additional structural constraints beyond frontmatter
         else:
             self.errors.append(
@@ -190,6 +190,25 @@ class SchemaValidator:
                         )
                     )
 
+            elif isinstance(entity, Outcome):
+                if entity.project and entity.project not in entities:
+                    suggestion = self._suggest_ref(entity.project, entities)
+                    self.warnings.append(
+                        ValidationWarning(
+                            entity_id, "project", f"Associated project {entity.project} not found",
+                            suggestion=suggestion
+                        )
+                    )
+                for source_id in entity.sources:
+                    if source_id not in entities:
+                        suggestion = self._suggest_ref(source_id, entities)
+                        self.warnings.append(
+                            ValidationWarning(
+                                entity_id, "sources", f"Source {source_id} not found",
+                                suggestion=suggestion
+                            )
+                        )
+
         # Check 1 (A027): DONE parent with non-terminal children
         # Collect children per project and per design
         children_by_project: Dict[str, List[PlanEntity]] = {}
@@ -202,6 +221,8 @@ class SchemaValidator:
                     children_by_project.setdefault(entity.project, []).append(entity)
                 if entity.design:
                     children_by_design.setdefault(entity.design, []).append(entity)
+            elif isinstance(entity, Outcome) and entity.project:
+                children_by_project.setdefault(entity.project, []).append(entity)
 
         terminal = {Status.DONE, Status.DEFERRED, Status.CANCELLED}
         for entity_id, entity in entities.items():

@@ -2,7 +2,7 @@
 
 from datetime import date
 import pytest
-from planner.models import Project, Design, Action, PlanFile, Status, Priority
+from planner.models import Project, Design, Action, Outcome, InboxMessage, PlanFile, Status, Priority
 from planner.validator import SchemaValidator
 
 
@@ -172,6 +172,58 @@ class TestSchemaValidator:
         validator = SchemaValidator()
         validator.validate_relationships(entities)
         assert len(validator.warnings) > 0
+
+    def test_validate_relationships_outcome_missing_project_warns(self) -> None:
+        """Test that an outcome with a missing project generates a warning."""
+        entities = {
+            "O001": Outcome(
+                id="O001",
+                title="Test",
+                status=Status.DONE,
+                project="P001",  # P001 doesn't exist
+                created=date(2026, 10, 4),
+                updated=date(2026, 10, 4),
+            ),
+        }
+
+        validator = SchemaValidator()
+        validator.validate_relationships(entities)
+        assert len(validator.warnings) > 0
+
+    def test_validate_relationships_outcome_missing_source_warns(self) -> None:
+        """Test that an outcome referencing a missing source generates a warning."""
+        entities = {
+            "O001": Outcome(
+                id="O001",
+                title="Test",
+                status=Status.DONE,
+                sources=["D999"],  # D999 doesn't exist
+                created=date(2026, 10, 4),
+                updated=date(2026, 10, 4),
+            ),
+        }
+
+        validator = SchemaValidator()
+        validator.validate_relationships(entities)
+        assert len(validator.warnings) > 0
+
+    def test_validate_relationships_inbox_message_no_constraints(self) -> None:
+        """Test that an inbox message validates cleanly with no refs to check."""
+        entities = {
+            "I001": InboxMessage(
+                id="I001",
+                title="Test",
+                status=Status.IDEA,
+                from_project="EphemNet",
+                to="lplan maintainers",
+                created=date(2026, 10, 4),
+                updated=date(2026, 10, 4),
+            ),
+        }
+
+        validator = SchemaValidator()
+        assert validator.validate_relationships(entities) is True
+        assert len(validator.warnings) == 0
 
     def test_validate_relationships_done_project_with_open_child_warns(self) -> None:
         """A027: DONE project with a non-terminal child Action warns."""

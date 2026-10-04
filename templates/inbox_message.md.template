@@ -1,0 +1,19 @@
+---
+id: IXXX
+title: Short Subject Line Here
+status: IDEA
+from_project: your-repo-name
+to: lplan maintainers
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## Message
+
+What happened, what changed, or what's being requested — short and
+concrete. Link to the real source (a commit, a file, another repo's
+own plan entity) rather than re-explaining it at length here.
+
+## Log
+
+YYYY-MM-DD — Message sent.
